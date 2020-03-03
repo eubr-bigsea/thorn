@@ -1,0 +1,209 @@
+# -*- coding: utf-8 -*-
+import datetime
+import json
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float, \
+    Enum, DateTime, Numeric, Text, Unicode, UnicodeText
+from sqlalchemy import event
+from sqlalchemy.dialects.mysql import LONGTEXT
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy_i18n import make_translatable, translation_base, Translatable
+
+make_translatable(options={'locales': ['pt', 'en'],
+                           'auto_create_locales': True,
+                           'fallback_locale': 'en'})
+
+db = SQLAlchemy()
+
+
+# noinspection PyClassHasNoInit
+class AssetType:
+    DASHBOARD = 'DASHBOARD'
+    DATA_SOURCE = 'DATA_SOURCE'
+    SYSTEM = 'SYSTEM'
+    VISUALIZATION = 'VISUALIZATION'
+    USER = 'USER'
+    WORKFLOW = 'WORKFLOW'
+
+    @staticmethod
+    def values():
+        return [n for n in list(AssetType.__dict__.keys())
+                if n[0] != '_' and n != 'values']
+
+
+class Asset(db.Model):
+    """ A protected asset in Lemonade """
+    __tablename__ = 'asset'
+
+    # Fields
+    id = Column(Integer, primary_key=True)
+    name = Column(String(300), nullable=False)
+    external_id = Column(String(100), nullable=False)
+    type = Column(Enum(*list(AssetType.values()),
+                       name='AssetTypeEnumType'), nullable=False)
+
+    # Associations
+    owner_id = Column(Integer,
+                      ForeignKey("user.id"), nullable=False)
+    owner = relationship(
+        "User",
+        foreign_keys=[owner_id])
+
+    def __unicode__(self):
+        return self.name
+
+    def __repr__(self):
+        return '<Instance {}: {}>'.format(self.__class__, self.id)
+
+
+class Configuration(db.Model, Translatable):
+    """ Configuration in Lemonade """
+    __tablename__ = 'configuration'
+    __translatable__ = {'locales': ['pt', 'en']}
+
+    # Fields
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    value = Column(LONGTEXT, nullable=False)
+    enabled = Column(Boolean,
+                     default=True, nullable=False)
+
+    def __unicode__(self):
+        return self.name
+
+    def __repr__(self):
+        return '<Instance {}: {}>'.format(self.__class__, self.id)
+
+
+class ConfigurationTranslation(translation_base(Configuration)):
+    """ Translation table for Configuration """
+    __tablename__ = 'configuration_translation'
+
+    # Fields
+    description = Column(Unicode(100))
+
+
+class Permission(db.Model, Translatable):
+    """ Permission in Lemonade """
+    __tablename__ = 'permission'
+    __translatable__ = {'locales': ['pt', 'en']}
+
+    # Fields
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    applicable_to = Column(Enum(*list(AssetType.values()),
+                                name='AssetTypeEnumType'))
+    enabled = Column(Boolean,
+                     default=True, nullable=False)
+
+    def __unicode__(self):
+        return self.name
+
+    def __repr__(self):
+        return '<Instance {}: {}>'.format(self.__class__, self.id)
+
+
+class PermissionTranslation(translation_base(Permission)):
+    """ Translation table for Permission """
+    __tablename__ = 'permission_translation'
+
+    # Fields
+    description = Column(Unicode(100))
+
+
+class Role(db.Model, Translatable):
+    """ Roles in Lemonade """
+    __tablename__ = 'role'
+    __translatable__ = {'locales': ['pt', 'en']}
+
+    # Fields
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    all_user = Column(Boolean,
+                      default=False, nullable=False)
+    enabled = Column(Boolean,
+                     default=True, nullable=False)
+
+    def __unicode__(self):
+        return self.name
+
+    def __repr__(self):
+        return '<Instance {}: {}>'.format(self.__class__, self.id)
+
+
+class RoleTranslation(translation_base(Role)):
+    """ Translation table for Role """
+    __tablename__ = 'role_translation'
+
+    # Fields
+    description = Column(Unicode(100))
+
+
+class User(db.Model):
+    """ A user in Lemonade """
+    __tablename__ = 'user'
+
+    # Fields
+    id = Column(Integer, primary_key=True)
+    email = Column(String(255), nullable=False)
+    enabled = Column(Boolean,
+                     default=True, nullable=False)
+    encrypted_password = Column(String(255), nullable=False)
+    reset_password_token = Column(String(255))
+    reset_password_sent_at = Column(DateTime,
+                                    default=datetime.datetime.utcnow,
+                                    onupdate=datetime.datetime.utcnow)
+    remember_created_at = Column(DateTime,
+                                 default=datetime.datetime.utcnow,
+                                 onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime,
+                        default=datetime.datetime.utcnow, nullable=False,
+                        onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime,
+                        default=datetime.datetime.utcnow,
+                        onupdate=datetime.datetime.utcnow)
+    first_name = Column(String(255))
+    last_name = Column(String(255))
+    locale = Column(String(20))
+    confirmed_at = Column(DateTime,
+                          default=datetime.datetime.utcnow,
+                          onupdate=datetime.datetime.utcnow)
+    confirmation_sent_at = Column(DateTime,
+                                  default=datetime.datetime.utcnow,
+                                  onupdate=datetime.datetime.utcnow)
+    unconfirmed_email = Column(String(200))
+
+    # Associations
+    # noinspection PyUnresolvedReferences
+    user_role = db.Table(
+        'user_role',
+        Column('user_id', Integer,
+               ForeignKey('user.id'), nullable=False),
+        Column('role_id', Integer,
+               ForeignKey('role.id'), nullable=False))
+    roles = relationship(
+        "Role",
+        secondary=user_role)
+
+    def __unicode__(self):
+        return self.email
+
+    def __repr__(self):
+        return '<Instance {}: {}>'.format(self.__class__, self.id)
+
+
+class UserPermissionForAsset(db.Model):
+    """ User permission for an asset """
+    __tablename__ = 'user_permission_for_asset'
+
+    # Fields
+    id = Column(Integer, primary_key=True)
+
+    def __unicode__(self):
+        return 'UserPermissionForAsset'
+
+    def __repr__(self):
+        return '<Instance {}: {}>'.format(self.__class__, self.id)
+
