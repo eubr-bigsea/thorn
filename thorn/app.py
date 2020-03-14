@@ -1,28 +1,31 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # noinspection PyBroadException
-try:
-    import eventlet
-    eventlet.monkey_patch(all=True)
-except:
-    pass
+import eventlet
+
+eventlet.monkey_patch(all=True)
 
 import logging
 import logging.config
-import eventlet.wsgi
 import os
+
+import eventlet.wsgi
 import sqlalchemy_utils
 import yaml
-from thorn.models import db, User
+from thorn import rq
 from flask import Flask, request
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_babel import get_locale, Babel
 from flask_cors import CORS
-from flask_restful import Api, abort
-
+from flask_restful import Api
+from thorn.gateway import ApiGateway
+from thorn.models import db, User
 from thorn.permission_api import PermissionListApi
-from thorn.user_api import UserListApi
+from thorn.user_api import UserListApi, ChangePasswordWithTokenApi, \
+    ResetPasswordApi, ApproveUserApi
+from thorn.auth_api import ValidateTokenApi, AuthenticationApi
+from thorn.role_api import RoleListApi
 
 sqlalchemy_utils.i18n.get_locale = get_locale
 
@@ -32,7 +35,7 @@ babel = Babel(app)
 
 logging.config.fileConfig('logging_config.ini')
 
-app.secret_key = 'l3m0n4d1_thorn'
+app.secret_key = '0e36528dc34844e79963436a7af9258f'
 # Flask Admin 
 admin = Admin(app, name='Lemonade', template_mode='bootstrap3')
 
@@ -40,15 +43,25 @@ admin = Admin(app, name='Lemonade', template_mode='bootstrap3')
 CORS(app, resources={r"/*": {"origins": "*"}})
 api = Api(app)
 
+
 mappings = {
+    '/auth/validate': ValidateTokenApi,
+    '/auth': AuthenticationApi,
+    '/password/<int:user_id>/<token>': ChangePasswordWithTokenApi,
+    '/reset-password/<int:user_id>': ResetPasswordApi,
     '/permissions': PermissionListApi,
+    '/roles': RoleListApi,
     '/users': UserListApi,
-#    '/dashboards/<int:dashboard_id>': DashboardDetailApi,
-#    '/visualizations/<int:job_id>/<task_id>': VisualizationDetailApi,
-#    '/visualizations': VisualizationListApi,
+    '/approve/<int:user_id>': ApproveUserApi,
+    #    '/dashboards/<int:dashboard_id>': DashboardDetailApi,
+    #    '/visualizations/<int:job_id>/<task_id>': VisualizationDetailApi,
+    #    '/visualizations': VisualizationListApi,
 }
 for path, view in list(mappings.items()):
     api.add_resource(view, path)
+
+app.add_url_rule('/api/v1/<path:path>', view_func=ApiGateway.as_view('gateway'),
+                 methods=['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'])
 
 
 @babel.localeselector
@@ -73,11 +86,13 @@ def main(is_main_module):
         app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
         app.config['SQLALCHEMY_POOL_SIZE'] = 10
         app.config['SQLALCHEMY_POOL_RECYCLE'] = 240
+        app.config['RQ_REDIS_URL'] = config['servers']['redis_url']
 
         app.config.update(config.get('config', {}))
         app.config['THORN_CONFIG'] = config
 
         db.init_app(app)
+        rq.init_app(app)
 
         port = int(config.get('port', 5000))
         logger.debug('Running in %s mode', config.get('environment'))

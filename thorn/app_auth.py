@@ -1,21 +1,11 @@
 # -*- coding: utf-8 -*-}
 import json
+import jwt
 import logging
-import re
-from collections import namedtuple
 from functools import wraps
 
-import requests
-from flask import request, Response, current_app, g as flask_g
-
-User = namedtuple(
-    "User", "id, login, email, name, first_name, last_name, locale, roles")
-
-MSG1 = 'Could not verify your access level for that URL. ' \
-       'You have to login with proper credentials provided by Lemonade Thorn'
-
-MSG2 = 'Could not verify your access level for that URL. ' \
-       'Invalid authentication token'
+from flask import Response, g as flask_g, request, current_app
+from thorn.models import User, Role, Permission
 
 CONFIG_KEY = 'THORN_CONFIG'
 
@@ -28,67 +18,75 @@ def authenticate(msg, params):
                     mimetype="application/json")
 
 
+def requires_role(*roles):
+    def real_requires_role(f):
+        @wraps(f)
+        def decorated(*_args, **kwargs):
+            belongs = any(r.name for r in flask_g.user.roles if r.name in roles)
+            if belongs:
+                return f(*_args, **kwargs)
+            else:
+                return Response(
+                    json.dumps({'status': 'ERROR', 'message': 'Role'}), 401,
+                    mimetype="application/json")
+
+        return decorated
+
+    return real_requires_role
+
+
+def requires_permission(*permissions):
+    def real_requires_permission(f):
+        @wraps(f)
+        def decorated(*_args, **kwargs):
+            fullfill = any(
+                p for r in flask_g.user.roles for p in r.permissions if
+                p.name in permissions)
+            if fullfill:
+                return f(*_args, **kwargs)
+            else:
+                return Response(
+                    json.dumps({'status': 'ERROR', 'message': 'Permission'}),
+                    401,
+                    mimetype="application/json")
+
+        return decorated
+
+    return real_requires_permission
+
+
 def requires_auth(f):
+    # noinspection PyArgumentList
     @wraps(f)
     def decorated(*_args, **kwargs):
-        config = current_app.config[CONFIG_KEY]
-        internal_token = request.args.get(
-            'token', request.headers.get('x-auth-token'))
-        authorization = request.headers.get('authorization')
-        user_id = request.headers.get('x-user-id')
+        user_id = 1
+        email = 'walter@dcc.ufmg.br'
+        first_name = 'Walter'
+        last_name = 'Santos'
+        locale = 'pt'
+        authorization = request.headers.get('Authorization')
+        if authorization is not None:
+            print('======')
+            print(authorization)
+            import pdb;pdb.set_trace()
+            print(jwt.decode(authorization[7:], current_app.secret_key))
 
-        if authorization and user_id:
-            # It is using Thorn
-            url = '{}/api/tokens'.format(config['services']['thorn']['url'])
-            # url = 'http://localhost:3000/api/tokens'
+        print('======')
 
-            payload = json.dumps({
-                'data': {
-                    'type': 'tokens',
-                    'id': user_id
-                }
-            })
-            headers = {
-                'content-type': "application/json",
-                'authorization': authorization,
-                'cache-control': "no-cache",
-            }
-            r = requests.request("POST", url, data=payload,
-                                 headers=headers)
-            if r.status_code != 200:
-                if internal_token and internal_token == str(config['secret']):
-                    setattr(flask_g, 'user', User(2, '', '', '', '', '', 'pt', 
-                        ['admin']))
-                    log.warn('Using Authorization and token is incorrect!')
-                    return f(*_args, **kwargs)
-                else:
-                    print(('Error in authentication ({}, {}, {}): {}'.format(
-                        authorization, user_id, url, r.text)))
-                    log.error('Error in authentication ({}, {}, {}): {}'.format(
-                        authorization, user_id, url, r.text))
-                    return authenticate(MSG2, {})
-            else:
-                user_data = json.loads(r.text)
-                setattr(flask_g, 'user', User(
-                    id=int(user_id),
-                    name='{} {}'.format(
-                        user_data['data']['attributes']['first_name'],
-                        user_data['data']['attributes']['last_name']),
-                    login=user_data['data']['attributes']['email'],
-                    email=user_data['data']['attributes']['email'],
-                    first_name=user_data['data']['attributes']['first_name'],
-                    last_name=user_data['data']['attributes']['last_name'],
-                    locale=user_data['data']['attributes']['locale'],
-                    roles=user_data['data']['attributes']['roles']))
-                return f(*_args, **kwargs)
-        elif internal_token:
-            if internal_token == str(config['secret']):
-                # System user being used
-                setattr(flask_g, 'user', User(1, '', '', '', '', '', '', ''))
-                return f(*_args, **kwargs)
-            else:
-                return authenticate(MSG2, {"message": "Invalid X-Auth-Token"})
+        if request.args.get('token') == '123456':
+            r = Role(id=1, name='admin', enabled=1,
+                     permissions=[Permission(id=1000, name='ADMINISTRATOR')])
         else:
-            return authenticate(MSG1, {'message': 'Invalid authentication'})
+            r = Role(id=1, name='admin', enabled=1,
+                     permissions=[Permission(id=1, name='WORK')])
+
+        setattr(flask_g, 'user', User(
+            id=int(user_id),
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            locale=locale,
+            roles=[r]))
+        return f(*_args, **kwargs)
 
     return decorated

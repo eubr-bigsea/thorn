@@ -39,6 +39,7 @@ def upgrade():
     op.create_table('user',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('enabled', sa.Boolean(), nullable=False),
+                    sa.Column('login', sa.String(length=255), nullable=False),
                     sa.Column('email', sa.String(length=255), nullable=False),
                     sa.Column('encrypted_password', sa.String(length=255),
                               nullable=False),
@@ -59,6 +60,8 @@ def upgrade():
                     sa.Column('confirmation_sent_at', sa.DateTime(),
                               nullable=True),
                     sa.Column('unconfirmed_email', sa.String(length=200),
+                              nullable=True),
+                    sa.Column('notes', sa.String(length=500),
                               nullable=True),
                     sa.PrimaryKeyConstraint('id')
                     )

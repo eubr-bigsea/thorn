@@ -35,7 +35,6 @@ class PermissionListResponseSchema(Schema):
     description = fields.String(required=True)
     applicable_to = fields.String(required=False, allow_none=True,
                                   validate=[OneOf(list(AssetType.__dict__.keys()))])
-    enabled = fields.Boolean(required=True, default=True)
 
     # noinspection PyUnresolvedReferences
     @post_load
@@ -53,7 +52,32 @@ class RoleListResponseSchema(Schema):
     name = fields.String(required=True)
     description = fields.String(required=True)
     all_user = fields.Boolean(required=True, default=False)
+    permissions = fields.Nested(
+        'thorn.schema.PermissionListResponseSchema',
+        required=True,
+        many=True)
+
+    # noinspection PyUnresolvedReferences
+    @post_load
+    def make_object(self, data):
+        """ Deserialize data into an instance of Role"""
+        return Role(**data)
+
+    class Meta:
+        ordered = True
+
+
+class RoleItemResponseSchema(Schema):
+    """ JSON serialization schema """
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    description = fields.String(required=True)
+    all_user = fields.Boolean(required=True, default=False)
     enabled = fields.Boolean(required=True, default=True)
+    permissions = fields.Nested(
+        'thorn.schema.PermissionItemResponseSchema',
+        required=True,
+        many=True)
 
     # noinspection PyUnresolvedReferences
     @post_load
@@ -68,8 +92,10 @@ class RoleListResponseSchema(Schema):
 class UserListResponseSchema(Schema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
+    login = fields.String(required=True)
     email = fields.String(required=True)
-    enabled = fields.Boolean(required=True, default=True)
+    authentication_type = fields.String(required=False, allow_none=True, missing='INTERNAL',
+                                        validate=[OneOf(list(AuthenticationType.__dict__.keys()))])
     created_at = fields.DateTime(
         required=True,
         default=datetime.datetime.utcnow)
@@ -80,6 +106,7 @@ class UserListResponseSchema(Schema):
     first_name = fields.String(required=False, allow_none=True)
     last_name = fields.String(required=False, allow_none=True)
     locale = fields.String(required=False, allow_none=True)
+    notes = fields.String(required=False, allow_none=True)
     roles = fields.Nested(
         'thorn.schema.RoleListResponseSchema',
         required=True,

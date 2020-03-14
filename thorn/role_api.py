@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-}
-from thorn.app_auth import requires_auth, requires_permission
+from thorn.app_auth import requires_auth, requires_role
 from flask import request, current_app, g as flask_globals
 from flask_restful import Resource
 from sqlalchemy import or_
@@ -15,15 +15,16 @@ log = logging.getLogger(__name__)
 # endregion
 
 
-class PermissionListApi(Resource):
-    """ REST API for listing class Permission """
+class RoleListApi(Resource):
+    """ REST API for listing class Role """
 
     def __init__(self):
-        self.human_name = gettext('Permission')
+        self.human_name = gettext('Role')
 
     @requires_auth
-    @requires_permission('ADMINISTRATOR')
+    @requires_role('admin')
     def get(self):
+        print(flask_globals.user)
         if request.args.get('fields'):
             only = [f.strip() for f in request.args.get('fields').split(',')]
         else:
@@ -31,18 +32,18 @@ class PermissionListApi(Resource):
                 'simple', 'false') == 'true' else None
         enabled_filter = request.args.get('enabled')
         if enabled_filter:
-            permissions = Permission.query.filter(
-                Permission.enabled == (enabled_filter != 'false'))
+            roles = Role.query.filter(
+                Role.enabled == (enabled_filter != 'false'))
         else:
-            permissions = Permission.query
+            roles = Role.query
 
         page = request.args.get('page') or '1'
         if page is not None and page.isdigit():
             page_size = int(request.args.get('size', 20))
             page = int(page)
-            pagination = permissions.paginate(page, page_size, True)
+            pagination = roles.paginate(page, page_size, True)
             result = {
-                'data': PermissionListResponseSchema(
+                'data': RoleListResponseSchema(
                     many=True, only=only).dump(pagination.items),
                 'pagination': {
                     'page': page, 'size': page_size,
@@ -51,9 +52,9 @@ class PermissionListApi(Resource):
             }
         else:
             result = {
-                'data': PermissionListResponseSchema(
+                'data': RoleListResponseSchema(
                     many=True, only=only).dump(
-                    permissions)}
+                    roles)}
 
         if log.isEnabledFor(logging.DEBUG):
             log.debug(gettext('Listing %(name)s', name=self.human_name))

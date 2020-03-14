@@ -1,22 +1,100 @@
 # -*- coding: utf-8 -*-}
-from thorn.app_auth import requires_auth
+from thorn.app_auth import requires_auth, requires_permission
 from flask import request, current_app, g as flask_globals
 from flask_restful import Resource
 from sqlalchemy import or_
 
 import math
+import uuid
+import datetime
+import rq
 import logging
 from thorn.schema import *
 from flask_babel import gettext
+from thorn.jobs import send_email
 
 log = logging.getLogger(__name__)
 
 # region Protected\s*
+class ChangeLocaleApi(Resource):
+    @requires_auth
+    def change_locale(self, user_id):
+        pass
+
+class ApproveUserApi(Resource):
+    @staticmethod
+    @requires_auth
+    @requires_permission('ADMINISTRATOR')
+    def post(user_id):
+        user = User.query.get(user_id)
+        if not user:
+            return {'status': 'ERROR', 'msg': 'not found'}, 404
+        user.confirmed_at = datetime.datetime.now()
+        job = send_email.queue(
+                subject=gettext('Registration confirmed'), 
+                to='waltersf@gmail.com', 
+                name='Walter dos Santos Filho',
+                template='confirm',
+                url='https://fixme.lemonade.org.br',
+                queue='thorn',)
+        user.enabled = True
+        db.session.add(user)
+        db.session.commit()
+        return {'status': 'OK', 'msg': 'fixme'}, 200
+class ResetPasswordApi(Resource):
+    @staticmethod
+    @requires_auth
+    def post(user_id):
+        user = User.query.get(user_id)
+        if not user:
+            return {'status': 'ERROR', 'msg': 'not found'}, 404
+        user.reset_password_token = uuid.uuid4().hex
+        user.reset_password_sent_at = datetime.datetime.now() 
+        job = send_email.queue(
+                subject=gettext('Reset password instructions'), 
+                to='waltersf@gmail.com', 
+                name='Walter dos Santos Filho',
+                template='reset_password',
+                link='https://fixme.lemonade.org.br/fixme',
+                queue='thorn')
+        db.session.add(user)
+        db.session.commit()
+        return {'status': 'OK'}
+        
+class ChangePasswordWithTokenApi(Resource):
+    @staticmethod
+    def get(user_id, token):
+        user = User.query.get(user_id)
+        if not user:
+            return {'status': 'ERROR', 'msg': 'not found'}, 404
+        if user.reset_password_token == token:
+            user.enabled = True
+            db.session.add(user)
+            db.session.commit()
+            return {'status': 'OK', 'msg': 'FIXME'}, 200 
+        else:
+            return {'status': 'ERROR', 'msg': 'Invalid token'}, 401
+    @staticmethod
+    def post(user_id, token):
+        user = User.query.get(user_id)
+        if not user:
+            return {'status': 'ERROR', 'msg': 'not found'}, 404
+        if user.reset_password_token == token:
+            user.enabled = True
+            user.reset_password_token = None
+            user.encrypted_password = '11'
+            db.session.add(user)
+            db.session.commit()
+            return {'status': 'OK', 'msg': 'FIXME'}, 200 
+        else:
+            return {'status': 'ERROR', 'msg': 'Invalid token'}, 401
+
+
+def has_permission(permission):
+    user = flask_globals.user
+    return any(p for r in user.roles 
+            for p in r.permissions if p.name == permission)
 # endregion
-def translate_validation(validation_errors):
-    for field, errors in list(validation_errors.items()):
-        validation_errors[field] = [gettext(error) for error in errors]
-    return validation_errors
 
 
 class UserListApi(Resource):
@@ -32,8 +110,16 @@ class UserListApi(Resource):
         else:
             only = ('id', ) if request.args.get(
                 'simple', 'false') == 'true' else None
-        users = User.query.all()
+        enabled_filter = request.args.get('enabled')
+        if enabled_filter:
+            users = User.query.filter(
+                User.enabled == (enabled_filter != 'false'))
+        else:
+            users = User.query
 
+        exclude = [] if has_permission('ADMINISTRATOR') else [
+                'email', 'notes', 'updated_at', 'created_at', 'locale', 
+                'roles']
         page = request.args.get('page') or '1'
         if page is not None and page.isdigit():
             page_size = int(request.args.get('size', 20))
@@ -41,7 +127,7 @@ class UserListApi(Resource):
             pagination = users.paginate(page, page_size, True)
             result = {
                 'data': UserListResponseSchema(
-                    many=True, only=only).dump(pagination.items),
+                    many=True, only=only, exclude=exclude).dump(pagination.items),
                 'pagination': {
                     'page': page, 'size': page_size,
                     'total': pagination.total,
@@ -50,7 +136,7 @@ class UserListApi(Resource):
         else:
             result = {
                 'data': UserListResponseSchema(
-                    many=True, only=only).dump(
+                    many=True, only=only, exclude=exclude).dump(
                     users)}
 
         if log.isEnabledFor(logging.DEBUG):
@@ -78,7 +164,7 @@ class UserListApi(Resource):
                     user = form.data
                     db.session.add(user)
                     db.session.commit()
-                    result = response_schema.dump(user).data
+                    result = response_schema.dump(user)
                     return_code = 200
                 except Exception as e:
                     result = {'status': 'ERROR',
@@ -111,7 +197,7 @@ class UserDetailApi(Resource):
             result = {
                 'status': 'OK',
                 'data': [UserItemResponseSchema().dump(
-                    user).data]
+                    user)]
             }
         else:
             return_code = 404
@@ -185,7 +271,7 @@ class UserDetailApi(Resource):
                                 n=self.human_name,
                                 id=user_id),
                             'data': [response_schema.dump(
-                                user).data]
+                                user)]
                         }
                 except Exception as e:
                     result = {'status': 'ERROR',

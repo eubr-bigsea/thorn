@@ -7,6 +7,7 @@ Create Date: 2020-03-02 09:28:48.614317
 """
 import datetime
 
+import bcrypt
 from alembic import context
 from alembic import op
 from sqlalchemy import String, Integer, DateTime
@@ -15,7 +16,7 @@ from sqlalchemy.sql import table, column
 
 # revision identifiers, used by Alembic.
 revision = '1fba1a39c681'
-down_revision = '9218f15233f8'
+down_revision = '2f93dbc61a5d'
 branch_labels = None
 depends_on = None
 
@@ -53,6 +54,8 @@ def _insert_permissions():
         (100, 'USER_MANAGE', 'USER', 1),
         (101, 'STORAGE_MANAGE', 'SYSTEM', 1),
         (102, 'CLUSTER_MANAGE', 'SYSTEM', 1),
+
+        (1000, 'ADMINISTRATOR', 'SYSTEM', 1),
 
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
@@ -111,6 +114,9 @@ def _insert_permission_translations():
         (102, 'pt', 'Gerenciar clusters'),
         (102, 'en', 'Manage clusters'),
 
+        (1000, 'en', 'Administrator'),
+        (1000, 'pt', 'Administrador'),
+
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
     op.bulk_insert(tb, rows)
@@ -130,8 +136,10 @@ def _insert_admin():
     )
 
     columns = [c.name for c in tb.columns]
+    hashed = bcrypt.hashpw('admin'.encode('utf8'),
+                           bcrypt.gensalt(12))
     data = [
-        (1, 'admin@lemonade.org.br', 'FIXME', datetime.datetime.now(),
+        (1, 'admin@lemonade.org.br', hashed, datetime.datetime.now(),
          'Admin', '', 'pt', 1),
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
@@ -177,7 +185,7 @@ def _insert_user_roles():
     tb = table(
         'user_role',
         column('user_id', Integer),
-        column('role_id', String),
+        column('role_id', Integer),
     )
     columns = [c.name for c in tb.columns]
     data = [
@@ -187,12 +195,44 @@ def _insert_user_roles():
     op.bulk_insert(tb, rows)
 
 
+def _insert_role_permission():
+    tb = table(
+        'role_permission',
+        column('role_id', Integer),
+        column('permission_id', Integer),
+    )
+    columns = [c.name for c in tb.columns]
+    data = [
+        (1, 1000),
+    ]
+    rows = [dict(list(zip(columns, row))) for row in data]
+    op.bulk_insert(tb, rows)
+
+
+def _insert_configuration():
+    tb = table(
+        'configuration',
+        column('id', Integer),
+        column('name', String),
+        column('value', String),
+        column('enabled', Integer),
+    )
+    columns = [c.name for c in tb.columns]
+    data = [
+        (1, 'LDAP_SERVER', 'ldap.domain.com', 1),
+        (2, 'LDAP_BASE_DN', 'dc=domain,dc=com', 1),
+        (3, 'LDAP_USER_DN', 'uid={login},ou=People,dc=domain,dc=com', 1),
+    ]
+    rows = [dict(list(zip(columns, row))) for row in data]
+    op.bulk_insert(tb, rows)
+
+
 all_commands = [
     (_insert_permissions, 'DELETE FROM permission WHERE id BETWEEN 1 AND 16 OR '
-                          'id BETWEEN 100 AND 102'),
+                          'id BETWEEN 100 AND 102 OR id BETWEEN 1000 AND 1000'),
     (_insert_permission_translations,
      'DELETE FROM permission_translation WHERE id BETWEEN 1 AND 16 OR '
-     'id BETWEEN 100 AND 102'),
+     'id BETWEEN 100 AND 102 OR id BETWEEN 1000 AND 1000'),
 
     (_insert_admin, 'DELETE FROM user WHERE id BETWEEN 1 AND 1 '),
     (_insert_roles, 'DELETE FROM role WHERE id BETWEEN 1 AND 1 OR id '
@@ -200,7 +240,10 @@ all_commands = [
     (_insert_role_translations,
      'DELETE FROM role_translation WHERE id BETWEEN 1 AND 1 OR id '
      'BETWEEN 100 AND 100'),
-    (_insert_user_roles, 'DELETE FROM user_role WHERE user_id BETWEEN 1 AND 1')
+    (_insert_user_roles, 'DELETE FROM user_role WHERE user_id BETWEEN 1 AND 1'),
+
+    (_insert_role_permission, 'DELETE FROM role_permission WHERE role_id = 1 '
+                              'AND permission_id = 1000')
 ]
 
 

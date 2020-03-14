@@ -33,6 +33,18 @@ class AssetType:
                 if n[0] != '_' and n != 'values']
 
 
+# noinspection PyClassHasNoInit
+class AuthenticationType:
+    AD = 'AD'
+    INTERNAL = 'INTERNAL'
+    LDAP = 'LDAP'
+
+    @staticmethod
+    def values():
+        return [n for n in list(AuthenticationType.__dict__.keys())
+                if n[0] != '_' and n != 'values']
+
+
 class Asset(db.Model):
     """ A protected asset in Lemonade """
     __tablename__ = 'asset'
@@ -85,6 +97,36 @@ class ConfigurationTranslation(translation_base(Configuration)):
     description = Column(Unicode(100))
 
 
+class ManagedResource(db.Model):
+    """ Resource managed by thorn """
+    __tablename__ = 'managed_resource'
+
+    # Fields
+    id = Column(Integer, primary_key=True)
+    path = Column(String(1000), nullable=False)
+    target = Column(String(1000), nullable=False)
+    allowed_methods = Column(String(200),
+                             default='*', nullable=False)
+
+    # Associations
+    # noinspection PyUnresolvedReferences
+    managed_resource_role = db.Table(
+        'managed_resource_role',
+        Column('managed_resource_id', Integer,
+               ForeignKey('managed_resource.id'), nullable=False),
+        Column('role_id', Integer,
+               ForeignKey('role.id'), nullable=False))
+    roles = relationship(
+        "Role",
+        secondary=managed_resource_role)
+
+    def __unicode__(self):
+        return self.path
+
+    def __repr__(self):
+        return '<Instance {}: {}>'.format(self.__class__, self.id)
+
+
 class Permission(db.Model, Translatable):
     """ Permission in Lemonade """
     __tablename__ = 'permission'
@@ -126,6 +168,22 @@ class Role(db.Model, Translatable):
     enabled = Column(Boolean,
                      default=True, nullable=False)
 
+    # Associations
+    # noinspection PyUnresolvedReferences
+    role_permission = db.Table(
+        'role_permission',
+        Column('role_id', Integer,
+               ForeignKey('role.id'), nullable=False),
+        Column('permission_id', Integer,
+               ForeignKey('permission.id'), nullable=False))
+    permissions = relationship(
+        "Permission",
+        secondary=role_permission,
+        secondaryjoin=(
+            "and_("
+            "Permission.id==role_permission.c.permission_id,"
+            "Permission.enabled==1)"))
+
     def __unicode__(self):
         return self.name
 
@@ -147,17 +205,19 @@ class User(db.Model):
 
     # Fields
     id = Column(Integer, primary_key=True)
+    login = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False)
     enabled = Column(Boolean,
                      default=True, nullable=False)
+    authentication_type = Column(Enum(*list(AuthenticationType.values()),
+                                      name='AuthenticationTypeEnumType'),
+                                 default='INTERNAL')
     encrypted_password = Column(String(255), nullable=False)
     reset_password_token = Column(String(255))
     reset_password_sent_at = Column(DateTime,
                                     default=datetime.datetime.utcnow,
                                     onupdate=datetime.datetime.utcnow)
-    remember_created_at = Column(DateTime,
-                                 default=datetime.datetime.utcnow,
-                                 onupdate=datetime.datetime.utcnow)
+    remember_created_at = Column(DateTime)
     created_at = Column(DateTime,
                         default=datetime.datetime.utcnow, nullable=False,
                         onupdate=datetime.datetime.utcnow)
@@ -167,13 +227,10 @@ class User(db.Model):
     first_name = Column(String(255))
     last_name = Column(String(255))
     locale = Column(String(20))
-    confirmed_at = Column(DateTime,
-                          default=datetime.datetime.utcnow,
-                          onupdate=datetime.datetime.utcnow)
-    confirmation_sent_at = Column(DateTime,
-                                  default=datetime.datetime.utcnow,
-                                  onupdate=datetime.datetime.utcnow)
+    confirmed_at = Column(DateTime)
+    confirmation_sent_at = Column(DateTime)
     unconfirmed_email = Column(String(200))
+    notes = Column(String(500))
 
     # Associations
     # noinspection PyUnresolvedReferences
@@ -185,10 +242,14 @@ class User(db.Model):
                ForeignKey('role.id'), nullable=False))
     roles = relationship(
         "Role",
-        secondary=user_role)
+        secondary=user_role,
+        secondaryjoin=(
+            "and_("
+            "Role.id==user_role.c.role_id,"
+            "Role.enabled==1)"))
 
     def __unicode__(self):
-        return self.email
+        return self.login
 
     def __repr__(self):
         return '<Instance {}: {}>'.format(self.__class__, self.id)
