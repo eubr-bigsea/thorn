@@ -7,14 +7,48 @@ from flask import request, current_app, Response
 from flask_restful import Resource
 from thorn.models import User, Role, Permission, db, AuthenticationType
 from thorn.util import check_password, ldap_authentication, encrypt_password
+from gettext import gettext 
 
 log = logging.getLogger(__name__)
+
+def _internal_authentication():
+    pass
+def _ldap_authentication():
+    pass
+def _get_jwt_token(user):
+    return jwt.encode(
+         {
+             'id': user.id,
+             'name': '{} {}'.format(
+                 user.first_name, user.last_name).strip(),
+             'email': user.email, 
+             'login': user.email, 
+             'locale': user.locale,
+             'permissions': [p.name for r in user.roles 
+                 for p in r.permissions]
+         }, current_app.secret_key).decode('utf8')
+
+def _success(user):
+     return Response(json.dumps({'status': 'OK', 
+         'token': _get_jwt_token(user)}), 200,
+         mimetype="application/json")
+
+def _create_ldap_user():
+    first_name, last_name = ldap_user.get(
+            'displayName')[0].decode('utf8').split(' ', 1)
+    user = User(login=login, email=ldap_user.get('mail', [''])[0],
+            notes=gettext('LDAP User'), first_name=first_name,
+            last_name=last_name.strip(), 
+            authentication_type=AuthenticationType.LDAP,
+            encrypted_password=encrypt_password('dummy'))
+    db.session.add(user)
+    db.session.commit()
 
 class AuthenticationApi(Resource):
     """"""
     def post(self):
 
-        msg = 'Invalid login or password'
+        msg = gettext('Invalid login or password')
         result = Response(json.dumps({'status': 'ERROR', 'message': msg}), 401,
                     mimetype="application/json")
         password = request.form.get('password')
@@ -23,51 +57,24 @@ class AuthenticationApi(Resource):
             user = User.query.filter(User.login == login).first()
             if user:
                 if user.enabled:
-                     if check_password(password.encode('utf8'), 
-                             user.encrypted_password.encode('utf8')):
-                         token = jwt.encode(
-                                 {
-                                     'id': user.id,
-                                     'name': '{} {}'.format(
-                                         user.first_name, user.last_name).strip(),
-                                     'email': user.email, 
-                                     'login': user.email, 
-                                     'locale': user.locale, 
-                                     'permissions': [p.name for r in user.roles 
-                                         for p in r.permissions]
-                                 }, current_app.secret_key)
-                         result = Response(json.dumps({'status': 'OR', 
-                             'token': token.decode('utf8')}), 200,
-                             mimetype="application/json")
+                    if user.authentication_type == AuthenticationType.INTERNAL:
+                         if check_password(password.encode('utf8'), 
+                                 user.encrypted_password.encode('utf8')):
+                             result = _success(user)
+                    elif user.authentication_type == AuthenticationType.LDAP:
+                        ldap_user = ldap_authentication(login, password)[0][1]
+                        result = _success(user)
+                    else:
+                        log.warn(gettext('Unsupported authentication type'))
                 else:
-                    msg = 'User disabled'
+                    msg = gettext('User disabled')
                     result = Response(json.dumps({'status': 'ERROR', 'message': msg}), 401,
                                 mimetype="application/json")
             else:
                 ldap_user = ldap_authentication(login, password)[0][1]
-                first_name, last_name = ldap_user.get(
-                        'displayName')[0].decode('utf8').split(' ', 1)
-                user = User(login=login, email=ldap_user.get('mail', [''])[0],
-                        notes='LDAP User', first_name=first_name,
-                        last_name=last_name.strip(), 
-                        authentication_type=AuthenticationType.LDAP,
-                        encrypted_password=encrypt_password('dummy'))
-                db.session.add(user)
-                db.session.commit()
-                token = jwt.encode(
-                   {
-                       'id': user.id,
-                       'name': '{} {}'.format(
-                           user.first_name, user.last_name).strip(),
-                       'email': user.email, 
-                       'login': user.email, 
-                       'locale': user.locale,
-                       'permissions': [p.name for r in user.roles 
-                           for p in r.permissions]
-                   }, current_app.secret_key)
-
+                _create_ldap_user(ldap_user)
                 result = Response(json.dumps({'status': 'OR', 
-                    'token': token.decode('utf8')}), 200,
+                    'token': _get_jwt_token(user)}), 200,
                     mimetype="application/json")
 
         return result
