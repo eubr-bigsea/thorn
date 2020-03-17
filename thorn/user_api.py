@@ -92,8 +92,9 @@ class ChangePasswordWithTokenApi(Resource):
 
 def has_permission(permission):
     user = flask_globals.user
-    return any(p for r in user.roles 
-            for p in r.permissions if p.name == permission)
+    return permission in user.permissions
+    # return any(p for r in user.roles 
+    #         for p in r.permissions if p.name == permission)
 # endregion
 
 
@@ -245,7 +246,7 @@ class UserDetailApi(Resource):
     @requires_auth
     def patch(self, user_id):
         result = {'status': 'ERROR', 'message': gettext('Insufficient data.')}
-        return_code = 404
+        return_code = 400
 
         if log.isEnabledFor(logging.DEBUG):
             log.debug(gettext('Updating %s (id=%s)'), self.human_name,
