@@ -23,14 +23,14 @@ from thorn.gateway import ApiGateway
 from thorn.models import db, User
 from thorn.permission_api import PermissionListApi
 from thorn.user_api import UserListApi, ChangePasswordWithTokenApi, \
-    ResetPasswordApi, ApproveUserApi
+    ResetPasswordApi, ApproveUserApi, UserDetailApi
 from thorn.auth_api import ValidateTokenApi, AuthenticationApi
-from thorn.role_api import RoleListApi
+from thorn.role_api import RoleListApi, RoleDetailApi
 
 sqlalchemy_utils.i18n.get_locale = get_locale
 
 app = Flask(__name__)
-
+app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.abspath(           'thorn/i18n/locales') 
 babel = Babel(app)
 
 logging.config.fileConfig('logging_config.ini')
@@ -51,7 +51,9 @@ mappings = {
     '/reset-password/<int:user_id>': ResetPasswordApi,
     '/permissions': PermissionListApi,
     '/roles': RoleListApi,
+    '/roles/<int:role_id>': RoleDetailApi,
     '/users': UserListApi,
+    '/users/<int:user_id>': UserDetailApi,
     '/approve/<int:user_id>': ApproveUserApi,
     #    '/dashboards/<int:dashboard_id>': DashboardDetailApi,
     #    '/visualizations/<int:job_id>/<task_id>': VisualizationDetailApi,
@@ -66,7 +68,7 @@ app.add_url_rule('/api/v1/<path:path>', view_func=ApiGateway.as_view('gateway'),
 
 @babel.localeselector
 def get_locale():
-    return request.args.get('lang', 'en')
+    return request.headers.get('X-Locale', 'pt')
 
 
 def main(is_main_module):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-}
-from thorn.app_auth import requires_auth, requires_permission
+from thorn.app_auth import requires_auth
 from flask import request, current_app, g as flask_globals
 from flask_restful import Resource
 from sqlalchemy import or_
@@ -22,7 +22,6 @@ class PermissionListApi(Resource):
         self.human_name = gettext('Permission')
 
     @requires_auth
-    @requires_permission('ADMINISTRATOR')
     def get(self):
         if request.args.get('fields'):
             only = [f.strip() for f in request.args.get('fields').split(',')]

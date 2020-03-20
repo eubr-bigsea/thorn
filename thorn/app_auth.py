@@ -4,6 +4,7 @@ import jwt
 import logging
 from functools import wraps
 
+from collections import namedtuple
 from flask import Response, g as flask_g, request, current_app
 from thorn.models import User, Role, Permission
 
@@ -11,6 +12,9 @@ CONFIG_KEY = 'THORN_CONFIG'
 
 log = logging.getLogger(__name__)
 
+
+SessionUser = namedtuple(
+    "SessionUser", "id, login, email, name, first_name, last_name, locale, permissions")
 
 def authenticate(msg, params):
     """Sends a 403 response that enables basic auth"""
@@ -39,9 +43,11 @@ def requires_permission(*permissions):
     def real_requires_permission(f):
         @wraps(f)
         def decorated(*_args, **kwargs):
-            fullfill = any(
-                p for r in flask_g.user.roles for p in r.permissions if
-                p.name in permissions)
+            # fullfill = any(
+            #     p for r in flask_g.user.roles for p in r.permissions if
+            #     p.name in permissions)
+            fullfill = len(set(permissions).intersection(
+                    set(flask_g.user.permissions))) > 0
             if fullfill:
                 return f(*_args, **kwargs)
             else:
@@ -54,39 +60,23 @@ def requires_permission(*permissions):
 
     return real_requires_permission
 
-
 def requires_auth(f):
-    # noinspection PyArgumentList
     @wraps(f)
     def decorated(*_args, **kwargs):
-        user_id = 1
-        email = 'walter@dcc.ufmg.br'
-        first_name = 'Walter'
-        last_name = 'Santos'
-        locale = 'pt'
-        authorization = request.headers.get('Authorization')
-        if authorization is not None:
-            print('======')
-            print(authorization)
-            import pdb;pdb.set_trace()
-            print(jwt.decode(authorization[7:], current_app.secret_key))
+        config = current_app.config[CONFIG_KEY]
+        # TODO: User uma configuração / chave no thorn conhecida aqui
+        user_id = request.headers.get('x-user-id')
+        permissions = request.headers.get('x-permissions')
+        user_data = request.headers.get('x-user-data')
 
-        print('======')
-
-        if request.args.get('token') == '123456':
-            r = Role(id=1, name='admin', enabled=1,
-                     permissions=[Permission(id=1000, name='ADMINISTRATOR')])
+        if all([user_data, user_id, permissions]):
+            login, email, name, locale = user_data.split(';')
+            setattr(flask_g, 'user', 
+                    SessionUser(user_id, login, email, name, locale, '', '',
+                permissions.split(',')))
+            return f(*_args, **kwargs)
         else:
-            r = Role(id=1, name='admin', enabled=1,
-                     permissions=[Permission(id=1, name='WORK')])
-
-        setattr(flask_g, 'user', User(
-            id=int(user_id),
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            locale=locale,
-            roles=[r]))
-        return f(*_args, **kwargs)
+            return authenticate(MSG1, {'message': 'Invalid authentication'})
 
     return decorated
+

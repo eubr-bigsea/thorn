@@ -126,6 +126,7 @@ def _insert_admin():
     tb = table(
         'user',
         column('id', Integer),
+        column('login', String),
         column('email', String),
         column('encrypted_password', String),
         column('created_at', DateTime),
@@ -133,14 +134,15 @@ def _insert_admin():
         column('last_name', String),
         column('locale', String),
         column('enabled', Integer),
+        column('authentication_type', String),
     )
 
     columns = [c.name for c in tb.columns]
     hashed = bcrypt.hashpw('admin'.encode('utf8'),
-                           bcrypt.gensalt(12))
+                           bcrypt.gensalt(12)).decode('utf8')
     data = [
-        (1, 'admin@lemonade.org.br', hashed, datetime.datetime.now(),
-         'Admin', '', 'pt', 1),
+        (1, 'admin@lemonade.org.br', 'admin@lemonade.org.br',
+         hashed, datetime.datetime.now(), 'Admin', '', 'pt', 1, 'INTERNAL'),
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
     op.bulk_insert(tb, rows)

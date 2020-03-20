@@ -10,7 +10,7 @@ import datetime
 import rq
 import logging
 from thorn.schema import *
-from flask_babel import gettext
+from flask_babel import gettext, get_locale
 from thorn.jobs import send_email
 
 log = logging.getLogger(__name__)
@@ -198,7 +198,7 @@ class UserDetailApi(Resource):
             result = {
                 'status': 'OK',
                 'data': [UserItemResponseSchema().dump(
-                    user)]
+                    user).data]
             }
         else:
             return_code = 404
@@ -220,7 +220,8 @@ class UserDetailApi(Resource):
         user = User.query.get(user_id)
         if user is not None:
             try:
-                db.session.delete(user)
+                user.enabled = False
+                db.session.add(user)
                 db.session.commit()
                 result = {
                     'status': 'OK',

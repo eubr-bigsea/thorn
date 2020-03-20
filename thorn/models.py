@@ -63,7 +63,7 @@ class Asset(db.Model):
         "User",
         foreign_keys=[owner_id])
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def __repr__(self):
@@ -82,7 +82,7 @@ class Configuration(db.Model, Translatable):
     enabled = Column(Boolean,
                      default=True, nullable=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def __repr__(self):
@@ -120,7 +120,7 @@ class ManagedResource(db.Model):
         "Role",
         secondary=managed_resource_role)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.path
 
     def __repr__(self):
@@ -140,7 +140,7 @@ class Permission(db.Model, Translatable):
     enabled = Column(Boolean,
                      default=True, nullable=False)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def __repr__(self):
@@ -165,6 +165,8 @@ class Role(db.Model, Translatable):
     name = Column(String(100), nullable=False)
     all_user = Column(Boolean,
                       default=False, nullable=False)
+    system = Column(Boolean,
+                    default=False, nullable=False)
     enabled = Column(Boolean,
                      default=True, nullable=False)
 
@@ -184,7 +186,7 @@ class Role(db.Model, Translatable):
             "Permission.id==role_permission.c.permission_id,"
             "Permission.enabled==1)"))
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def __repr__(self):
@@ -215,12 +217,10 @@ class User(db.Model):
     encrypted_password = Column(String(255), nullable=False)
     reset_password_token = Column(String(255))
     reset_password_sent_at = Column(DateTime,
-                                    default=datetime.datetime.utcnow,
-                                    onupdate=datetime.datetime.utcnow)
+                                    default=datetime.datetime.utcnow)
     remember_created_at = Column(DateTime)
     created_at = Column(DateTime,
-                        default=datetime.datetime.utcnow, nullable=False,
-                        onupdate=datetime.datetime.utcnow)
+                        default=datetime.datetime.utcnow, nullable=False)
     updated_at = Column(DateTime,
                         default=datetime.datetime.utcnow,
                         onupdate=datetime.datetime.utcnow)
@@ -248,7 +248,7 @@ class User(db.Model):
             "Role.id==user_role.c.role_id,"
             "Role.enabled==1)"))
 
-    def __unicode__(self):
+    def __str__(self):
         return self.login
 
     def __repr__(self):
@@ -262,7 +262,7 @@ class UserPermissionForAsset(db.Model):
     # Fields
     id = Column(Integer, primary_key=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return 'UserPermissionForAsset'
 
     def __repr__(self):
