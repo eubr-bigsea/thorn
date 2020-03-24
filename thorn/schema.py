@@ -151,6 +151,10 @@ class UserListResponseSchema(Schema):
         'thorn.schema.RoleListResponseSchema',
         required=True,
         many=True)
+    full_name = fields.Function(
+        lambda x: "{} {}".format(
+            x.first_name,
+            x.last_name).strip())
 
     # noinspection PyUnresolvedReferences
     @post_load

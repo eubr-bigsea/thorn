@@ -46,7 +46,7 @@ api = Api(app)
 
 mappings = {
     '/auth/validate': ValidateTokenApi,
-    '/auth': AuthenticationApi,
+    '/auth/login': AuthenticationApi,
     '/password/<int:user_id>/<token>': ChangePasswordWithTokenApi,
     '/reset-password/<int:user_id>': ResetPasswordApi,
     '/permissions': PermissionListApi,

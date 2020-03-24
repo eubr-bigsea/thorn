@@ -28,8 +28,18 @@ def _get_jwt_token(user):
 
 
 def _success(user):
+    user_data = {
+            'id': user.id,
+            'email': user.email,
+            'login': user.login,
+            'locale': user.locale,
+            'name': user.first_name + ('' if not user.last_name else ' ' 
+                + user.last_name),
+            'roles': [r.name for r in user.roles]
+            }
     return Response(
-        json.dumps({'status': 'OK', 'token': _get_jwt_token(user)}), 200,
+            json.dumps({'status': 'OK', 'token': _get_jwt_token(user), 
+                'user': user_data}), 200,
         mimetype="application/json")
 
 
@@ -51,12 +61,16 @@ class AuthenticationApi(Resource):
     """
 
     def post(self):
-
         msg = gettext('Invalid login or password')
         result = Response(json.dumps({'status': 'ERROR', 'message': msg}), 401,
                           mimetype="application/json")
-        password = request.form.get('password')
-        login = request.form.get('login')
+
+        if 'application/json' in request.content_type:
+            password = request.json['user']['password']
+            login = request.json['user']['email']
+        else:
+            password = request.form.get('password')
+            login = request.form.get('login')
         if all([login, password]):
             user = User.query.filter(User.login == login).first()
             ldap_config = {}
@@ -96,10 +110,12 @@ class ValidateTokenApi(Resource):
 
     def post(self):
         status_code = 401
+        user = None
         authorization = request.headers.get('Authorization')
-        offset = 7
+        offset = 7 if authorization and authorization.startswith('Bearer ') else 0
         result = {'status': 'ERROR', 'msg': gettext('Invalid authentication')}
         if authorization is None:
+            qs = {}
             if 'X-Original-URI' in request.headers:
                 qs = urllib.parse.parse_qs(request.headers['X-Original-URI'])
             authorization = qs.get('token')[0] if 'token' in qs else None
@@ -109,7 +125,6 @@ class ValidateTokenApi(Resource):
             try:
                 decoded = jwt.decode(authorization[offset:],
                                      current_app.secret_key)
-                status_code = 200
                 result = {'X-User-Id': decoded.get('id'),
                           'X-Permissions': decoded.get('permissions'),
                           'X-Locale': decoded.get('locale'),
@@ -117,7 +132,7 @@ class ValidateTokenApi(Resource):
                               decoded.get('login'), decoded.get('email'),
                               decoded.get('name'), decoded.get('locale'))
                           }
+                status_code = 200
             except Exception as ex:
                 log.error(ex)
-
         return '', status_code, result

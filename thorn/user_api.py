@@ -128,7 +128,7 @@ class UserListApi(Resource):
             pagination = users.paginate(page, page_size, True)
             result = {
                 'data': UserListResponseSchema(
-                    many=True, only=only, exclude=exclude).dump(pagination.items),
+                    many=True, only=only, exclude=exclude).dump(pagination.items).data,
                 'pagination': {
                     'page': page, 'size': page_size,
                     'total': pagination.total,
