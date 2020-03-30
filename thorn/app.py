@@ -23,7 +23,8 @@ from thorn.gateway import ApiGateway
 from thorn.models import db, User
 from thorn.permission_api import PermissionListApi
 from thorn.user_api import UserListApi, ChangePasswordWithTokenApi, \
-    ResetPasswordApi, ApproveUserApi, UserDetailApi
+    ResetPasswordApi, ApproveUserApi, UserDetailApi, ProfileApi, \
+    RegisterApi
 from thorn.auth_api import ValidateTokenApi, AuthenticationApi
 from thorn.role_api import RoleListApi, RoleDetailApi
 
@@ -47,12 +48,14 @@ api = Api(app)
 mappings = {
     '/auth/validate': ValidateTokenApi,
     '/auth/login': AuthenticationApi,
-    '/password/<int:user_id>/<token>': ChangePasswordWithTokenApi,
-    '/reset-password/<int:user_id>': ResetPasswordApi,
+    '/password/reset/<token>': ChangePasswordWithTokenApi,
+    '/password/reset': ResetPasswordApi,
     '/permissions': PermissionListApi,
     '/roles': RoleListApi,
     '/roles/<int:role_id>': RoleDetailApi,
+    '/users/me': ProfileApi,
     '/users': UserListApi,
+    '/register': RegisterApi,
     '/users/<int:user_id>': UserDetailApi,
     '/approve/<int:user_id>': ApproveUserApi,
     #    '/dashboards/<int:dashboard_id>': DashboardDetailApi,
@@ -61,9 +64,6 @@ mappings = {
 }
 for path, view in list(mappings.items()):
     api.add_resource(view, path)
-
-app.add_url_rule('/api/v1/<path:path>', view_func=ApiGateway.as_view('gateway'),
-                 methods=['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'])
 
 
 @babel.localeselector

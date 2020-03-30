@@ -19,6 +19,18 @@ db = SQLAlchemy()
 
 
 # noinspection PyClassHasNoInit
+class UserStatus:
+    ENABLED = 'ENABLED'
+    DELETED = 'DELETED'
+    PENDING_APPROVAL = 'PENDING_APPROVAL'
+
+    @staticmethod
+    def values():
+        return [n for n in list(UserStatus.__dict__.keys())
+                if n[0] != '_' and n != 'values']
+
+
+# noinspection PyClassHasNoInit
 class AssetType:
     DASHBOARD = 'DASHBOARD'
     DATA_SOURCE = 'DATA_SOURCE'
@@ -95,6 +107,27 @@ class ConfigurationTranslation(translation_base(Configuration)):
 
     # Fields
     description = Column(Unicode(100))
+
+
+class MailQueue(db.Model):
+    """ Mail queue """
+    __tablename__ = 'mail_queue'
+
+    # Fields
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime,
+                     default=datetime.datetime.utcnow, nullable=False,
+                     onupdate=datetime.datetime.utcnow)
+    status = Column(String(50), nullable=False)
+    attempts = Column(Integer,
+                      default=0, nullable=False)
+    json_data = Column(LONGTEXT, nullable=False)
+
+    def __str__(self):
+        return self.created
+
+    def __repr__(self):
+        return '<Instance {}: {}>'.format(self.__class__, self.id)
 
 
 class ManagedResource(db.Model):
@@ -211,6 +244,9 @@ class User(db.Model):
     email = Column(String(255), nullable=False)
     enabled = Column(Boolean,
                      default=True, nullable=False)
+    status = Column(Enum(*list(UserStatus.values()),
+                         name='UserStatusEnumType'),
+                    default='ENABLED', nullable=False)
     authentication_type = Column(Enum(*list(AuthenticationType.values()),
                                       name='AuthenticationTypeEnumType'),
                                  default='INTERNAL')

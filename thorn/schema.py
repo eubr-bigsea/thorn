@@ -133,6 +133,8 @@ class UserListResponseSchema(Schema):
     login = fields.String(required=True)
     email = fields.String(required=True)
     enabled = fields.Boolean(required=True, default=True)
+    status = fields.String(required=True, default='ENABLED',
+                           validate=[OneOf(list(UserStatus.__dict__.keys()))])
     authentication_type = fields.String(required=False, allow_none=True, missing='INTERNAL',
                                         validate=[OneOf(list(AuthenticationType.__dict__.keys()))])
     created_at = fields.DateTime(
@@ -172,6 +174,8 @@ class UserItemResponseSchema(Schema):
     login = fields.String(required=True)
     email = fields.String(required=True)
     enabled = fields.Boolean(required=True, default=True)
+    status = fields.String(required=True, default='ENABLED',
+                           validate=[OneOf(list(UserStatus.__dict__.keys()))])
     authentication_type = fields.String(required=False, allow_none=True, missing='INTERNAL',
                                         validate=[OneOf(list(AuthenticationType.__dict__.keys()))])
     created_at = fields.DateTime(
@@ -207,22 +211,12 @@ class UserCreateRequestSchema(Schema):
     login = fields.String(required=True)
     email = fields.String(required=True)
     enabled = fields.Boolean(required=True, default=True)
+    status = fields.String(required=True, default='ENABLED',
+                           validate=[OneOf(list(UserStatus.__dict__.keys()))])
     authentication_type = fields.String(required=False, allow_none=True, missing='INTERNAL',
                                         validate=[OneOf(list(AuthenticationType.__dict__.keys()))])
     encrypted_password = fields.String(required=True)
-    reset_password_token = fields.String(required=False, allow_none=True)
-    reset_password_sent_at = fields.DateTime(
-        required=False,
-        allow_none=True,
-        missing=datetime.datetime.utcnow)
     remember_created_at = fields.DateTime(required=False, allow_none=True)
-    created_at = fields.DateTime(
-        required=True,
-        default=datetime.datetime.utcnow)
-    updated_at = fields.DateTime(
-        required=False,
-        allow_none=True,
-        missing=datetime.datetime.utcnow)
     first_name = fields.String(required=False, allow_none=True)
     last_name = fields.String(required=False, allow_none=True)
     locale = fields.String(required=False, allow_none=True)

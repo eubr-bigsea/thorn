@@ -12,6 +12,12 @@ CONFIG_KEY = 'THORN_CONFIG'
 
 log = logging.getLogger(__name__)
 
+MSG1 = 'Could not verify your access level for that URL. ' \
+       'You have to login with proper credentials provided by Lemonade Thorn'
+
+MSG2 = 'Could not verify your access level for that URL. ' \
+       'Invalid authentication token'
+
 
 SessionUser = namedtuple(
     "SessionUser", "id, login, email, name, first_name, last_name, locale, permissions")

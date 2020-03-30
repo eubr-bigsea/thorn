@@ -2,13 +2,14 @@
 import json
 import logging
 import urllib
-from gettext import gettext
 
 import jwt
+from thorn.app_auth import requires_auth, requires_permission
 from flask import request, current_app, Response
 from flask_restful import Resource
 from thorn.models import User, db, AuthenticationType
 from thorn.util import check_password, ldap_authentication, encrypt_password
+from flask_babel import force_locale, gettext, get_locale
 
 log = logging.getLogger(__name__)
 
@@ -61,10 +62,10 @@ class AuthenticationApi(Resource):
     """
 
     def post(self):
-        msg = gettext('Invalid login or password')
+        msg = gettext('Invalid login or password.')
         result = Response(json.dumps({'status': 'ERROR', 'message': msg}), 401,
                           mimetype="application/json")
-
+    
         if 'application/json' in request.content_type:
             password = request.json['user']['password']
             login = request.json['user']['email']
@@ -99,7 +100,7 @@ class AuthenticationApi(Resource):
                     result = Response(json.dumps(
                         {'status': 'OK', 'token': _get_jwt_token(user)}),
                         200, mimetype="application/json")
-
+    
         return result
 
 
@@ -107,10 +108,14 @@ class ValidateTokenApi(Resource):
     """
     Validates JWT tokens.
     """
+    @requires_auth
+    def get(self):
+        return "OK", 200
 
     def post(self):
         status_code = 401
         user = None
+
         authorization = request.headers.get('Authorization')
         offset = 7 if authorization and authorization.startswith('Bearer ') else 0
         result = {'status': 'ERROR', 'msg': gettext('Invalid authentication')}
@@ -120,12 +125,12 @@ class ValidateTokenApi(Resource):
                 qs = urllib.parse.parse_qs(request.headers['X-Original-URI'])
             authorization = qs.get('token')[0] if 'token' in qs else None
             offset = 0
-
         if authorization is not None:
             try:
                 decoded = jwt.decode(authorization[offset:],
                                      current_app.secret_key)
-                result = {'X-User-Id': decoded.get('id'),
+                result = {
+                          'X-User-Id': decoded.get('id'),
                           'X-Permissions': decoded.get('permissions'),
                           'X-Locale': decoded.get('locale'),
                           'X-User-Data': '{};{};{};{}'.format(
@@ -135,4 +140,13 @@ class ValidateTokenApi(Resource):
                 status_code = 200
             except Exception as ex:
                 log.error(ex)
+        else:
+            # Check if URL is unprotected
+            unprotected = current_app.config['THORN_CONFIG'].get(
+                'unprotected_urls', {})
+            path = request.headers.get('X-Original-URI', '').split('?')[0]
+            method = request.headers.get('X-Original-Method', 'INVALID')
+            if method in unprotected.get(path, []):
+                status_code = 200
+                result = {}
         return '', status_code, result

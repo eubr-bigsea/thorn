@@ -211,23 +211,6 @@ def _insert_role_permission():
     op.bulk_insert(tb, rows)
 
 
-def _insert_configuration():
-    tb = table(
-        'configuration',
-        column('id', Integer),
-        column('name', String),
-        column('value', String),
-        column('enabled', Integer),
-    )
-    columns = [c.name for c in tb.columns]
-    data = [
-        (1, 'LDAP_SERVER', 'ldap.domain.com', 1),
-        (2, 'LDAP_BASE_DN', 'dc=domain,dc=com', 1),
-        (3, 'LDAP_USER_DN', 'uid={login},ou=People,dc=domain,dc=com', 1),
-    ]
-    rows = [dict(list(zip(columns, row))) for row in data]
-    op.bulk_insert(tb, rows)
-
 
 all_commands = [
     (_insert_permissions, 'DELETE FROM permission WHERE id BETWEEN 1 AND 16 OR '
