@@ -50,7 +50,7 @@ mappings = {
     '/approve/<int:user_id>': ApproveUserApi,
     '/auth/validate': ValidateTokenApi,
     '/auth/login': AuthenticationApi,
-    '/configuration': ConfigurationListApi,
+    '/configurations': ConfigurationListApi,
     '/password/reset/<token>': ChangePasswordWithTokenApi,
     '/password/reset': ResetPasswordApi,
     '/permissions': PermissionListApi,

@@ -35,6 +35,13 @@ class ConfigurationListApi(Resource):
                 Configuration.enabled == (enabled_filter != 'false'))
         else:
             configurations = Configuration.query
+        sort = request.args.get('sort', 'name')
+        if sort not in ['id', 'name']:
+            sort = 'name'
+        sort_option = getattr(Configuration, sort)
+        if request.args.get('asc', 'true') == 'false':
+            sort_option = sort_option.desc()
+        configurations = configurations.order_by(sort_option)
 
         page = request.args.get('page') or '1'
         if page is not None and page.isdigit():
@@ -43,7 +50,7 @@ class ConfigurationListApi(Resource):
             pagination = configurations.paginate(page, page_size, True)
             result = {
                 'data': ConfigurationListResponseSchema(
-                    many=True, only=only).dump(pagination.items),
+                    many=True, only=only).dump(pagination.items).data,
                 'pagination': {
                     'page': page, 'size': page_size,
                     'total': pagination.total,
@@ -64,7 +71,6 @@ class ConfigurationListApi(Resource):
     def patch(self):
         result = {'status': 'ERROR', 'message': gettext('Insufficient data.')}
         return_code = 404
-
         if log.isEnabledFor(logging.DEBUG):
             log.debug(gettext('Updating %s'), self.human_name)
         if request.json:
@@ -96,9 +102,8 @@ class ConfigurationListApi(Resource):
             else:
                 result = {
                     'status': 'ERROR',
-                    'message': gettext('Invalid data for %(name)s (id=%(id)s)',
-                                       name=self.human_name,
-                                       id=configuration_id),
+                    'message': gettext('Invalid data for %(name)s',
+                                       name=self.human_name),
                     'errors': form.errors
                 }
         return result, return_code
