@@ -28,6 +28,58 @@ def load_json(str_value):
 # endregion
 
 
+class ConfigurationListResponseSchema(Schema):
+    """ JSON serialization schema """
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    description = fields.String(required=True)
+    value = fields.String(required=True)
+    enabled = fields.Boolean(required=True, default=True)
+
+    # noinspection PyUnresolvedReferences
+    @post_load
+    def make_object(self, data):
+        """ Deserialize data into an instance of Configuration"""
+        return Configuration(**data)
+
+    class Meta:
+        ordered = True
+
+
+class ConfigurationItemResponseSchema(Schema):
+    """ JSON serialization schema """
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    description = fields.String(required=True)
+    value = fields.String(required=True)
+    enabled = fields.Boolean(required=True, default=True)
+
+    # noinspection PyUnresolvedReferences
+    @post_load
+    def make_object(self, data):
+        """ Deserialize data into an instance of Configuration"""
+        return Configuration(**data)
+
+    class Meta:
+        ordered = True
+
+
+class ConfigurationCreateRequestSchema(Schema):
+    """ JSON serialization schema """
+    id = fields.Integer(required=True)
+    value = fields.String(required=True)
+    enabled = fields.Boolean(required=True, default=True)
+
+    # noinspection PyUnresolvedReferences
+    @post_load
+    def make_object(self, data):
+        """ Deserialize data into an instance of Configuration"""
+        return Configuration(**data)
+
+    class Meta:
+        ordered = True
+
+
 class PermissionListResponseSchema(Schema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)

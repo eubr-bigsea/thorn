@@ -27,6 +27,7 @@ from thorn.user_api import UserListApi, ChangePasswordWithTokenApi, \
     RegisterApi
 from thorn.auth_api import ValidateTokenApi, AuthenticationApi
 from thorn.role_api import RoleListApi, RoleDetailApi
+from thorn.configuration_api import ConfigurationListApi
 
 sqlalchemy_utils.i18n.get_locale = get_locale
 
@@ -46,8 +47,10 @@ api = Api(app)
 
 
 mappings = {
+    '/approve/<int:user_id>': ApproveUserApi,
     '/auth/validate': ValidateTokenApi,
     '/auth/login': AuthenticationApi,
+    '/configuration': ConfigurationListApi,
     '/password/reset/<token>': ChangePasswordWithTokenApi,
     '/password/reset': ResetPasswordApi,
     '/permissions': PermissionListApi,
@@ -57,7 +60,6 @@ mappings = {
     '/users': UserListApi,
     '/register': RegisterApi,
     '/users/<int:user_id>': UserDetailApi,
-    '/approve/<int:user_id>': ApproveUserApi,
     #    '/dashboards/<int:dashboard_id>': DashboardDetailApi,
     #    '/visualizations/<int:job_id>/<task_id>': VisualizationDetailApi,
     #    '/visualizations': VisualizationListApi,
