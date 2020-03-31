@@ -35,6 +35,9 @@ class ConfigurationListResponseSchema(Schema):
     description = fields.String(required=True)
     value = fields.String(required=True)
     enabled = fields.Boolean(required=True, default=True)
+    internal = fields.Boolean(required=True, default=True)
+    editor = fields.String(required=True, default='TEXT',
+                           validate=[OneOf(list(EditorType.__dict__.keys()))])
 
     # noinspection PyUnresolvedReferences
     @post_load
@@ -53,6 +56,9 @@ class ConfigurationItemResponseSchema(Schema):
     description = fields.String(required=True)
     value = fields.String(required=True)
     enabled = fields.Boolean(required=True, default=True)
+    internal = fields.Boolean(required=True, default=True)
+    editor = fields.String(required=True, default='TEXT',
+                           validate=[OneOf(list(EditorType.__dict__.keys()))])
 
     # noinspection PyUnresolvedReferences
     @post_load
@@ -69,6 +75,9 @@ class ConfigurationCreateRequestSchema(Schema):
     id = fields.Integer(required=True)
     value = fields.String(required=True)
     enabled = fields.Boolean(required=True, default=True)
+    internal = fields.Boolean(required=True, default=True)
+    editor = fields.String(required=True, default='TEXT',
+                           validate=[OneOf(list(EditorType.__dict__.keys()))])
 
     # noinspection PyUnresolvedReferences
     @post_load

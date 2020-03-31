@@ -26,7 +26,7 @@ def _insert_configuration_translation():
         'configuration_translation',
         column('id', Integer),
         column('locale', String),
-        column('description', String)
+        column('description', String),
     )
     columns = [c.name for c in tb.columns]
     data = [
@@ -40,6 +40,14 @@ def _insert_configuration_translation():
         (4, 'en', 'Lemonade server address (URL) (if it is different from the computer\'s name)'),
         (5, 'pt', 'E-mail de suporte para o Lemonade (e-mail de contato)'),
         (5, 'en', 'Lemonade\'s support email (contact email)'),
+        (6, 'pt', 'Endereço do servidor para envio de e-mails (SMTP)'),
+        (6, 'en', 'Email server address (SMTP)'),
+        (7, 'pt', 'Usuário para autenticação no servidor de envio de e-mails'),
+        (7, 'en', 'Email server login'),
+        (8, 'pt', 'Senha para autenticação no servidor de envio de e-mails'),
+        (8, 'en', 'Email server password'),
+        (9, 'pt', 'Porta do servidor para envio de e-mails'),
+        (9, 'en', 'Email server port'),
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
     op.bulk_insert(tb, rows)
@@ -52,14 +60,20 @@ def _insert_configuration():
         column('name', String),
         column('value', String),
         column('enabled', Integer),
+        column('internal', Integer),
+        column('editor', String),
     )
     columns = [c.name for c in tb.columns]
     data = [
-        (1, 'LDAP_SERVER', 'ldap.domain.com', 1),
-        (2, 'LDAP_BASE_DN', 'dc=domain,dc=com', 1),
-        (3, 'LDAP_USER_DN', 'uid={login},ou=People,dc=domain,dc=com', 1),
-        (4, 'SERVER_BASE_URL', 'http://localhost:8000', 1),
-        (5, 'SUPPORT_EMAIL', 'supporte@domain', 1),
+        (1, 'LDAP_SERVER', 'ldap.domain.com', 1, 1, 'TEXT'),
+        (2, 'LDAP_BASE_DN', 'dc=domain,dc=com', 1, 1, 'TEXT'),
+        (3, 'LDAP_USER_DN', 'uid={login},ou=People,dc=domain,dc=com', 1, 1, 'TEXT'),
+        (4, 'SERVER_BASE_URL', 'http://localhost:8000', 1, 0, 'URL'),
+        (5, 'SUPPORT_EMAIL', 'supporte@domain', 1, 0, 'EMAIL'),
+        (6, 'SMTP_SERVER', 'smtp.domain.com', 1, 1, 'TEXT'),
+        (7, 'SMTP_USER', 'lemonade.user', 1, 1, 'TEXT'),
+        (8, 'SMTP_PASSWORD', 'secret', 1, 1, 'PASSWORD'),
+        (9, 'SMTP_PORT', '465', 1, 1, 'INTEGER'),
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
     op.bulk_insert(tb, rows)

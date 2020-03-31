@@ -31,6 +31,24 @@ class UserStatus:
 
 
 # noinspection PyClassHasNoInit
+class EditorType:
+    TEXT = 'TEXT'
+    TEXTAREA = 'TEXTAREA'
+    PASSWORD = 'PASSWORD'
+    INTEGER = 'INTEGER'
+    FLOAT = 'FLOAT'
+    DATE = 'DATE'
+    DATETIME = 'DATETIME'
+    EMAIL = 'EMAIL'
+    URL = 'URL'
+
+    @staticmethod
+    def values():
+        return [n for n in list(EditorType.__dict__.keys())
+                if n[0] != '_' and n != 'values']
+
+
+# noinspection PyClassHasNoInit
 class AssetType:
     DASHBOARD = 'DASHBOARD'
     DATA_SOURCE = 'DATA_SOURCE'
@@ -93,6 +111,11 @@ class Configuration(db.Model, Translatable):
     value = Column(LONGTEXT, nullable=False)
     enabled = Column(Boolean,
                      default=True, nullable=False)
+    internal = Column(Boolean,
+                      default=True, nullable=False)
+    editor = Column(Enum(*list(EditorType.values()),
+                         name='EditorTypeEnumType'),
+                    default='TEXT', nullable=False)
 
     def __str__(self):
         return self.name

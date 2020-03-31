@@ -41,6 +41,9 @@ def upgrade():
                     sa.Column('enabled', sa.Boolean(), nullable=False),
                     sa.Column('login', sa.String(length=255), nullable=False),
                     sa.Column('email', sa.String(length=255), nullable=False),
+                    sa.Column('authentication_type', 
+                        sa.Enum('LDAP', 'INTERNAL', 'AD', 
+                            name='AuthenticationTypeEnumType'), nullable=False), 
                     sa.Column('encrypted_password', sa.String(length=255),
                               nullable=False),
                     sa.Column('reset_password_token', sa.String(length=255),
@@ -116,6 +119,10 @@ def upgrade():
                     sa.Column('name', sa.String(length=100), nullable=False),
                     sa.Column('value', mysql.LONGTEXT(), nullable=False),
                     sa.Column('enabled', sa.Boolean(), nullable=False),
+                    sa.Column('editor', sa.Enum('TEXT', 'TEXTAREA', 'INTEGER', 'FLOAT', 
+                        'DATE', 'DATETIME', 'PASSWORD', 'URL', 'EMAIL', 
+                        name='EditorTypeEnumType'), nullable=False),
+                    sa.Column('internal', sa.Boolean(), nullable=False),
                     sa.PrimaryKeyConstraint('id')
                     )
 
