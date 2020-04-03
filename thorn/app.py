@@ -1,9 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # noinspection PyBroadException
-import eventlet
+# import eventlet
+# 
+# eventlet.monkey_patch(all=True)
+# 
+# See BUG: https://github.com/eventlet/eventlet/issues/592
+# import __original_module_threading
+# import threading
+# __original_module_threading.current_thread.__globals__['_active'] = threading._active
+# 
+# Eventlet is not being used anymore because there is a severe bug:
+# https://github.com/eventlet/eventlet/issues/526
 
-eventlet.monkey_patch(all=True)
+from gevent import monkey
+monkey.patch_all()
+
+from gevent.pywsgi import WSGIServer
 
 import logging
 import logging.config
@@ -22,12 +35,13 @@ from flask_restful import Api
 from thorn.gateway import ApiGateway
 from thorn.models import db, User
 from thorn.permission_api import PermissionListApi
-from thorn.user_api import UserListApi, ChangePasswordWithTokenApi, \
+from thorn.user_api import UserListApi, \
     ResetPasswordApi, ApproveUserApi, UserDetailApi, ProfileApi, \
     RegisterApi
 from thorn.auth_api import ValidateTokenApi, AuthenticationApi
 from thorn.role_api import RoleListApi, RoleDetailApi
 from thorn.configuration_api import ConfigurationListApi
+import rq_dashboard
 
 sqlalchemy_utils.i18n.get_locale = get_locale
 
@@ -45,13 +59,15 @@ admin = Admin(app, name='Lemonade', template_mode='bootstrap3')
 CORS(app, resources={r"/*": {"origins": "*"}})
 api = Api(app)
 
+# RQ dashboard
+app.config.from_object(rq_dashboard.default_settings)
+app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
 
 mappings = {
     '/approve/<int:user_id>': ApproveUserApi,
     '/auth/validate': ValidateTokenApi,
     '/auth/login': AuthenticationApi,
     '/configurations': ConfigurationListApi,
-    '/password/reset/<token>': ChangePasswordWithTokenApi,
     '/password/reset': ResetPasswordApi,
     '/permissions': PermissionListApi,
     '/roles': RoleListApi,
@@ -91,6 +107,7 @@ def main(is_main_module):
         app.config['SQLALCHEMY_POOL_SIZE'] = 10
         app.config['SQLALCHEMY_POOL_RECYCLE'] = 240
         app.config['RQ_REDIS_URL'] = config['servers']['redis_url']
+        app.config['RQ_DASHBOARD_REDIS_URL'] = app.config['RQ_REDIS_URL']
 
         app.config.update(config.get('config', {}))
         app.config['THORN_CONFIG'] = config
@@ -106,7 +123,9 @@ def main(is_main_module):
                 admin.add_view(ModelView(User, db.session))
                 app.run(debug=True, port=port)
             else:
-                eventlet.wsgi.server(eventlet.listen(('', port)), app)
+                # eventlet.wsgi.server(eventlet.listen(('', port)), app)
+                http_server = WSGIServer(('0.0.0.0', port), app)
+                http_server.serve_forever()
     else:
         logger.error('Please, set THORN_CONFIG environment variable')
         exit(1)

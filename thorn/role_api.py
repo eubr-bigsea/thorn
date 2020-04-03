@@ -42,7 +42,7 @@ class RoleListApi(Resource):
             pagination = roles.paginate(page, page_size, True)
             result = {
                 'data': RoleListResponseSchema(
-                    many=True, only=only).dump(pagination.items),
+                    many=True, only=only).dump(pagination.items).data,
                 'pagination': {
                     'page': page, 'size': page_size,
                     'total': pagination.total,
@@ -52,7 +52,7 @@ class RoleListApi(Resource):
             result = {
                 'data': RoleListResponseSchema(
                     many=True, only=only).dump(
-                    roles)}
+                    roles).data}
 
         if log.isEnabledFor(logging.DEBUG):
             log.debug(gettext('Listing %(name)s', name=self.human_name))

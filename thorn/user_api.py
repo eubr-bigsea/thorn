@@ -46,6 +46,50 @@ class ApproveUserApi(Resource):
 
 class ResetPasswordApi(Resource):
     @staticmethod
+    def get():
+        result = {'status': 'ERROR', 'message': gettext('Record not found')}
+        status_code = 404
+
+        user_id = request.args.get('id')
+        token = request.args.get('token')
+        
+        if all([user_id, token]):
+            found = User.query.filter(
+                    User.id==user_id, 
+                    User.reset_password_token==token).count()
+            if found > 0: 
+                result = {'status': 'OK'}
+                status_code = 200
+        return result, status_code
+
+    @staticmethod
+    def patch():
+        result = {'status': 'ERROR', 
+                'message': gettext('User not found or invalid token.')}
+        status_code = 404
+        if request.json and len(request.json.get('token', '')) > 0:
+            user = User.query.filter(
+                User.id==request.json.get('id'),
+                User.reset_password_token==request.json.get('token')).first()
+            if user:
+                if len(request.json.get('password', '')) > 5:
+                    user.encrypted_password = encrypt_password(
+                                 request.json.get('password')).decode('utf8')
+                    user.reset_password_token = None
+                    user.reset_password_sent_at = None
+                    db.session.add(user)
+                    db.session.commit()
+
+                    result = {'status': 'OK', 
+                            'message': gettext(
+                                'Password changed with success!')}
+                    status_code = 200
+                else:
+                    result['message'] = gettext('Password too short')
+
+        return result, status_code
+
+    @staticmethod
     def post():
         result = {'status': 'ERROR', 'message': 'User not found.'}
         status_code = 404
@@ -55,8 +99,8 @@ class ResetPasswordApi(Resource):
                 config = Configuration.query.filter(or_(
                         Configuration.name=='SUPPORT_EMAIL', 
                         Configuration.name=='SERVER_BASE_URL'))
-                support_email = [c.value for c in config if c.name == 'SUPPORT_EMAIL']
-                server_url = [c.value for c in config if c.name == 'SERVER_BASE_URL']
+                support_email = next(c.value for c in config if c.name == 'SUPPORT_EMAIL')
+                server_url = next(c.value for c in config if c.name == 'SERVER_BASE_URL')
 
                 user.reset_password_token = uuid.uuid4().hex
                 user.reset_password_sent_at = datetime.datetime.now() 
@@ -65,7 +109,8 @@ class ResetPasswordApi(Resource):
                         to=user.email, 
                         name='{} {}'.format(user.first_name, user.last_name).strip(),
                         template='reset_password',
-                        link='{}/fixme'.format(server_url),
+                        link='{}/#/change-password/{}/{}'.format(server_url, user.id, 
+                            user.reset_password_token),
                         queue='thorn')
                 db.session.add(user)
                 db.session.commit()
@@ -76,33 +121,33 @@ class ResetPasswordApi(Resource):
                 status_code = 200
         return result, status_code
 
-class ChangePasswordWithTokenApi(Resource):
-    @staticmethod
-    def get(user_id, token):
-        user = User.query.get(user_id)
-        if not user:
-            return {'status': 'ERROR', 'message': 'not found'}, 404
-        if user.reset_password_token == token:
-            user.enabled = True
-            db.session.add(user)
-            db.session.commit()
-            return {'status': 'OK', 'message': 'FIXME'}, 200 
-        else:
-            return {'status': 'ERROR', 'message': 'Invalid token'}, 401
-    @staticmethod
-    def post(user_id, token):
-        user = User.query.get(user_id)
-        if not user:
-            return {'status': 'ERROR', 'message': 'not found'}, 404
-        if user.reset_password_token == token:
-            user.enabled = True
-            user.reset_password_token = None
-            user.encrypted_password = '11'
-            db.session.add(user)
-            db.session.commit()
-            return {'status': 'OK', 'message': 'FIXME'}, 200 
-        else:
-            return {'status': 'ERROR', 'message': 'Invalid token'}, 401
+# class ChangePasswordWithTokenApi(Resource):
+#     @staticmethod
+#     def get(user_id, token):
+#         user = User.query.get(user_id)
+#         if not user:
+#             return {'status': 'ERROR', 'message': 'not found'}, 404
+#         if user.reset_password_token == token:
+#             user.enabled = True
+#             db.session.add(user)
+#             db.session.commit()
+#             return {'status': 'OK', 'message': 'FIXME'}, 200 
+#         else:
+#             return {'status': 'ERROR', 'message': 'Invalid token'}, 401
+#     @staticmethod
+#     def post(user_id, token):
+#         user = User.query.get(user_id)
+#         if not user:
+#             return {'status': 'ERROR', 'message': 'not found'}, 404
+#         if user.reset_password_token == token:
+#             user.enabled = True
+#             user.reset_password_token = None
+#             user.encrypted_password = '11'
+#             db.session.add(user)
+#             db.session.commit()
+#             return {'status': 'OK', 'message': 'FIXME'}, 200 
+#         else:
+#             return {'status': 'ERROR', 'message': 'Invalid token'}, 401
 
 
 def has_permission(permission):
@@ -185,6 +230,8 @@ def _change_user(user_id, administrative, human_name):
         log.debug(gettext('Updating %s (id=%s)'), human_name,
                   user_id)
     if request.json:
+        roles = request.json.pop('roles', [])
+
         request_schema = partial_schema_factory(
             UserCreateRequestSchema)
         # Ignore missing fields to allow partial updates
@@ -211,6 +258,8 @@ def _change_user(user_id, administrative, human_name):
                     if new_password is not None:
                         form.data.encrypted_password = encrypt_password(
                                 new_password).decode('utf8')
+                    form.data.roles = list(Role.query.filter(
+                            Role.id.in_([r['id'] for r in roles])))
                     db.session.merge(form.data)
                     db.session.commit()
 
