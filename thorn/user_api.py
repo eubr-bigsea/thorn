@@ -343,6 +343,16 @@ class UserListApi(Resource):
             sort_option = sort_option.desc()
         users = users.order_by(sort_option)
 
+        q = request.args.get('query')
+        if q: 
+            q = '%{}%'.format(q)
+            users = users.filter(or_(
+                User.first_name.ilike(q),
+                User.last_name.ilike(q),
+                User.login.ilike(q),
+                User.email.ilike(q)),
+            )
+
         page = request.args.get('page') or '1'
         if page is not None and page.isdigit():
             page_size = int(request.args.get('size', 20))

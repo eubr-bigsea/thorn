@@ -75,6 +75,30 @@ class AuthenticationType:
                 if n[0] != '_' and n != 'values']
 
 
+# Association tables definition
+    # noinspection PyUnresolvedReferences
+managed_resource_role = db.Table(
+    'managed_resource_role',
+    Column('managed_resource_id', Integer,
+           ForeignKey('managed_resource.id'), nullable=False),
+    Column('role_id', Integer,
+           ForeignKey('role.id'), nullable=False))
+# noinspection PyUnresolvedReferences
+role_permission = db.Table(
+    'role_permission',
+    Column('role_id', Integer,
+           ForeignKey('role.id'), nullable=False),
+    Column('permission_id', Integer,
+           ForeignKey('permission.id'), nullable=False))
+# noinspection PyUnresolvedReferences
+user_role = db.Table(
+    'user_role',
+    Column('user_id', Integer,
+           ForeignKey('user.id'), nullable=False),
+    Column('role_id', Integer,
+           ForeignKey('role.id'), nullable=False))
+
+
 class Asset(db.Model):
     """ A protected asset in Lemonade """
     __tablename__ = 'asset'
@@ -165,13 +189,6 @@ class ManagedResource(db.Model):
                              default='*', nullable=False)
 
     # Associations
-    # noinspection PyUnresolvedReferences
-    managed_resource_role = db.Table(
-        'managed_resource_role',
-        Column('managed_resource_id', Integer,
-               ForeignKey('managed_resource.id'), nullable=False),
-        Column('role_id', Integer,
-               ForeignKey('role.id'), nullable=False))
     roles = relationship(
         "Role",
         secondary=managed_resource_role)
@@ -227,13 +244,6 @@ class Role(db.Model, Translatable):
                      default=True, nullable=False)
 
     # Associations
-    # noinspection PyUnresolvedReferences
-    role_permission = db.Table(
-        'role_permission',
-        Column('role_id', Integer,
-               ForeignKey('role.id'), nullable=False),
-        Column('permission_id', Integer,
-               ForeignKey('permission.id'), nullable=False))
     permissions = relationship(
         "Permission",
         secondary=role_permission,
@@ -241,6 +251,13 @@ class Role(db.Model, Translatable):
             "and_("
             "Permission.id==role_permission.c.permission_id,"
             "Permission.enabled==1)"))
+    users = relationship(
+        "User",
+        secondary=user_role,
+        secondaryjoin=(
+            "and_("
+            "User.id==user_role.c.user_id,"
+            "User.enabled==1)"))
 
     def __str__(self):
         return self.name
@@ -292,13 +309,6 @@ class User(db.Model):
     notes = Column(String(500))
 
     # Associations
-    # noinspection PyUnresolvedReferences
-    user_role = db.Table(
-        'user_role',
-        Column('user_id', Integer,
-               ForeignKey('user.id'), nullable=False),
-        Column('role_id', Integer,
-               ForeignKey('role.id'), nullable=False))
     roles = relationship(
         "Role",
         secondary=user_role,

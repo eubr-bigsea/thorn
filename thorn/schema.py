@@ -171,12 +171,7 @@ class RoleCreateRequestSchema(Schema):
     name = fields.String(required=True)
     description = fields.String(required=True)
     all_user = fields.Boolean(required=True, default=False)
-    system = fields.Boolean(required=True, default=False)
     enabled = fields.Boolean(required=True, default=True)
-    permissions = fields.Nested(
-        'thorn.schema.PermissionCreateRequestSchema',
-        required=True,
-        many=True)
 
     # noinspection PyUnresolvedReferences
     @post_load

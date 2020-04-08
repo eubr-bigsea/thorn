@@ -35,6 +35,19 @@ class RoleListApi(Resource):
         else:
             roles = Role.query
 
+        sort = request.args.get('sort', 'name')
+        if sort not in ['id', 'name']:
+            sort = 'name'
+        sort_option = getattr(Role, sort)
+        if request.args.get('asc', 'true') == 'false':
+            sort_option = sort_option.desc()
+        roles = roles.order_by(sort_option)
+
+        q = request.args.get('query')
+        if q: 
+            q = '%{}%'.format(q)
+            roles = roles.filter(Role.name.ilike(q))
+
         page = request.args.get('page') or '1'
         if page is not None and page.isdigit():
             page_size = int(request.args.get('size', 20))
@@ -99,13 +112,20 @@ class RoleDetailApi(Resource):
         role = Role.query.get(role_id)
         if role is not None:
             try:
-                db.session.delete(role)
-                db.session.commit()
-                result = {
-                    'status': 'OK',
-                    'message': gettext('%(name)s deleted with success!',
+                if role.system:
+                    result = {
+                        'status': 'ERROR',
+                        'message': gettext('A system role cannot be deleted')
+                        }
+                    return_code = 400
+                else:
+                    db.session.delete(role)
+                    db.session.commit()
+                    result = {
+                        'status': 'OK',
+                        'message': gettext('%(name)s deleted with success!',
                                        name=self.human_name)
-                }
+                    }
             except Exception as e:
                 result = {'status': 'ERROR',
                           'message': gettext("Internal error")}
@@ -140,19 +160,24 @@ class RoleDetailApi(Resource):
                 try:
                     form.data.id = role_id
                     role = db.session.merge(form.data)
-                    db.session.commit()
+                    if role.system:
+                        result = {'status': 'ERROR', 
+                                'message': 'A system role cannot be changed'}
+                        return_code = 400
+                    else:
+                        db.session.commit()
 
-                    if role is not None:
-                        return_code = 200
-                        result = {
-                            'status': 'OK',
-                            'message': gettext(
-                                '%(n)s (id=%(id)s) was updated with success!',
-                                n=self.human_name,
-                                id=role_id),
-                            'data': [response_schema.dump(
-                                role)]
-                        }
+                        if role is not None:
+                            return_code = 200
+                            result = {
+                                'status': 'OK',
+                                'message': gettext(
+                                    '%(n)s (id=%(id)s) was updated with success!',
+                                    n=self.human_name,
+                                    id=role_id),
+                                'data': [response_schema.dump(
+                                    role)]
+                            }
                 except Exception as e:
                     result = {'status': 'ERROR',
                               'message': gettext("Internal error")}
