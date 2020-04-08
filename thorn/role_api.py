@@ -153,6 +153,8 @@ class RoleDetailApi(Resource):
         if request.json:
             request_schema = partial_schema_factory(
                 RoleCreateRequestSchema)
+            permissions = request.json.pop('permissions') \
+                    if 'permissions' in request.json else []
             # Ignore missing fields to allow partial updates
             form = request_schema.load(request.json, partial=True)
             response_schema = RoleItemResponseSchema()
@@ -165,6 +167,9 @@ class RoleDetailApi(Resource):
                                 'message': 'A system role cannot be changed'}
                         return_code = 400
                     else:
+                        role.permissions = list(Permission.query.filter(
+                                Permission.id.in_([p.get('id', 0) 
+                                    for p in permissions])))
                         db.session.commit()
 
                         if role is not None:
