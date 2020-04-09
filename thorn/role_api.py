@@ -3,6 +3,7 @@ from thorn.app_auth import requires_auth
 from flask import request, current_app, g as flask_globals
 from flask_restful import Resource
 from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 
 import math
 import logging
@@ -48,6 +49,7 @@ class RoleListApi(Resource):
             q = '%{}%'.format(q)
             roles = roles.filter(Role.name.ilike(q))
 
+        roles= roles.options(joinedload(Role.current_translation))
         page = request.args.get('page') or '1'
         if page is not None and page.isdigit():
             page_size = int(request.args.get('size', 20))
@@ -55,7 +57,8 @@ class RoleListApi(Resource):
             pagination = roles.paginate(page, page_size, True)
             result = {
                 'data': RoleListResponseSchema(
-                    many=True, only=only).dump(pagination.items).data,
+                    many=True, only=only, exclude=('users.roles',)).dump(
+                        pagination.items).data,
                 'pagination': {
                     'page': page, 'size': page_size,
                     'total': pagination.total,
@@ -84,12 +87,17 @@ class RoleDetailApi(Resource):
             log.debug(gettext('Retrieving %s (id=%s)'), self.human_name,
                       role_id)
 
-        role = Role.query.get(role_id)
+        role = Role.query.options(joinedload(Role.permissions))\
+                .options(joinedload(Role.users))\
+                .options(joinedload('permissions.current_translation'))\
+                .get(role_id)
         return_code = 200
         if role is not None:
+            # remove role.users.roles in order to avoid recursion
             result = {
                 'status': 'OK',
-                'data': [RoleItemResponseSchema().dump(
+                'data': [RoleItemResponseSchema(
+                    exclude=('users.roles',)).dump(
                     role).data]
             }
         else:
@@ -155,9 +163,12 @@ class RoleDetailApi(Resource):
                 RoleCreateRequestSchema)
             permissions = request.json.pop('permissions') \
                     if 'permissions' in request.json else []
+            users = request.json.pop('users') \
+                    if 'users' in request.json else []
+
             # Ignore missing fields to allow partial updates
             form = request_schema.load(request.json, partial=True)
-            response_schema = RoleItemResponseSchema()
+            response_schema = RoleItemResponseSchema(exclude=('users.roles',))
             if not form.errors:
                 try:
                     form.data.id = role_id
@@ -170,6 +181,8 @@ class RoleDetailApi(Resource):
                         role.permissions = list(Permission.query.filter(
                                 Permission.id.in_([p.get('id', 0) 
                                     for p in permissions])))
+                        role.users = list(User.query.filter(
+                            User.id.in_([u.get('id', 0) for u in users])))
                         db.session.commit()
 
                         if role is not None:

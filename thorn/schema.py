@@ -132,6 +132,10 @@ class RoleListResponseSchema(Schema):
     name = fields.String(required=True)
     description = fields.String(required=True)
     system = fields.Boolean(required=True, default=False)
+    users = fields.Nested(
+        'thorn.schema.UserListResponseSchema',
+        required=True,
+        many=True)
 
     # noinspection PyUnresolvedReferences
     @post_load
@@ -153,6 +157,10 @@ class RoleItemResponseSchema(Schema):
     enabled = fields.Boolean(required=True, default=True)
     permissions = fields.Nested(
         'thorn.schema.PermissionItemResponseSchema',
+        required=True,
+        many=True)
+    users = fields.Nested(
+        'thorn.schema.UserItemResponseSchema',
         required=True,
         many=True)
 
@@ -232,25 +240,13 @@ class UserItemResponseSchema(Schema):
     enabled = fields.Boolean(required=True, default=True)
     status = fields.String(required=True, default='ENABLED',
                            validate=[OneOf(list(UserStatus.__dict__.keys()))])
-    authentication_type = fields.String(required=False, allow_none=True, missing='INTERNAL',
-                                        validate=[OneOf(list(AuthenticationType.__dict__.keys()))])
-    created_at = fields.DateTime(
-        required=True,
-        default=datetime.datetime.utcnow)
-    updated_at = fields.DateTime(
-        required=False,
-        allow_none=True,
-        missing=datetime.datetime.utcnow)
     first_name = fields.String(required=False, allow_none=True)
     last_name = fields.String(required=False, allow_none=True)
-    locale = fields.String(required=False, allow_none=True)
-    confirmed_at = fields.DateTime(required=False, allow_none=True)
-    confirmation_sent_at = fields.DateTime(required=False, allow_none=True)
-    notes = fields.String(required=False, allow_none=True)
     roles = fields.Nested(
         'thorn.schema.RoleItemResponseSchema',
         required=True,
         many=True)
+    name = fields.Function(lambda x: "{} {}".format(x.first_name, x.last_name))
 
     # noinspection PyUnresolvedReferences
     @post_load

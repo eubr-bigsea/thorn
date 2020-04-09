@@ -3,6 +3,7 @@ from thorn.app_auth import requires_auth
 from flask import request, current_app, g as flask_globals
 from flask_restful import Resource
 from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 
 import math
 import logging
@@ -35,6 +36,8 @@ class PermissionListApi(Resource):
         else:
             permissions = Permission.query
 
+        permissions = permissions.options(joinedload(
+            Permission.current_translation))
         page = request.args.get('page') or '1'
         if page is not None and page.isdigit():
             page_size = int(request.args.get('size', 20))

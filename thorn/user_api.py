@@ -236,7 +236,7 @@ def _change_user(user_id, administrative, human_name):
             UserCreateRequestSchema)
         # Ignore missing fields to allow partial updates
         form = request_schema.load(request.json, partial=True)
-        response_schema = UserItemResponseSchema()
+        response_schema = UserItemResponseSchema(exclude=('roles.users',))
 
         if not form.errors:
             try:
@@ -358,6 +358,8 @@ class UserListApi(Resource):
             page_size = int(request.args.get('size', 20))
             page = int(page)
             pagination = users.paginate(page, page_size, True)
+            # remove user.roles.users in order to avoid recursion
+            exclude.append('roles.users')
             result = {
                 'data': UserListResponseSchema(
                     many=True, only=only, exclude=exclude).dump(pagination.items).data,
@@ -399,7 +401,7 @@ class UserDetailApi(Resource):
         if user is not None:
             result = {
                 'status': 'OK',
-                'data': [UserItemResponseSchema().dump(
+                'data': [UserItemResponseSchema(exclude=('roles.users',)).dump(
                     user).data]
             }
         else:
