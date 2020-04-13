@@ -247,17 +247,11 @@ class Role(db.Model, Translatable):
     permissions = relationship(
         "Permission",
         secondary=role_permission,
-        secondaryjoin=(
-            "and_("
-            "Permission.id==role_permission.c.permission_id,"
-            "Permission.enabled==1)"))
+        cascade="save-update")
     users = relationship(
         "User",
         secondary=user_role,
-        secondaryjoin=(
-            "and_("
-            "User.id==user_role.c.user_id,"
-            "User.enabled==1)"))
+        cascade="save-update")
 
     def __str__(self):
         return self.name
@@ -312,6 +306,7 @@ class User(db.Model):
     roles = relationship(
         "Role",
         secondary=user_role,
+        cascade="delete",
         secondaryjoin=(
             "and_("
             "Role.id==user_role.c.role_id,"

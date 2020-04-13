@@ -9,6 +9,7 @@ import math
 import logging
 from thorn.schema import *
 from flask_babel import gettext
+from thorn.util import translate_validation
 
 log = logging.getLogger(__name__)
 
@@ -73,6 +74,59 @@ class RoleListApi(Resource):
         if log.isEnabledFor(logging.DEBUG):
             log.debug(gettext('Listing %(name)s', name=self.human_name))
         return result
+
+    @requires_auth
+    def post(self):
+        result = {'status': 'ERROR',
+                  'message': gettext("Missing json in the request body")}
+        return_code = 400
+
+        if request.json is not None:
+            request_schema = RoleCreateRequestSchema()
+            response_schema = RoleItemResponseSchema()
+            form = request_schema.load(request.json)
+
+            permissions = request.json.pop('permissions') \
+                    if 'permissions' in request.json else []
+            users = request.json.pop('users') \
+                    if 'users' in request.json else []
+
+
+            if form.errors:
+                result = {'status': 'ERROR',
+                          'message': gettext("Validation error"),
+                          'errors': translate_validation(form.errors)}
+            elif form.data.system:
+                        result = {'status': 'ERROR', 
+                                'message': gettext(
+                                    'A system role cannot be changed')}
+                        return_code = 400
+            else:
+                try:
+                    role = form.data
+                    role.permissions = list(Permission.query.filter(
+                            Permission.id.in_([p.get('id', 0) 
+                                for p in permissions])))
+                    role.users = list(User.query.filter(
+                    User.id.in_([u.get('id', 0) for u in users])))
+
+                    if log.isEnabledFor(logging.DEBUG):
+                        log.debug(gettext('Adding %s'), self.human_name)
+                    db.session.add(role)
+                    db.session.commit()
+                    result = response_schema.dump(role).data
+                    return_code = 200
+                except Exception as e:
+                    result = {'status': 'ERROR',
+                              'message': gettext("Internal error")}
+                    return_code = 500
+                    if current_app.debug:
+                        result['debug_detail'] = str(e)
+
+                    log.exception(e)
+                    db.session.rollback()
+
+        return result, return_code
 
 
 class RoleDetailApi(Resource):
@@ -175,7 +229,8 @@ class RoleDetailApi(Resource):
                     role = db.session.merge(form.data)
                     if role.system:
                         result = {'status': 'ERROR', 
-                                'message': 'A system role cannot be changed'}
+                                'message': gettext(
+                                    'A system role cannot be changed')}
                         return_code = 400
                     else:
                         role.permissions = list(Permission.query.filter(

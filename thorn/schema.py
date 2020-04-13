@@ -178,7 +178,6 @@ class RoleCreateRequestSchema(Schema):
     """ JSON serialization schema """
     name = fields.String(required=True)
     description = fields.String(required=True)
-    all_user = fields.Boolean(required=True, default=False)
     enabled = fields.Boolean(required=True, default=True)
 
     # noinspection PyUnresolvedReferences
