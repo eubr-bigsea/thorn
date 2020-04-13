@@ -20,8 +20,6 @@ Flask-RESTful==0.3.8
 Flask-RQ2==18.3
 Flask-Script==2.0.6
 Flask-SQLAlchemy==2.4.1
-gevent==1.4.0
-greenlet==0.4.15
 idna==2.9
 itsdangerous==1.1.0
 Jinja2==2.11.1

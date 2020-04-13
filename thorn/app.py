@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # noinspection PyBroadException
-# import eventlet
+import eventlet
 # 
-# eventlet.monkey_patch(all=True)
+eventlet.monkey_patch(all=True)
 # 
 # See BUG: https://github.com/eventlet/eventlet/issues/592
-# import __original_module_threading
-# import threading
-# __original_module_threading.current_thread.__globals__['_active'] = threading._active
+import __original_module_threading
+import threading
+__original_module_threading.current_thread.__globals__['_active'] = threading._active
 # 
 # Eventlet is not being used anymore because there is a severe bug:
 # https://github.com/eventlet/eventlet/issues/526
 
-from gevent import monkey
-monkey.patch_all()
+# from gevent import monkey
+# monkey.patch_all()
 
 from gevent.pywsgi import WSGIServer
 
