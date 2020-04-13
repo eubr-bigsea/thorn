@@ -16,7 +16,7 @@ __original_module_threading.current_thread.__globals__['_active'] = threading._a
 # from gevent import monkey
 # monkey.patch_all()
 
-from gevent.pywsgi import WSGIServer
+# from gevent.pywsgi import WSGIServer
 
 import logging
 import logging.config
@@ -123,9 +123,9 @@ def main(is_main_module):
                 admin.add_view(ModelView(User, db.session))
                 app.run(debug=True, port=port)
             else:
-                # eventlet.wsgi.server(eventlet.listen(('', port)), app)
-                http_server = WSGIServer(('0.0.0.0', port), app)
-                http_server.serve_forever()
+                eventlet.wsgi.server(eventlet.listen(('', port)), app)
+                # http_server = WSGIServer(('0.0.0.0', port), app)
+                # http_server.serve_forever()
     else:
         logger.error('Please, set THORN_CONFIG environment variable')
         exit(1)
