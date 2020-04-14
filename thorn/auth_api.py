@@ -122,7 +122,7 @@ class ValidateTokenApi(Resource):
             'unprotected_urls', {})
         path = request.headers.get('X-Original-URI', '').split('?')[0]
         method = request.headers.get('X-Original-Method', 'INVALID')
-        if method in unprotected.get(path, []):
+        if method in unprotected.get(path, []) or unprotected.get(path) == []:
             status_code = 200
             result = {}
         else: 
