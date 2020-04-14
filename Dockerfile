@@ -8,6 +8,7 @@ RUN pip install -r /requirements.txt
 FROM base
 LABEL maintainer="Vinicius Dias <viniciusvdias@dcc.ufmg.br>, Guilherme Maluf <guimaluf@dcc.ufmg.br>"
 
+RUN apk add --no-cache libldap
 ENV THORN_HOME /usr/local/thorn
 ENV THORN_CONFIG $THORN_HOME/conf/thorn-config.yaml
 

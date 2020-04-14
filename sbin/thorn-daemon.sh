@@ -45,8 +45,7 @@ case $cmd_option in
       exit 1
     fi
     PYTHONPATH=${THORN_HOME}:${PYTHONPATH} nohup -- \
-      python ${THORN_HOME}/thorn/runner/thorn_server.py \
-      -c ${THORN_HOME}/conf/thorn-config.yaml >> $log 2>&1 < /dev/null &
+      python ${THORN_HOME}/thorn/app/.py >> $log 2>&1 < /dev/null &
     thorn_server_pid=$!
     # persist the pid
     echo $thorn_server_pid > $pid
@@ -68,8 +67,7 @@ case $cmd_option in
       exit 1
     fi
     PYTHONPATH=${THORN_HOME}:${PYTHONPATH} \
-      python ${THORN_HOME}/thorn/runner/thorn_server.py \
-      -c ${THORN_HOME}/conf/thorn-config.yaml &
+      python ${THORN_HOME}/thorn/app.py &
     thorn_server_pid=$!
 
     # persist the pid
