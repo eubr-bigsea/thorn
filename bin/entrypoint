@@ -1,0 +1,45 @@
+#!/usr/bin/env sh
+
+function start_server
+{
+  python ${THORN_HOME}/thorn/app.py
+}
+
+function db_migrate
+{
+  python ${THORN_HOME}/thorn/manage.py db upgrade
+
+  if [ $? -eq 0 ]
+  then
+    echo "DB migration: successful"
+  else
+    echo "Error on DB migration"
+    exit 1
+  fi
+}
+
+# if unset set thorn_home to thorn root dir, without ./sbin
+export THORN_HOME=${THORN_HOME:-$(cd $(dirname $0)/..; pwd)}
+export THORN_CONFIG=${THORN_CONFIG:-${THORN_HOME}/conf/thorn.yaml}
+
+export FLASK_APP=${FLASK_APP:-${THORN_HOME}/thorn/app.py}
+export PYTHONPATH=${THORN_HOME}:${PYTHONPATH}
+
+CMD=$1
+case $CMD in
+
+  (server)
+    db_migrate
+    start_server
+    ;;
+
+  (worker)
+    python -m flask rq worker \
+      --logging_level DEBUG 
+    ;;
+
+  (*)
+    echo "Usage: $0 (server|worker)"
+    exit 1
+    ;;
+esac
