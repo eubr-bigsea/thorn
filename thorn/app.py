@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # noinspection PyBroadException
-import eventlet
-# 
-eventlet.monkey_patch(all=True)
-# 
-# See BUG: https://github.com/eventlet/eventlet/issues/592
-import __original_module_threading
-import threading
-__original_module_threading.current_thread.__globals__['_active'] = threading._active
+if __name__ == '__main__':
+    import eventlet
+    eventlet.monkey_patch(all=True)
+    # 
+    # See BUG: https://github.com/eventlet/eventlet/issues/592
+    import __original_module_threading
+    import threading
+    __original_module_threading.current_thread.__globals__['_active'] = threading._active
 # 
 # Eventlet is not being used anymore because there is a severe bug:
 # https://github.com/eventlet/eventlet/issues/526
@@ -46,7 +46,7 @@ import rq_dashboard
 sqlalchemy_utils.i18n.get_locale = get_locale
 
 app = Flask(__name__)
-app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.abspath(           'thorn/i18n/locales') 
+app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.abspath('thorn/i18n/locales') 
 babel = Babel(app)
 
 logging.config.fileConfig('logging_config.ini')
