@@ -255,7 +255,7 @@ def _change_user(user_id, administrative, human_name):
                             gettext('Invalid password or confirmation')}
                     return_code = 401
                 else:
-                    if new_password is not None:
+                    if new_password is not None and len(new_password) > 0:
                         form.data.encrypted_password = encrypt_password(
                                 new_password).decode('utf8')
                     form.data.roles = list(Role.query.filter(

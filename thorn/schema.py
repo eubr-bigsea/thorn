@@ -241,6 +241,7 @@ class UserItemResponseSchema(Schema):
                            validate=[OneOf(list(UserStatus.__dict__.keys()))])
     first_name = fields.String(required=False, allow_none=True)
     last_name = fields.String(required=False, allow_none=True)
+    locale = fields.String(required=False, allow_none=True)
     roles = fields.Nested(
         'thorn.schema.RoleItemResponseSchema',
         required=True,
