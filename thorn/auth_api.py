@@ -116,9 +116,10 @@ class ValidateTokenApi(Resource):
     def post(self):
         status_code = 401
         user = None
+        config = current_app.config['THORN_CONFIG']
 
         # Check if URL is unprotected
-        unprotected = current_app.config['THORN_CONFIG'].get(
+        unprotected = config.get(
             'unprotected_urls', {})
         path = request.headers.get('X-Original-URI', '').split('?')[0]
         method = request.headers.get('X-Original-Method', 'INVALID')
@@ -126,6 +127,17 @@ class ValidateTokenApi(Resource):
                 or '/public/' in path:
             status_code = 200
             result = {}
+        elif request.headers.get('X-Auth-Token') == str(config.get('secret')):
+            status_code = 200
+            result = { 
+                    'X-User-Id': 1,
+                    'X-Permissions': ['ADMINISTRATOR'],
+                    'X-Locale': 'pt',
+                    'X-User-Data': '{};{};{} {};{}'.format(
+                        'admin', 'admin@lemonade.org.br',
+                        'Admin', 'Lemonade',
+                        'pt')
+                    }
         else: 
             authorization = request.headers.get('Authorization')
             offset = 7 if authorization and authorization.startswith(
