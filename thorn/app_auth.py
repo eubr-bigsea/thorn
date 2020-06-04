@@ -72,10 +72,10 @@ def requires_auth(f):
         config = current_app.config[CONFIG_KEY]
         # TODO: User uma configuração / chave no thorn conhecida aqui
         user_id = request.headers.get('x-user-id')
-        permissions = request.headers.get('x-permissions')
+        permissions = request.headers.get('x-permissions', '')
         user_data = request.headers.get('x-user-data')
 
-        if all([user_data, user_id, permissions]):
+        if all([user_data, user_id]):
             login, email, name, locale = user_data.split(';')
             setattr(flask_g, 'user', 
                     SessionUser(user_id, login, email, name, locale, '', '',

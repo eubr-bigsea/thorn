@@ -40,6 +40,9 @@ class ApproveUserApi(Resource):
                 url='https://fixme.lemonade.org.br',
                 queue='thorn',)
         user.enabled = True
+        user.status = UserStatus.ENABLED
+        if user.locale is None:
+            user.locale = 'pt'
         db.session.add(user)
         db.session.commit()
         return {'status': 'OK', 'message': 'fixme'}, 200
@@ -399,6 +402,8 @@ class UserDetailApi(Resource):
         user = User.query.get(user_id)
         return_code = 200
         if user is not None:
+            # Retrieve roles the apply to all users
+            user.roles.extend(Role.query.filter(Role.all_user==True))
             result = {
                 'status': 'OK',
                 'data': [UserItemResponseSchema(exclude=('roles.users',)).dump(
