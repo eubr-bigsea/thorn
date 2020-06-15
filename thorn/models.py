@@ -41,10 +41,36 @@ class EditorType:
     DATETIME = 'DATETIME'
     EMAIL = 'EMAIL'
     URL = 'URL'
+    IMAGE = 'IMAGE'
+    FILE = 'FILE'
 
     @staticmethod
     def values():
         return [n for n in list(EditorType.__dict__.keys())
+                if n[0] != '_' and n != 'values']
+
+
+# noinspection PyClassHasNoInit
+class NotificationStatus:
+    UNREAD = 'UNREAD'
+    READ = 'READ'
+    DELETED = 'DELETED'
+
+    @staticmethod
+    def values():
+        return [n for n in list(NotificationStatus.__dict__.keys())
+                if n[0] != '_' and n != 'values']
+
+
+# noinspection PyClassHasNoInit
+class NotificationType:
+    INFO = 'INFO'
+    WARNING = 'WARNING'
+    ERROR = 'ERROR'
+
+    @staticmethod
+    def values():
+        return [n for n in list(NotificationType.__dict__.keys())
                 if n[0] != '_' and n != 'values']
 
 
@@ -112,7 +138,8 @@ class Asset(db.Model):
 
     # Associations
     owner_id = Column(Integer,
-                      ForeignKey("user.id"), nullable=False)
+                      ForeignKey("user.id",
+                                 name="fk_user_id"), nullable=False)
     owner = relationship(
         "User",
         foreign_keys=[owner_id])
@@ -154,6 +181,7 @@ class ConfigurationTranslation(translation_base(Configuration)):
 
     # Fields
     description = Column(Unicode(100))
+    category = Column(Unicode(100))
 
 
 class MailQueue(db.Model):
@@ -195,6 +223,39 @@ class ManagedResource(db.Model):
 
     def __str__(self):
         return self.path
+
+    def __repr__(self):
+        return '<Instance {}: {}>'.format(self.__class__, self.id)
+
+
+class Notification(db.Model):
+    """ Notification """
+    __tablename__ = 'notification'
+
+    # Fields
+    id = Column(Integer, primary_key=True)
+    created = Column(DateTime,
+                     default=datetime.datetime.utcnow, nullable=False,
+                     onupdate=datetime.datetime.utcnow)
+    status = Column(Enum(*list(NotificationStatus.values()),
+                         name='NotificationStatusEnumType'),
+                    default="UNREAD", nullable=False)
+    from_system = Column(Boolean,
+                         default=True, nullable=False)
+    type = Column(Enum(*list(NotificationType.values()),
+                       name='NotificationTypeEnumType'),
+                  default="INFO", nullable=False)
+
+    # Associations
+    user_id = Column(Integer,
+                     ForeignKey("user.id",
+                                name="fk_user_id"), nullable=False)
+    user = relationship(
+        "User",
+        foreign_keys=[user_id])
+
+    def __str__(self):
+        return self.created
 
     def __repr__(self):
         return '<Instance {}: {}>'.format(self.__class__, self.id)
@@ -265,6 +326,7 @@ class RoleTranslation(translation_base(Role)):
     __tablename__ = 'role_translation'
 
     # Fields
+    label = Column(Unicode(100))
     description = Column(Unicode(100))
 
 
@@ -311,6 +373,12 @@ class User(db.Model):
             "and_("
             "Role.id==user_role.c.role_id,"
             "Role.enabled==1)"))
+    workspace_id = Column(Integer,
+                          ForeignKey("workspace.id",
+                                     name="fk_workspace_id"))
+    workspace = relationship(
+        "Workspace",
+        foreign_keys=[workspace_id])
 
     def __str__(self):
         return self.login
@@ -328,6 +396,29 @@ class UserPermissionForAsset(db.Model):
 
     def __str__(self):
         return 'UserPermissionForAsset'
+
+    def __repr__(self):
+        return '<Instance {}: {}>'.format(self.__class__, self.id)
+
+
+class Workspace(db.Model):
+    """ A user workspace in Lemonade """
+    __tablename__ = 'workspace'
+
+    # Fields
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50), nullable=False)
+
+    # Associations
+    owner_id = Column(Integer,
+                      ForeignKey("user.id",
+                                 name="fk_user_id"), nullable=False)
+    owner = relationship(
+        "User",
+        foreign_keys=[owner_id])
+
+    def __str__(self):
+        return self.name
 
     def __repr__(self):
         return '<Instance {}: {}>'.format(self.__class__, self.id)

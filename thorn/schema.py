@@ -33,10 +33,11 @@ class ConfigurationListResponseSchema(Schema):
     id = fields.Integer(required=True)
     name = fields.String(required=True)
     description = fields.String(required=True)
+    category = fields.String(required=False, allow_none=True)
     value = fields.String(required=True)
-    enabled = fields.Boolean(required=True, default=True)
-    internal = fields.Boolean(required=True, default=True)
-    editor = fields.String(required=True, default='TEXT',
+    enabled = fields.Boolean(required=True, missing=True, default=True)
+    internal = fields.Boolean(required=True, missing=True, default=True)
+    editor = fields.String(required=True, missing='TEXT', default='TEXT',
                            validate=[OneOf(list(EditorType.__dict__.keys()))])
 
     # noinspection PyUnresolvedReferences
@@ -54,10 +55,11 @@ class ConfigurationItemResponseSchema(Schema):
     id = fields.Integer(required=True)
     name = fields.String(required=True)
     description = fields.String(required=True)
+    category = fields.String(required=False, allow_none=True)
     value = fields.String(required=True)
-    enabled = fields.Boolean(required=True, default=True)
-    internal = fields.Boolean(required=True, default=True)
-    editor = fields.String(required=True, default='TEXT',
+    enabled = fields.Boolean(required=True, missing=True, default=True)
+    internal = fields.Boolean(required=True, missing=True, default=True)
+    editor = fields.String(required=True, missing='TEXT', default='TEXT',
                            validate=[OneOf(list(EditorType.__dict__.keys()))])
 
     # noinspection PyUnresolvedReferences
@@ -73,10 +75,77 @@ class ConfigurationItemResponseSchema(Schema):
 class ConfigurationCreateRequestSchema(Schema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
+    category = fields.String(required=False, allow_none=True)
     value = fields.String(required=True)
-    enabled = fields.Boolean(required=True, default=True)
-    internal = fields.Boolean(required=True, default=True)
-    editor = fields.String(required=True, default='TEXT',
+    enabled = fields.Boolean(required=True, missing=True, default=True)
+    internal = fields.Boolean(required=True, missing=True, default=True)
+    editor = fields.String(required=True, missing='TEXT', default='TEXT',
+                           validate=[OneOf(list(EditorType.__dict__.keys()))])
+
+    # noinspection PyUnresolvedReferences
+    @post_load
+    def make_object(self, data):
+        """ Deserialize data into an instance of Configuration"""
+        return Configuration(**data)
+
+    class Meta:
+        ordered = True
+
+
+class ConfigurationListResponseSchema(Schema):
+    """ JSON serialization schema """
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    description = fields.String(required=True)
+    category = fields.String(required=False, allow_none=True)
+    value = fields.String(required=True)
+    enabled = fields.Boolean(required=True, missing=True, default=True)
+    internal = fields.Boolean(required=True, missing=True, default=True)
+    editor = fields.String(required=True, missing='TEXT', default='TEXT',
+                           validate=[OneOf(list(EditorType.__dict__.keys()))])
+
+    # noinspection PyUnresolvedReferences
+    @post_load
+    def make_object(self, data):
+        """ Deserialize data into an instance of Configuration"""
+        return Configuration(**data)
+
+    class Meta:
+        ordered = True
+
+
+class ConfigurationItemResponseSchema(Schema):
+    """ JSON serialization schema """
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    description = fields.String(required=True)
+    category = fields.String(required=False, allow_none=True)
+    value = fields.String(required=True)
+    enabled = fields.Boolean(required=True, missing=True, default=True)
+    internal = fields.Boolean(required=True, missing=True, default=True)
+    editor = fields.String(required=True, missing='TEXT', default='TEXT',
+                           validate=[OneOf(list(EditorType.__dict__.keys()))])
+
+    # noinspection PyUnresolvedReferences
+    @post_load
+    def make_object(self, data):
+        """ Deserialize data into an instance of Configuration"""
+        return Configuration(**data)
+
+    class Meta:
+        ordered = True
+
+
+class ConfigurationCreateRequestSchema(Schema):
+    """ JSON serialization schema """
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    description = fields.String(required=True)
+    category = fields.String(required=False, allow_none=True)
+    value = fields.String(required=True)
+    enabled = fields.Boolean(required=True, missing=True, default=True)
+    internal = fields.Boolean(required=True, missing=True, default=True)
+    editor = fields.String(required=True, missing='TEXT', default='TEXT',
                            validate=[OneOf(list(EditorType.__dict__.keys()))])
 
     # noinspection PyUnresolvedReferences
@@ -114,7 +183,7 @@ class PermissionItemResponseSchema(Schema):
     description = fields.String(required=True)
     applicable_to = fields.String(required=False, allow_none=True,
                                   validate=[OneOf(list(AssetType.__dict__.keys()))])
-    enabled = fields.Boolean(required=True, default=True)
+    enabled = fields.Boolean(required=True, missing=True, default=True)
 
     # noinspection PyUnresolvedReferences
     @post_load
@@ -130,8 +199,9 @@ class RoleListResponseSchema(Schema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     name = fields.String(required=True)
+    label = fields.String(required=True)
     description = fields.String(required=True)
-    system = fields.Boolean(required=True, default=False)
+    system = fields.Boolean(required=True, missing=False, default=False)
     users = fields.Nested(
         'thorn.schema.UserListResponseSchema',
         required=True,
@@ -151,10 +221,11 @@ class RoleItemResponseSchema(Schema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     name = fields.String(required=True)
+    label = fields.String(required=True)
     description = fields.String(required=True)
-    all_user = fields.Boolean(required=True, default=False)
-    system = fields.Boolean(required=True, default=False)
-    enabled = fields.Boolean(required=True, default=True)
+    all_user = fields.Boolean(required=True, missing=False, default=False)
+    system = fields.Boolean(required=True, missing=False, default=False)
+    enabled = fields.Boolean(required=True, missing=True, default=True)
     permissions = fields.Nested(
         'thorn.schema.PermissionItemResponseSchema',
         required=True,
@@ -177,8 +248,9 @@ class RoleItemResponseSchema(Schema):
 class RoleCreateRequestSchema(Schema):
     """ JSON serialization schema """
     name = fields.String(required=True)
+    label = fields.String(required=True)
     description = fields.String(required=True)
-    enabled = fields.Boolean(required=True, default=True)
+    enabled = fields.Boolean(required=True, missing=True, default=True)
 
     # noinspection PyUnresolvedReferences
     @post_load
@@ -195,18 +267,20 @@ class UserListResponseSchema(Schema):
     id = fields.Integer(required=True)
     login = fields.String(required=True)
     email = fields.String(required=True)
-    enabled = fields.Boolean(required=True, default=True)
-    status = fields.String(required=True, default='ENABLED',
+    enabled = fields.Boolean(required=True, missing=True, default=True)
+    status = fields.String(required=True, missing='ENABLED', default='ENABLED',
                            validate=[OneOf(list(UserStatus.__dict__.keys()))])
-    authentication_type = fields.String(required=False, allow_none=True, missing='INTERNAL',
+    authentication_type = fields.String(required=False, allow_none=True, missing='INTERNAL', default='INTERNAL',
                                         validate=[OneOf(list(AuthenticationType.__dict__.keys()))])
     created_at = fields.DateTime(
         required=True,
+        missing=datetime.datetime.utcnow,
         default=datetime.datetime.utcnow)
     updated_at = fields.DateTime(
         required=False,
         allow_none=True,
-        missing=datetime.datetime.utcnow)
+        missing=datetime.datetime.utcnow,
+        default=datetime.datetime.utcnow)
     first_name = fields.String(required=False, allow_none=True)
     last_name = fields.String(required=False, allow_none=True)
     locale = fields.String(required=False, allow_none=True)
@@ -216,6 +290,9 @@ class UserListResponseSchema(Schema):
         'thorn.schema.RoleListResponseSchema',
         required=True,
         many=True)
+    workspace = fields.Nested(
+        'thorn.schema.WorkspaceListResponseSchema',
+        allow_none=True)
     full_name = fields.Function(
         lambda x: "{} {}".format(
             x.first_name,
@@ -236,8 +313,8 @@ class UserItemResponseSchema(Schema):
     id = fields.Integer(required=True)
     login = fields.String(required=True)
     email = fields.String(required=True)
-    enabled = fields.Boolean(required=True, default=True)
-    status = fields.String(required=True, default='ENABLED',
+    enabled = fields.Boolean(required=True, missing=True, default=True)
+    status = fields.String(required=True, missing='ENABLED', default='ENABLED',
                            validate=[OneOf(list(UserStatus.__dict__.keys()))])
     first_name = fields.String(required=False, allow_none=True)
     last_name = fields.String(required=False, allow_none=True)
@@ -246,6 +323,9 @@ class UserItemResponseSchema(Schema):
         'thorn.schema.RoleItemResponseSchema',
         required=True,
         many=True)
+    workspace = fields.Nested(
+        'thorn.schema.WorkspaceItemResponseSchema',
+        allow_none=True)
     name = fields.Function(lambda x: "{} {}".format(x.first_name, x.last_name))
 
     # noinspection PyUnresolvedReferences
@@ -262,10 +342,10 @@ class UserCreateRequestSchema(Schema):
     """ JSON serialization schema """
     login = fields.String(required=True)
     email = fields.String(required=True)
-    enabled = fields.Boolean(required=True, default=True)
-    status = fields.String(required=True, default='ENABLED',
+    enabled = fields.Boolean(required=True, missing=True, default=True)
+    status = fields.String(required=True, missing='ENABLED', default='ENABLED',
                            validate=[OneOf(list(UserStatus.__dict__.keys()))])
-    authentication_type = fields.String(required=False, allow_none=True, missing='INTERNAL',
+    authentication_type = fields.String(required=False, allow_none=True, missing='INTERNAL', default='INTERNAL',
                                         validate=[OneOf(list(AuthenticationType.__dict__.keys()))])
     encrypted_password = fields.String(required=True)
     remember_created_at = fields.DateTime(required=False, allow_none=True)
@@ -276,12 +356,69 @@ class UserCreateRequestSchema(Schema):
     confirmation_sent_at = fields.DateTime(required=False, allow_none=True)
     unconfirmed_email = fields.String(required=False, allow_none=True)
     notes = fields.String(required=False, allow_none=True)
+    workspace = fields.Nested(
+        'thorn.schema.WorkspaceCreateRequestSchema',
+        allow_none=True)
 
     # noinspection PyUnresolvedReferences
     @post_load
     def make_object(self, data):
         """ Deserialize data into an instance of User"""
         return User(**data)
+
+    class Meta:
+        ordered = True
+
+
+class WorkspaceListResponseSchema(Schema):
+    """ JSON serialization schema """
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    owner = fields.Nested(
+        'thorn.schema.UserListResponseSchema',
+        required=True)
+
+    # noinspection PyUnresolvedReferences
+    @post_load
+    def make_object(self, data):
+        """ Deserialize data into an instance of Workspace"""
+        return Workspace(**data)
+
+    class Meta:
+        ordered = True
+
+
+class WorkspaceItemResponseSchema(Schema):
+    """ JSON serialization schema """
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    owner = fields.Nested(
+        'thorn.schema.UserItemResponseSchema',
+        required=True)
+
+    # noinspection PyUnresolvedReferences
+    @post_load
+    def make_object(self, data):
+        """ Deserialize data into an instance of Workspace"""
+        return Workspace(**data)
+
+    class Meta:
+        ordered = True
+
+
+class WorkspaceCreateRequestSchema(Schema):
+    """ JSON serialization schema """
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    owner = fields.Nested(
+        'thorn.schema.UserCreateRequestSchema',
+        required=True)
+
+    # noinspection PyUnresolvedReferences
+    @post_load
+    def make_object(self, data):
+        """ Deserialize data into an instance of Workspace"""
+        return Workspace(**data)
 
     class Meta:
         ordered = True
