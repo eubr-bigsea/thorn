@@ -15,6 +15,9 @@ from thorn.models import *
 log = logging.getLogger(__name__)
 
 
+def _get_global_roles():
+    return [r.id for r in Role.query.filter(Role.all_user==True)]
+
 def _get_jwt_token(user):
     return jwt.encode(
         {
@@ -30,14 +33,20 @@ def _get_jwt_token(user):
 
 
 def _success(user):
+    # Include global roles
+    user.roles.extend(Role.query.filter(Role.all_user==True))
     user_data = {
             'id': user.id,
             'email': user.email,
             'login': user.login,
             'locale': user.locale,
+            'workspace': {'id': user.workspace.id if user.workspace else None},
             'name': user.first_name + ('' if not user.last_name else ' ' 
                 + user.last_name),
-            'roles': [r.name for r in user.roles]
+            'roles': [{'name': r.name, 'description': r.description, 
+                'permissions': [{'id': p.id, 'name': p.name} 
+                    for p in r.permissions],
+                'id': r.id, 'label': r.label} for r in user.roles]
             }
     return Response(
             json.dumps({'status': 'OK', 'token': _get_jwt_token(user), 
@@ -156,10 +165,13 @@ class ValidateTokenApi(Resource):
                                          current_app.secret_key)
                     user = User.query.get(int(decoded.get('id')))
                     if user.enabled and user.status == UserStatus.ENABLED:
+                        global_roles = _get_global_roles()
                         result = {
                               'X-User-Id': user.id,
-                              'X-Permissions': [p.name for r in user.roles 
-                                  for p in r.permissions],
+                              'X-Permissions': ','.join([p.name for r in user.roles 
+                                  for p in r.permissions]),
+                              'X-Roles': ','.join(map(str, [
+                                  r.id for r in user.roles] + global_roles)),
                               'X-Locale': user.locale,
                               'X-User-Data': '{};{};{} {};{}'.format(
                                   user.login, user.email,
