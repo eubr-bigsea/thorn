@@ -83,7 +83,9 @@ class RoleListApi(Resource):
 
         if request.json is not None:
             request_schema = RoleCreateRequestSchema()
-            response_schema = RoleItemResponseSchema()
+            response_schema = RoleItemResponseSchema(exclude=('users.roles',))
+            #FIXME
+            request.json['label'] = request.json.get('name')
             form = request_schema.load(request.json)
 
             permissions = request.json.pop('permissions') \
