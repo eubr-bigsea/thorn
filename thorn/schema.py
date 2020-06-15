@@ -92,67 +92,73 @@ class ConfigurationCreateRequestSchema(Schema):
         ordered = True
 
 
-class ConfigurationListResponseSchema(Schema):
+class NotificationListResponseSchema(Schema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
-    name = fields.String(required=True)
-    description = fields.String(required=True)
-    category = fields.String(required=False, allow_none=True)
-    value = fields.String(required=True)
-    enabled = fields.Boolean(required=True, missing=True, default=True)
-    internal = fields.Boolean(required=True, missing=True, default=True)
-    editor = fields.String(required=True, missing='TEXT', default='TEXT',
-                           validate=[OneOf(list(EditorType.__dict__.keys()))])
+    created = fields.DateTime(
+        required=True,
+        missing=datetime.datetime.utcnow,
+        default=datetime.datetime.utcnow)
+    status = fields.String(required=True, missing="UNREAD", default="UNREAD",
+                           validate=[OneOf(list(NotificationStatus.__dict__.keys()))])
+    from_system = fields.Boolean(required=True, missing=True, default=True)
+    type = fields.String(required=True, missing="INFO", default="INFO",
+                         validate=[OneOf(list(NotificationType.__dict__.keys()))])
 
     # noinspection PyUnresolvedReferences
     @post_load
     def make_object(self, data):
-        """ Deserialize data into an instance of Configuration"""
-        return Configuration(**data)
+        """ Deserialize data into an instance of Notification"""
+        return Notification(**data)
 
     class Meta:
         ordered = True
 
 
-class ConfigurationItemResponseSchema(Schema):
+class NotificationItemResponseSchema(Schema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
-    name = fields.String(required=True)
-    description = fields.String(required=True)
-    category = fields.String(required=False, allow_none=True)
-    value = fields.String(required=True)
-    enabled = fields.Boolean(required=True, missing=True, default=True)
-    internal = fields.Boolean(required=True, missing=True, default=True)
-    editor = fields.String(required=True, missing='TEXT', default='TEXT',
-                           validate=[OneOf(list(EditorType.__dict__.keys()))])
+    created = fields.DateTime(
+        required=True,
+        missing=datetime.datetime.utcnow,
+        default=datetime.datetime.utcnow)
+    status = fields.String(required=True, missing="UNREAD", default="UNREAD",
+                           validate=[OneOf(list(NotificationStatus.__dict__.keys()))])
+    from_system = fields.Boolean(required=True, missing=True, default=True)
+    type = fields.String(required=True, missing="INFO", default="INFO",
+                         validate=[OneOf(list(NotificationType.__dict__.keys()))])
 
     # noinspection PyUnresolvedReferences
     @post_load
     def make_object(self, data):
-        """ Deserialize data into an instance of Configuration"""
-        return Configuration(**data)
+        """ Deserialize data into an instance of Notification"""
+        return Notification(**data)
 
     class Meta:
         ordered = True
 
 
-class ConfigurationCreateRequestSchema(Schema):
+class NotificationCreateRequestSchema(Schema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
-    name = fields.String(required=True)
-    description = fields.String(required=True)
-    category = fields.String(required=False, allow_none=True)
-    value = fields.String(required=True)
-    enabled = fields.Boolean(required=True, missing=True, default=True)
-    internal = fields.Boolean(required=True, missing=True, default=True)
-    editor = fields.String(required=True, missing='TEXT', default='TEXT',
-                           validate=[OneOf(list(EditorType.__dict__.keys()))])
+    created = fields.DateTime(
+        required=True,
+        missing=datetime.datetime.utcnow,
+        default=datetime.datetime.utcnow)
+    status = fields.String(required=True, missing="UNREAD", default="UNREAD",
+                           validate=[OneOf(list(NotificationStatus.__dict__.keys()))])
+    from_system = fields.Boolean(required=True, missing=True, default=True)
+    type = fields.String(required=True, missing="INFO", default="INFO",
+                         validate=[OneOf(list(NotificationType.__dict__.keys()))])
+    user = fields.Nested(
+        'thorn.schema.UserCreateRequestSchema',
+        required=True)
 
     # noinspection PyUnresolvedReferences
     @post_load
     def make_object(self, data):
-        """ Deserialize data into an instance of Configuration"""
-        return Configuration(**data)
+        """ Deserialize data into an instance of Notification"""
+        return Notification(**data)
 
     class Meta:
         ordered = True
