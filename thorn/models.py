@@ -405,6 +405,30 @@ class UserPermissionForAsset(db.Model):
         return '<Instance {}: {}>'.format(self.__class__, self.id)
 
 
+class UserPreference(db.Model):
+    """ User preference """
+    __tablename__ = 'user_preference'
+
+    # Fields
+    id = Column(Integer, primary_key=True)
+    key = Column(String(100), nullable=False)
+    value = Column(LONGTEXT, nullable=False)
+
+    # Associations
+    user_id = Column(Integer,
+                     ForeignKey("user.id",
+                                name="fk_user_id"), nullable=False)
+    user = relationship(
+        "User",
+        foreign_keys=[user_id])
+
+    def __str__(self):
+        return self.key
+
+    def __repr__(self):
+        return '<Instance {}: {}>'.format(self.__class__, self.id)
+
+
 class Workspace(db.Model):
     """ A user workspace in Lemonade """
     __tablename__ = 'workspace'
