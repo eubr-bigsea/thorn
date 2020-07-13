@@ -18,6 +18,7 @@ COPY . $THORN_HOME/
 COPY bin/entrypoint /usr/local/bin/
 
 # CMD ["/usr/local/thorn/sbin/thorn-daemon.sh", "docker"]
+RUN pybabel compile -d $THORN_HOME/thorn/i18n/locales
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/usr/local/bin/entrypoint"]
 CMD ["server"]
