@@ -13,6 +13,7 @@ from thorn.schema import *
 from flask_babel import gettext, get_locale
 from thorn.jobs import send_email
 import json
+from thorn.models import Configuration
 from thorn.util import translate_validation
 
 log = logging.getLogger(__name__)
@@ -32,20 +33,28 @@ class ApproveUserApi(Resource):
         if not user:
             return {'status': 'ERROR', 'message': 'not found'}, 404
         user.confirmed_at = datetime.datetime.now()
+        base_url_conf = Configuration.query.filter_by(
+                name='SERVER_BASE_URL').first()
+
+        if base_url_conf is None:
+            base_url_conf = ''
+        success_message = gettext('Registration confirmed')
         job = send_email.queue(
-                subject=gettext('Registration confirmed'), 
-                to='waltersf@gmail.com', 
-                name='Walter dos Santos Filho',
+                subject=success_message,
+                to=user.email, 
+                name=user.first_name + " " + user.last_name,
                 template='confirm',
-                url='https://fixme.lemonade.org.br',
+                link=base_url_conf.value,
                 queue='thorn',)
+        
         user.enabled = True
         user.status = UserStatus.ENABLED
         if user.locale is None:
             user.locale = 'pt'
+
         db.session.add(user)
         db.session.commit()
-        return {'status': 'OK', 'message': 'fixme'}, 200
+        return {'status': 'OK', 'message': success_message}, 200
 
 class ResetPasswordApi(Resource):
     @staticmethod

@@ -40,7 +40,6 @@ from thorn.user_api import UserListApi, \
     RegisterApi
 from thorn.auth_api import ValidateTokenApi, AuthenticationApi
 from thorn.role_api import RoleListApi, RoleDetailApi
-from thorn.notification_api import NotificationListApi, NotificationDetailApi
 from thorn.configuration_api import ConfigurationListApi
 import rq_dashboard
 
@@ -71,8 +70,6 @@ mappings = {
     '/configurations': ConfigurationListApi,
     '/password/reset': ResetPasswordApi,
     '/permissions': PermissionListApi,
-    '/notifications': NotificationListApi,
-    '/notifications/<int:notification_id>': NotificationDetailApi,
     '/roles': RoleListApi,
     '/roles/<int:role_id>': RoleDetailApi,
     '/users/me': ProfileApi,

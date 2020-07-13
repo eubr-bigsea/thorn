@@ -1,0 +1,1849 @@
+# Portuguese (Brazil) translations for PROJECT.
+# Copyright (C) 2017 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2017.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2020-07-12 22:03-0300\n"
+"PO-Revision-Date: 2020-07-12 22:08-0300\n"
+"Last-Translator: \n"
+"Language-Team: pt_BR <LL@li.org>\n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Generated-By: Babel 2.5.0\n"
+"X-Generator: Poedit 1.8.7.1\n"
+
+#: thorn/auth_api.py:61
+msgid "LDAP User"
+msgstr "Usuário LDAP"
+
+#: thorn/auth_api.py:75
+msgid "Invalid login or password."
+msgstr "Usuário ou senha inválidos."
+
+#: thorn/auth_api.py:99
+msgid "Unsupported authentication type"
+msgstr "Tipo de autenticação não é suportado"
+
+#: thorn/auth_api.py:101
+msgid "User disabled"
+msgstr "Usuário não está ativo"
+
+#: thorn/auth_api.py:155
+msgid "Invalid authentication"
+msgstr "Tipo de autenticação inválida"
+
+#: thorn/configuration_api.py:23
+msgid "Configuration"
+msgstr "Configuração"
+
+#: thorn/configuration_api.py:82 thorn/permission_api.py:61
+#: thorn/role_api.py:75 thorn/user_api.py:390
+#, python-format
+msgid "Listing %(name)s"
+msgstr "Listando %(name)s"
+
+#: thorn/configuration_api.py:88 thorn/role_api.py:211 thorn/rq_job_api.py:44
+#: thorn/user_api.py:238
+msgid "Insufficient data."
+msgstr "Dados insuficientes"
+
+#: thorn/configuration_api.py:91 thorn/rq_job_api.py:47
+#, python-format
+msgid "Updating %s"
+msgstr "Atualizando %s"
+
+#: thorn/configuration_api.py:106 thorn/rq_job_api.py:62
+#, python-format
+msgid "%(n)s was updated with success!"
+msgstr "%(n)s foi atualizado com sucesso!"
+
+#: thorn/configuration_api.py:113 thorn/role_api.py:123 thorn/role_api.py:195
+#: thorn/role_api.py:258 thorn/rq_job_api.py:69 thorn/user_api.py:227
+#: thorn/user_api.py:291 thorn/user_api.py:452
+msgid "Internal error"
+msgstr "Erro interno"
+
+#: thorn/configuration_api.py:121 thorn/rq_job_api.py:77
+#, python-format
+msgid "Invalid data for %(name)s"
+msgstr "Dados inválidos para %(name)s"
+
+#: thorn/gateway.py:16
+msgid "API Gateway"
+msgstr "API Gateway"
+
+#: thorn/permission_api.py:23
+msgid "Permission"
+msgstr "Permissão"
+
+#: thorn/role_api.py:24 thorn/role_api.py:137
+msgid "Role"
+msgstr "Papel"
+
+#: thorn/role_api.py:81 thorn/user_api.py:174
+msgid "Missing json in the request body"
+msgstr "Json ausente no corpo da mensagem"
+
+#: thorn/role_api.py:99 thorn/user_api.py:199
+msgid "Validation error"
+msgstr "Erro de validação"
+
+#: thorn/role_api.py:103 thorn/role_api.py:234
+msgid "A system role cannot be changed"
+msgstr "Um perfil de sistema não pode ser alterado"
+
+#: thorn/role_api.py:116 thorn/user_api.py:212
+#, python-format
+msgid "Adding %s"
+msgstr "Adicionando %s"
+
+#: thorn/role_api.py:143 thorn/user_api.py:408
+#, python-format
+msgid "Retrieving %s (id=%s)"
+msgstr "Recuperando %s (id=%s)"
+
+#: thorn/role_api.py:163 thorn/user_api.py:425
+#, python-format
+msgid "%(name)s not found (id=%(id)s)"
+msgstr "%(name)s não foi encontrado(a) (id=%(id)s)"
+
+#: thorn/role_api.py:174 thorn/user_api.py:437
+#, python-format
+msgid "Deleting %s (id=%s)"
+msgstr "Excluindo %s (id=%s)"
+
+#: thorn/role_api.py:182
+msgid "A system role cannot be deleted"
+msgstr "Um perfil de sistema não pode ser excluído"
+
+#: thorn/role_api.py:190 thorn/user_api.py:447
+#, python-format
+msgid "%(name)s deleted with success!"
+msgstr "%(name)s foi excluído com sucesso!"
+
+#: thorn/role_api.py:204 thorn/user_api.py:461
+#, python-format
+msgid "%(name)s not found (id=%(id)s)."
+msgstr "%(name)s não foi encontrado(a) (id=%(id)s)."
+
+#: thorn/role_api.py:215 thorn/user_api.py:242
+#, python-format
+msgid "Updating %s (id=%s)"
+msgstr "Atualizando %s (id=%s)"
+
+#: thorn/role_api.py:249 thorn/user_api.py:282
+#, python-format
+msgid "%(n)s (id=%(id)s) was updated with success!"
+msgstr "%(n)s (id=%(id)s) foi atualizado com sucesso!"
+
+#: thorn/role_api.py:266 thorn/user_api.py:299
+#, python-format
+msgid "Invalid data for %(name)s (id=%(id)s)"
+msgstr "Dados inválidos para %(name)s (id=%(id)s)"
+
+#: thorn/rq_job_api.py:21
+msgid "BackgroundJob"
+msgstr "Background Job"
+
+#: thorn/user_api.py:41
+msgid "Registration confirmed"
+msgstr "Registro confirmado"
+
+#: thorn/user_api.py:62
+msgid "Record not found"
+msgstr "Registro não encontrado"
+
+#: thorn/user_api.py:80
+msgid "User not found or invalid token."
+msgstr "Usuário não encontrado ou token inválido."
+
+#: thorn/user_api.py:96
+msgid "Password changed with success!"
+msgstr "Senha alterada com sucesso!"
+
+#: thorn/user_api.py:100
+msgid "Password too short"
+msgstr "Senha muito curta"
+
+#: thorn/user_api.py:120
+msgid "Reset password instructions"
+msgstr "Instruções para reiniciar a senha"
+
+#: thorn/user_api.py:129
+msgid ""
+"Success! Soon you will receive an email with instructions to reset your "
+"password."
+msgstr ""
+"Sucesso! Em breve você receberá um email com instruções sobre como reiniciar "
+"sua senha."
+
+#: thorn/user_api.py:190
+msgid "You must inform a valid password."
+msgstr "Você deve informar uma senha válida."
+
+#: thorn/user_api.py:208
+msgid "Email in use. Please, inform another."
+msgstr "Email já cadastrado. Por favor, informe outra."
+
+#: thorn/user_api.py:221
+msgid "User registered with success!"
+msgstr "Usuário registrado com sucesso!"
+
+#: thorn/user_api.py:267
+msgid "Invalid password or confirmation"
+msgstr "Senha ou confirmação inválida(s)"
+
+#: thorn/user_api.py:309 thorn/user_api.py:326 thorn/user_api.py:395
+#: thorn/user_api.py:402
+msgid "User"
+msgstr "Usuário"
+
+#: thorn/util.py:39
+msgid "LDAP server is down."
+msgstr "Servidor LDAP não está acessível."
+
+#: thorn/util.py:42
+msgid "LDAP server reported an error."
+msgstr "Servidor LDAP reportou um erro."
+
+#: thorn/templates/mail/confirm.html:4
+#, python-format
+msgid "Hello again, %(user)s!"
+msgstr "Olá novamente, %(user)s!"
+
+#: thorn/templates/mail/confirm.html:5
+msgid "Your access to Lemonade application has been granted!"
+msgstr "Seu acesso ao Lemonade foi garantido!"
+
+#: thorn/templates/mail/confirm.html:7
+msgid "You can login in at"
+msgstr "Você pode se autenticar por aqui: "
+
+#: thorn/templates/mail/confirm.html:9
+#: thorn/templates/mail/reset_password.html:12
+#: thorn/templates/mail/welcome.html:9
+msgid "Questions?"
+msgstr "Dúvidas?"
+
+#: thorn/templates/mail/confirm.html:10 thorn/templates/mail/welcome.html:10
+msgid ""
+"Visit project <a href='https://docs.lemonade.org.br'>documentation</a> for a "
+"complete list of supported operations, plataforms and how to operate the "
+"LEMONADE interface."
+msgstr ""
+"Visite a <a href='https://docs.lemonade.org.br'>documentation do projeto</a> "
+"para a lista completa de operações suportadas, plataformas e sobre como "
+"operar a interface do LEMONADE."
+
+#: thorn/templates/mail/reset_password.html:4
+#: thorn/templates/mail/welcome.html:4
+#, python-format
+msgid "Hello, %(user)s!"
+msgstr "Olá, %(user)s!"
+
+#: thorn/templates/mail/reset_password.html:6
+msgid ""
+"Someone has requested a link to change your password, and you can do this "
+"through the link below."
+msgstr ""
+"Alguém solicitou o link para alteração de sua senha. O link encontra-se a "
+"seguir."
+
+#: thorn/templates/mail/reset_password.html:7
+msgid "If you didn't request this, please ignore this email."
+msgstr "Se você não fez essa solicitação, por favor, ignore este email."
+
+#: thorn/templates/mail/reset_password.html:8
+msgid ""
+"Your password won't change until you access the link above and create a new "
+"one."
+msgstr ""
+"Sua senha não será alterada até que você acesse o link a seguir e defina uma "
+"nova."
+
+#: thorn/templates/mail/reset_password.html:10
+msgid "Change my password"
+msgstr "Alterar minha senha"
+
+#: thorn/templates/mail/reset_password.html:13
+msgid ""
+"Visit project <a href='https://docs.lemonade.org.br'>documentation</a> for a "
+"complete list of supported operations, plataforms and how to operate "
+"Lemonade user interface."
+msgstr ""
+"Visite a <a href='https://docs.lemonade.org.br'>documentação</a> do projeto "
+"para uma lista completa das operações suportadas, plataformas e como operar "
+"a interface de usuário do Lemonade."
+
+#: thorn/templates/mail/welcome.html:5
+msgid "Welcome and thanks for joining LEMONADE."
+msgstr "Bem-vindo(a) e muito obrigado por usar o LEMONADE."
+
+#: thorn/templates/mail/welcome.html:6
+#, python-format
+msgid ""
+"First, if you need assistance, please email us, at <a href='mailto:"
+"%(support)s'>%(support)s</a>. We can help answer questions about usage, "
+"solutions and problems reagarding the platform."
+msgstr ""
+"Primeiro, se você precisa de ajuda, envie um email para <a href='mailto:"
+"%(support)s'>%(support)s</a>. Podemos ajudá-lo em assuntos relacionados ao "
+"uso, soluções e problemas relacionados à plataforma."
+
+#: thorn/templates/mail/welcome.html:7
+msgid ""
+"Second, our team is analising your profile and soon as possible you will "
+"receive another email that grant your access to the platform."
+msgstr ""
+"Segundo, nosso time está analisando seu perfil e assim que possível, você "
+"receberá outro e-mail que lhe dará acesso à plataforma."
+
+#~ msgid "Email in use. Inform another."
+#~ msgstr "O email informado está sendo usado. Por favor, informe outro."
+
+#~ msgid ""
+#~ "First, if you need assistance, please email us, at <a href='mailto:"
+#~ "lemonade.suporte@gmail.com'>lemonade.suporte@gmail.com</a>. We can help "
+#~ "answer questions about usage, solutions and problems reagarding the "
+#~ "platform."
+#~ msgstr ""
+#~ "Primeiramente, se você precisa de ajuda ajuda, pode enviar um e-mail para "
+#~ "<a href='mailto:lemonade.suporte@gmail.com'>lemonade.suporte@gmail.com</"
+#~ "a>. Podemos responder questões sobre uso, soluções e problemas "
+#~ "relacionados à plataforma."
+
+#~ msgid "Invalid login or password"
+#~ msgstr "Login ou senha inválidos"
+
+#~ msgid "Roles"
+#~ msgstr "Papéis"
+
+#~ msgid "Hello, %(u)!"
+#~ msgstr "Olá,  %(u)!"
+
+#~ msgid "Processing workflow queue %s"
+#~ msgstr "Processando fila de workflow %s"
+
+#~ msgid "Invalid platform value: {}"
+#~ msgstr "Valor inválido para a plataforma: {}"
+
+#~ msgid "At least one parameter is missing"
+#~ msgstr "Parâmetro ausente na função de agregação"
+
+#~ msgid "Method generate_code should be implemented in {} subclass"
+#~ msgstr "Método generate_code pode ser implementado na subclasse {}"
+
+#~ msgid "This implementation of traceability do not support multiple inputs"
+#~ msgstr ""
+#~ "Esta implementação de rastreabilidade não suporta entradas múltiplas"
+
+#~ msgid "Workflow must have at least 1 data source to be deployed."
+#~ msgstr ""
+#~ "Para ser implantado, o fluxo de trabalho precisa de pelo menos uma fonte "
+#~ "de dados. "
+
+#~ msgid "Parameter '{}' must be informed for task {}"
+#~ msgstr "O parâmetro '{}' deve ser informado para a tarefa {}"
+
+#~ msgid "Parameters '{}' must be informed for task {}"
+#~ msgstr "Parâmetros '{}' devem ser informados para a tarefa {}"
+
+#~ msgid "Parameters '{}' and '{}' must be informed for task {}"
+#~ msgstr "Parâmetros '{}' e '{}' devem ser informado para a tarefa {}"
+
+#~ msgid "Emit %s %s %s %s"
+#~ msgstr "Emitir %s %s %s %s"
+
+#~ msgid ""
+#~ "Unhandled error (%s) \n"
+#~ ">%s"
+#~ msgstr ""
+#~ "Erro não tratado (%s) \n"
+#~ ">%s"
+
+#~ msgid "Processing message %s for app %s"
+#~ msgstr "Processando a mesangem %s para a aplicação %s"
+
+#~ msgid "Running job with lang {}/{}"
+#~ msgstr "Executando o job usando o idioma {}/{}"
+
+#~ msgid "Execute message finished"
+#~ msgstr "Mensagem de execução finalizada"
+
+#~ msgid "Terminate message received (job_id=%s)"
+#~ msgstr "Mensagem de término recebida (job_id=%s)"
+
+#~ msgid "Terminate message received (app=%s)"
+#~ msgstr "Mensagem de término recebida (app=%s)"
+
+#~ msgid "Unknown message type %s"
+#~ msgstr "Tipo da mensagem desconhecido %s"
+
+#~ msgid "Running job"
+#~ msgstr "Executando tarefa"
+
+#~ msgid "Job finished in {0:.2f}s"
+#~ msgstr "Job executado em {0:.2f}s"
+
+#~ msgid "Invalid or missing parameters: {}"
+#~ msgstr "Parâmetro inválido ou ausente: {}"
+
+#~ msgid "Unhandled error"
+#~ msgstr "Erro não tratado"
+
+#~ msgid "Spark minion (workflow_id=%s,app_id=%s) started (pid=%s)"
+#~ msgstr "Spark minion (workflow_id=%s, app_id=%s) iniciou (pid=%s)"
+
+#~ msgid "Parameter '{}' and '{}' must be informed for task {}"
+#~ msgstr "Parâmetros '{}' e  '{}' devem ser informados para a tarefa {}"
+
+#~ msgid "Parameter '{}', '{}' and '{}' must be informed for task {}"
+#~ msgstr "Parâmetros '{}', '{}' e  '{}' devem ser informados para a tarefa {}"
+
+#~ msgid ""
+#~ "Parameter {} and {} must be informed if is using replace by value in task "
+#~ "{}."
+#~ msgstr ""
+#~ "Parâmetros '{}' e  '{}' devem ser informados se usando substituição por "
+#~ "valor na tarefa {}"
+
+#~ msgid ""
+#~ "Parameter 'value' must be [x>=0] if is using the current type of sampling "
+#~ "in task {}."
+#~ msgstr ""
+#~ "Parâmetro 'value/valor' deve ser [x>=0] se para o tipo amostra na tarefa "
+#~ "{}."
+
+#~ msgid "Parameter must be informed for task {}."
+#~ msgstr "Parâmetro deve ser informado para a tarefa: {}."
+
+#~ msgid "Function {f}() does not exists."
+#~ msgstr "Função {f}() não existe."
+
+#~ msgid "Parameters {}, {} and {} must be informed for task {}."
+#~ msgstr ""
+#~ "Parâmetros '{}', '{}' e  '{}' devem ser informados para a tarefa {}."
+
+#~ msgid ""
+#~ "Parameters {}, {} and {} must contain only one field (in each one) for "
+#~ "task {}."
+#~ msgstr ""
+#~ "Parâmetros '{}', '{}' e  '{}' devem conter apenas um campo (em cada um) "
+#~ "para a tarefa {}."
+
+#~ msgid "Parameter {} and {} must be informed for task {}"
+#~ msgstr "Parâmetro {} e {} precisam ser informados para a tarefa {}"
+
+#~ msgid "Invalid type for operation Tokenizer: {}"
+#~ msgstr "Tipo inválido para operação Tokenizer: {}"
+
+#~ msgid "Task completed"
+#~ msgstr "Tarefa completada"
+
+#~ msgid "Task running"
+#~ msgstr "Tarefa executando"
+
+#~ msgid "Lemonade task %s completed"
+#~ msgstr "Tarefa Lemonade %s completada"
+
+#~ msgid "Parents completed, submitting %s"
+#~ msgstr "Tarefas pais completadas, submetendo %s"
+
+#~ msgid "Lemonade task %s started"
+#~ msgstr "Tarefa Lemonade %s iniciada"
+
+#~ msgid "Submitting parent task {} before {}"
+#~ msgstr "Submetendo tarefas-pai {} antes de {}"
+
+#~ msgid "Parameter {} {} {} are required"
+#~ msgstr "Parâmetros {}, {} e {} são obrigatórios"
+
+#~ msgid "Parameter {} is invalid"
+#~ msgstr "Parâmetro {} é inválido"
+
+#~ msgid "Parameter {} {} are required"
+#~ msgstr "Parâmetros {} e {} são obrigatórios"
+
+#~ msgid "Parameter {} are required"
+#~ msgstr "Parâmetro {} é obrigatório"
+
+#~ msgid "Parameter {} is required"
+#~ msgstr "Parâmetro {} é obrigatório"
+
+#~ msgid "Parameter {} is required. The format is: (x, y) or (-1, x, y)"
+#~ msgstr "Parâmetro {} é obrigatório. O formato é:  (x, y) ou (-1, x, y)"
+
+#~ msgid "Parameter {} is required."
+#~ msgstr "Parâmetro {} é obrigatório"
+
+#~ msgid "Parameter {l1} and {l2} are required"
+#~ msgstr "Parâmetros {l1} e {l2} são obrigatórios"
+
+#~ msgid "Parameter {} needs to be positive integer"
+#~ msgstr "Parâmetro {} deve ser um inteiro positivo"
+
+#~ msgid "Parameter {} needs to be positive float"
+#~ msgstr "Parâmetro {} deve ser um número positivo"
+
+#~ msgid "Parameter {} requires at least 2."
+#~ msgstr "Parâmetro {} requer pelo menos 2."
+
+#~ msgid "The operation needs the inputs."
+#~ msgstr "A operação requer entradas."
+
+#~ msgid "It is necessary to inform the training data."
+#~ msgstr "É necessário informar os dados de treinamento."
+
+#~ msgid "It is necessary to inform the input(s) layer(s)."
+#~ msgstr "É necessário informar a(s) camada(s) de entrada."
+
+#~ msgid "It is necessary to inform the output(s) layer(s)."
+#~ msgstr "É necessário informar a(s) camada(s) de saída."
+
+#~ msgid "Parameter {} is invalid."
+#~ msgstr "Parâmetro {} é inválido."
+
+#~ msgid "File {} exists."
+#~ msgstr "Arquivo {} existe."
+
+#~ msgid "Parameter {} invalid."
+#~ msgstr "Parâmetro {} é inválido."
+
+#~ msgid "Parameter {} not supported yet."
+#~ msgstr "Parâmetro {} ainda não é suportado."
+
+#~ msgid ""
+#~ "You need to correctly specify the ports for training and/or validation."
+#~ msgstr ""
+#~ "Você precisa especificar corretamente as portas para treinamento e/ou "
+#~ "validação."
+
+#~ msgid ""
+#~ ",\n"
+#~ "Parameter {} is invalid."
+#~ msgstr ""
+#~ ",\n"
+#~ "Parâmetro {} é inválido.;"
+
+#~ msgid "Unsupported image format: {}"
+#~ msgstr "Formato de imagem não suportado: {}"
+
+#~ msgid "Training and validation images files are in different formats."
+#~ msgstr ""
+#~ "Arquivos de imagem de treinamento e validação estão em formatos "
+#~ "diferentes."
+
+#~ msgid "Incorrect data source configuration (empty url)"
+#~ msgstr "Configuração incorreta para fonte de dados (url vazia)"
+
+#~ msgid "Success."
+#~ msgstr "Sucesso."
+
+#~ msgid "Port output format not supported."
+#~ msgstr "Formato da porta de saída  não suportado."
+
+#~ msgid "Success getting data from task."
+#~ msgstr "Sucesso ao obter dados da tarefa."
+
+#~ msgid "State does not exists, processing app."
+#~ msgstr "Estado não existe, processando a aplicação"
+
+#~ msgid "Invalid port."
+#~ msgstr "Porta inválida."
+
+#~ msgid "Unable to retrieve data because a previous error."
+#~ msgstr "Não é possível recuperar os dados devido a um erro anterior."
+
+#~ msgid "Invalid Python code or incorrect encoding: {}"
+#~ msgstr "Código Python inválido ou codificação incorreta: {}"
+
+#~ msgid "Job {} was canceled"
+#~ msgstr "Trabalho {} foi cancelado."
+
+#~ msgid "App {} was terminated"
+#~ msgstr "Aplicação {} foi finalizada."
+
+#~ msgid "Workflow specification is missing"
+#~ msgstr "Especificação do workflow não especificada"
+
+#~ msgid "Task ignored (not used by other task or as an output)"
+#~ msgstr "Tarefa ignorada (não é usada por outra tarefa ou como saída)"
+
+#~ msgid "Finishing minion"
+#~ msgstr "Terminar o minion"
+
+#~ msgid "Pressed CTRL+C / SIGINT. Minion canceled the job."
+#~ msgstr "CTRL+C/SIGINT pressionado. Minion cancelou o job."
+
+#~ msgid "Invalid message JSON: {}"
+#~ msgstr "Mensagem JSON inválida: {}"
+
+#~ msgid "Unsupported cluster type, it cannot run Keras applications."
+#~ msgstr ""
+#~ "Tipo de cluster não é suportado, ele não pode executar aplicações Keras."
+
+#~ msgid "Cluster configuration changed. Stopping previous cluster."
+#~ msgstr "Configuração do cluster alterada. Parando o cluster anterior."
+
+#~ msgid "Error in general cluster parameters: {}"
+#~ msgstr "Erro nos parâmetros gerais do cluster: {}."
+
+#~ msgid ""
+#~ "Running job, but it requires allocation of cluster computers first and it "
+#~ "takes time."
+#~ msgstr ""
+#~ "Executando o job, mas ele requer alocação dos computadores no cluster e "
+#~ "isto leva tempo."
+
+#~ msgid "Minion is configured to stop cluster after each execution"
+#~ msgstr "Minion está configurado para parar o cluster após cada execução"
+
+#~ msgid "Keras minion (workflow_id=%s,app_id=%s) started (pid=%s)"
+#~ msgstr "Keras minion (workflow_id=%s,app_id=%s) started (pid=%s)"
+
+#~ msgid "It's necessary inform the subset parameter."
+#~ msgstr "É necessário informar o parâmetro subset."
+
+#~ msgid "Unsupported subset type."
+#~ msgstr "Tipo de subset não suportado."
+
+#~ msgid "Unsupported storage type: {}"
+#~ msgstr "Armazenamento não suportado: {}"
+
+#~ msgid "Invalid encryption function {}"
+#~ msgstr "Função de criptografia inválida {}"
+
+#~ msgid "Invalid masking type: {}"
+#~ msgstr "Tipo de máscara inválido: {}"
+
+#~ msgid "Data type is not supported for masking: {}"
+#~ msgstr "Tipo de dados não suportado para máscara: {}"
+
+#~ msgid "Starting minion"
+#~ msgstr "Iniciando o minion"
+
+#~ msgid "(c) Lemonade - DCC UFMG"
+#~ msgstr "Direitos Autorais (C) - DCC UFMG"
+
+#~ msgid "{type} is not supported (yet!)"
+#~ msgstr "{type} não é suportado (ainda!)"
+
+#~ msgid "Error running minion"
+#~ msgstr "Erro executando o minion"
+
+#~ msgid "Reloading {}"
+#~ msgstr "Recarregando"
+
+#~ msgid "Task completed, but not executed (not used in the workflow)."
+#~ msgstr "Tarefa completada, mas não executada (não foi usada no workflow)."
+
+#~ msgid "Task running (cached data)"
+#~ msgstr "Tarefa executando (usando dados em cache)"
+
+#~ msgid "Starting master process. Reading \"start\" queue"
+#~ msgstr "Inicializando o processo mestre. Lendo a fila de inicialização"
+
+#~ msgid "Starting pending app {}"
+#~ msgstr "Iniciando aplicação {} pendente"
+
+#~ msgid "Reading \"start\" queue."
+#~ msgstr "Lendo fila \"start\"."
+
+#~ msgid "Forwarding message to minion."
+#~ msgstr "Encaminhando mensagem para minion."
+
+#~ msgid "Minion status for (workflow_id=%s,app_id=%s): %s"
+#~ msgstr "Estado do Minion para (workflow_id=%s, app_id=%s): %s"
+
+#~ msgid "Minion (workflow_id=%s,app_id=%s) is running on %s."
+#~ msgstr "Minion (workflow_id=%s,app_id=%s)  está executando em %s."
+
+#~ msgid "Message %s forwarded to minion (workflow_id=%s,app_id=%s)"
+#~ msgstr "Mesangem %s encaminhada para o minion (workflow_id=%s, app_id=%s)"
+
+#~ msgid "Forking minion %s."
+#~ msgstr "Dividingo minion %s."
+
+#~ msgid "Minion command: %s"
+#~ msgstr "Comando do minion: %s"
+
+#~ msgid "Terminating (workflow_id=%s,app_id=%s)"
+#~ msgstr "Terminando (workflow_id=%s, app_id=%s)"
+
+#~ msgid "Master received a ticket for app %s"
+#~ msgstr "Mestre recebeu um rótulo para a aplicação %s"
+
+#~ msgid "Unknown help reason %s"
+#~ msgstr "Motivo de ajuda desconhecido %s"
+
+#~ msgid "Unable to launch minion: there is not available port for libprocess."
+#~ msgstr ""
+#~ "Impossível iniciar o minion: não há porta disponível para o libprocess."
+
+#~ msgid "Watching minions events."
+#~ msgstr "Acompanhando eventos do minion."
+
+#~ msgid "Minion {} finished."
+#~ msgstr "Minion {} terminou."
+
+#~ msgid "There are messages to process in app {} queue, starting minion."
+#~ msgstr ""
+#~ "Existem mensagens a processar na fila da aplicação {}, iniciando o minion."
+
+#~ msgid "Minion {} joined (pid: {}, port: {})."
+#~ msgstr "Minion juntou-se ao servidor (pid: {}, porta: {})."
+
+#~ msgid "Juicer server started (pid=%s)"
+#~ msgstr "Servidor Juicer iniciado (pid=%s)"
+
+#~ msgid "Terminating %s active minions"
+#~ msgstr "Terminando %s minions ativos"
+
+#~ msgid "Killing juicer server subprocesses and terminating"
+#~ msgstr "Matando subprocessos do servidor juicer e finalizando"
+
+#~ msgid "Model is being used, but at least one input is missing"
+#~ msgstr "Model está sendo usado, mas falta pelo menos uma entrada."
+
+#~ msgid "Parameter '{}' must be x>0 for task {}"
+#~ msgstr "Parâmetro '{}' deve ser x> 0 para tarefa {}"
+
+#~ msgid "Parameter '{}' must be x>=0 for task {}"
+#~ msgstr "Parâmetro '{}' deve ser x>= 0 para tarefa {}"
+
+#~ msgid ""
+#~ "Parameter '{}' must be a tuple with the size of each layer for task {}"
+#~ msgstr ""
+#~ "Parâmetro '{}' deve ser uma tupla com o tamanho de cada camada para a "
+#~ "tarefa {}"
+
+#~ msgid "Invalid optimizer value {} for class {}"
+#~ msgstr "Valor de optimizer inválido {} para classe {}"
+
+#~ msgid "Metadata do not include attributes information"
+#~ msgstr "Metadata não incluem informações sobre os atributos"
+
+#~ msgid "Not supported"
+#~ msgstr "Não suportado"
+
+#~ msgid "Database {} not supported"
+#~ msgstr "Base de dados {} não é suportada"
+
+#~ msgid "No command nor table specified for data source."
+#~ msgstr "Nenhum comando ou tabela especificada como fonte de dados."
+
+#~ msgid "Storage type not supported: {}"
+#~ msgstr "Tipo de armazenamento não suportado: {}"
+
+#~ msgid "Data source generated by workflow {}"
+#~ msgstr "Fonte de dados gerada pelo workflow {}"
+
+#~ msgid "File already exists"
+#~ msgstr "Arquivo já existe"
+
+#~ msgid "File not written (already exists)"
+#~ msgstr "Arquivo não foi escrito (já existe)"
+
+#~ msgid "Invalid mode {}"
+#~ msgstr "Modo inválido: {}"
+
+#~ msgid "Missing parameter in aggregation function"
+#~ msgstr "Parâmetro ausente na função de agregação"
+
+#~ msgid "Parameter '{}' must be 0<=x<=1 for task {}"
+#~ msgstr "Parâmetro '{}' deve ser 0<=x<=1 for tarefa {}"
+
+#~ msgid "Parameter '{}' must be not None when mode is '{}' for task {}"
+#~ msgstr ""
+#~ "Parâmetro '{}' não pode ser None quando o modo é '{}' para a tarefa {}"
+
+#~ msgid "Required parameter {} must be informed for task {}"
+#~ msgstr "Parâmetro obrigatório {} deve ser informado para tarefa {}"
+
+#~ msgid "Invalid query. Only SELECT is allowed."
+#~ msgstr "Consulta inválida. Apenas SELECT é permitido."
+
+#~ msgid ""
+#~ "Invalid names. Number of attributes in result differs from names informed."
+#~ msgstr ""
+#~ "Nomes inválidos. O número de atributos no resultado diferente dos nomes "
+#~ "informados."
+
+#~ msgid ""
+#~ "Parameter 'fraction' must be 0<=x<=1 if is using the current type of "
+#~ "sampling in task {}."
+#~ msgstr ""
+#~ "Parâmetro 'fraction' deve ser 0<=x<=1 se você está usando esse tipo de "
+#~ "amosta na tarefa {}."
+
+#~ msgid "Invalid metric value {}"
+#~ msgstr "Valor de métrica inválido {}"
+
+#~ msgid "Prediction versus Residual"
+#~ msgstr "Predição versus Resíduo"
+
+#~ msgid "Residual"
+#~ msgstr "Resíduo"
+
+#~ msgid "Prediction"
+#~ msgstr "Predição"
+
+#~ msgid "Parameters for this estimator"
+#~ msgstr "Parâmetros para o estimador"
+
+#~ msgid "Parameters"
+#~ msgstr "Parâmetros"
+
+#~ msgid "Value"
+#~ msgstr "Valor"
+
+#~ msgid "Actual versus Prediction"
+#~ msgstr "Real versus Predito"
+
+#~ msgid "Actual"
+#~ msgstr "Real"
+
+#~ msgid "Metric"
+#~ msgstr "Métrica"
+
+#~ msgid "Evaluation result"
+#~ msgstr "Resultado da avaliação"
+
+#~ msgid "Parameter '{}' must be x>1.0 for task {}"
+#~ msgstr "Parâmetro '{}' deve ser x>1.0 para tarefa {}"
+
+#~ msgid "Internal error."
+#~ msgstr "Erro interno."
+
+#~ msgid "Invalid type '{}' for task {}"
+#~ msgstr "Tipo inválido '{}' para a tarefa {}"
+
+#~ msgid "Incorrect data source configuration (empty url or not GEOJSON)"
+#~ msgstr ""
+#~ "Configuração de fonte de dados incorreta (URL vazia ou não é GEOJSON)"
+
+#~ msgid "Should be implemented in derived classes"
+#~ msgstr "Deve estar implementado em classes derivadas"
+
+#~ msgid "X-axis attribute not specified"
+#~ msgstr "Atributo do Eixo-X não especificado"
+
+#~ msgid "Attribute {} for X-axis does not exist in ({})"
+#~ msgstr "Atributo {} para o eixo-X não existe em ({})"
+
+#~ msgid "At least one attribute for Y-axis does not exist: {}"
+#~ msgstr "Pelo menos um atributo para o eixo-Y não existe: {}"
+
+#~ msgid "The maximum number of values for x-axis is 100."
+#~ msgstr "O número máximo de valores para o eixo-x é 100."
+
+#~ msgid "Attribute {} does not exist in ({})"
+#~ msgstr "Atributo {} não existe em ({})"
+
+#~ msgid "Attribute {} for label does not exist in ({})"
+#~ msgstr "Atributo {} para o label não existe em ({})"
+
+#~ msgid "The maximum number of values for this chart is 100."
+#~ msgstr "O número máximo para valores para este gráfico é 100."
+
+#~ msgid "attribute"
+#~ msgstr "atributo"
+
+#~ msgid "count"
+#~ msgstr "contagem"
+
+#~ msgid "approx. distinct"
+#~ msgstr "distintos (aproximado)"
+
+#~ msgid "missing"
+#~ msgstr "ausentes"
+
+#~ msgid "min"
+#~ msgstr "mínimo"
+
+#~ msgid "max"
+#~ msgstr "máximo"
+
+#~ msgid "avg"
+#~ msgstr "média"
+
+#~ msgid "std. dev."
+#~ msgstr "desvio padrão"
+
+#~ msgid "skewness"
+#~ msgstr "assimetria (skewness)"
+
+#~ msgid "kurtosis"
+#~ msgstr "curtose (kurtosis)"
+
+#~ msgid "correlation to {} (Pearson)"
+#~ msgstr "correlação com {} (Pearson)"
+
+#~ msgid "Querying Caipirinha URL: %s"
+#~ msgstr "Consultando a URL Caipirinha: %s"
+
+#~ msgid "Error in URL {}: HTTP {} - {} ({})"
+#~ msgstr "Erro na URL {}: HTTP {} - {} ({})"
+
+#~ msgid "Saving visualizations"
+#~ msgstr "Salvando visualizações"
+
+#~ msgid "Result generated"
+#~ msgstr "Resultado gerado"
+
+#~ msgid "Visualizations saved"
+#~ msgstr "Visualização salva"
+
+#~ msgid "Querying Limonero URL: %s"
+#~ msgstr "Consultando a URL do Limonero: %s"
+
+#~ msgid "Error querying Limonero URL: %s (%s: %s)"
+#~ msgstr "Erro ao consultar URL do Limonero: %s (%s: %s)"
+
+#~ msgid "not found"
+#~ msgstr "não encontrado"
+
+#~ msgid "Error loading {} id {}: HTTP {} - {} ({})"
+#~ msgstr "Erro carregando {} id {}: HTTP {} - {} ({})"
+
+#~ msgid "Data source not found"
+#~ msgstr "Base de dados não encontrada"
+
+#~ msgid "Error saving model in Limonero URL: %s (%s: %s)"
+#~ msgstr "Erro salvando modelo no Limonero URL %s (%s: %s)"
+
+#~ msgid "Error saving model: {})"
+#~ msgstr "Erro salvando model: {}"
+
+#~ msgid "Error saving data source in Limonero URL: %s (%s: %s)"
+#~ msgstr "Erro salvando fonte de dados no Limonero URL: %s (%s: %s)"
+
+#~ msgid "Error saving datasource: {})"
+#~ msgstr "Erro ao salvar a fonte de dados: {}"
+
+#~ msgid "Querying Tahiti URL: %s"
+#~ msgstr "Consultando a URL do Tahiti: %s"
+
+#~ msgid "Error loading storage id {}: HTTP {} - {}  ({})"
+#~ msgstr "Erro ao carregar o id de armazenamento {} : HTTP {} - {} ({})"
+
+#~ msgid "Akaike's \"An Information Criterion\" (AIC)"
+#~ msgstr "\"Um Critério de Informação\" (AIC) de Akaike"
+
+#~ msgid "Coefficient standard errors"
+#~ msgstr "Coeficientes de erro padrão"
+
+#~ msgid "Degrees of freedom"
+#~ msgstr "Graus de Liberdade"
+
+#~ msgid "Deviance residuals"
+#~ msgstr "Desvio dos Residuos"
+
+#~ msgid "Deviance"
+#~ msgstr "Desvio"
+
+#~ msgid "Dispersion"
+#~ msgstr "Dispersão"
+
+#~ msgid "Explained variance"
+#~ msgstr "Variância Explicada"
+
+#~ msgid "Features attribute"
+#~ msgstr "Coluna(s) de atributos"
+
+#~ msgid "Label attribute"
+#~ msgstr "Coluna do rótulo"
+
+#~ msgid "Mean absolute error"
+#~ msgstr "Erro Absoluto Médio"
+
+#~ msgid "Mean squared error"
+#~ msgstr "Erro Quadrático Médio"
+
+#~ msgid "Deviance for the null model"
+#~ msgstr "Desvio para o modelo nulo"
+
+#~ msgid "Number of instances"
+#~ msgstr "Número de Instância"
+
+#~ msgid "Iterations"
+#~ msgstr "Iterações"
+
+#~ msgid "Objective history"
+#~ msgstr "Histórico do Objetivo"
+
+#~ msgid "P-values"
+#~ msgstr "Valores p (p-values)"
+
+#~ msgid "Prediction attribute"
+#~ msgstr "Coluna de Predição"
+
+#~ msgid "Predictions"
+#~ msgstr "Predições"
+
+#~ msgid "R²"
+#~ msgstr "Coeficiente de determinação (R²)"
+
+#~ msgid "Adjusted R²"
+#~ msgstr "Coeficiente de Determinação Ajustado\" (Adjusted R²)"
+
+#~ msgid "Rank"
+#~ msgstr "Classificação (rank)"
+
+#~ msgid "Residuals"
+#~ msgstr "Residuos"
+
+#~ msgid "Residual degree of freedom"
+#~ msgstr "Grau residual de liberdade"
+
+#~ msgid "Residual degree of freedom for the null model"
+#~ msgstr "Grau residual de liberdade para o modelo nulo"
+
+#~ msgid "Root mean squared error"
+#~ msgstr "Raiz do Erro Quadrático Médio"
+
+#~ msgid "Solver"
+#~ msgstr "Solucionador"
+
+#~ msgid "T-values"
+#~ msgstr "Estatística-t (t-value)"
+
+#~ msgid "Total of iterations"
+#~ msgstr "Total de Iterações"
+
+#~ msgid "Invalid anonymization type ({})"
+#~ msgstr "Tipo de anonimização inválido ({})"
+
+#~ msgid "You must specify a name for new data source."
+#~ msgstr "Você deve especificar um nome para a nova base de dados"
+
+#~ msgid "You must specify a valid format."
+#~ msgstr "Você deve especificar um formato válido."
+
+#~ msgid "You must specify a storage for saving data."
+#~ msgstr ""
+#~ "Você deve especificar um local de armazenamento para salvar os dados."
+
+#~ msgid "You must specify a path for saving data."
+#~ msgstr "Você deve especificar um caminho para salvar os dados."
+
+#~ msgid "Invalid value '{}' for parameter '{}'"
+#~ msgstr "Valor '{}' inválido para parâmetro '{}'"
+
+#~ msgid "Algorithm '{}' not supported in for task {}"
+#~ msgstr "Algoritmo '{}' não suportado para a tarefa {}"
+
+#~ msgid "Support must be informed for classifier {}"
+#~ msgstr "Suporte deve ser informado para o classificador {}"
+
+#~ msgid "Items in a transaction must be unique"
+#~ msgstr "Itens em uma transação devem ser únicos"
+
+#~ msgid "relative_support"
+#~ msgstr "relative_support"
+
+#~ msgid "Model trained"
+#~ msgstr "Modelo treinado"
+
+#~ msgid "Required Lemonade Spark Extensions not found in CLASSPATH."
+#~ msgstr ""
+#~ "Extensões do Lemonade para Spark não foram encontradas no CLASSPATH."
+
+#~ msgid "Parameter '{}' must be in range [0, 100] for task {}"
+#~ msgstr "Parâmetro '{}' deve estar entre [0,100] para a tarefa {}"
+
+#~ msgid ""
+#~ "For intersection operation, both input data sources must have the same "
+#~ "number of attributes and types."
+#~ msgstr ""
+#~ "Para a operação de interseção, ambas as fontes de dados devem ter o mesmo "
+#~ "número de atributos e tipos correspondentes."
+
+#~ msgid "Parameters '{}' and {} must be informed for task {}"
+#~ msgstr "Parâmetro '{}' e {} devem ser informado para a tarefa {}"
+
+#~ msgid "You must inform 2 values for alias"
+#~ msgstr "Você deve informar 2 valores para o alias"
+
+#~ msgid "Parameter '{}' for task '{}' must be a number or enclosed in quotes."
+#~ msgstr ""
+#~ "Parâmetro '{}' para a tarefa '{}' deve ser numérico ou estar entre aspas."
+
+#~ msgid "Value and replacement must be of the same type for all attributes"
+#~ msgstr ""
+#~ "O valor a ser substituído e a substituição devem ser do mesmo tipo para "
+#~ "todos os atributos"
+
+#~ msgid "Parameter '{}' has an incorrect value '{}' in {}"
+#~ msgstr "Parâmetro '{}' tem um valor incorreto '{}' in {}"
+
+#~ msgid "Required parameters must be informed for task {}"
+#~ msgstr "Parâmetro necessário deve ser informado para a tarefa {}"
+
+#~ msgid "The value for parameter {} must be one of these: {}."
+#~ msgstr "O valor para o parâmetro {} deve ser um destes: {}."
+
+#~ msgid "Parameter '{}' must be informed in all expressions in task {}."
+#~ msgstr ""
+#~ "Parâmetro '{}' deve ser informado em todas as expressões na tarefa {}."
+
+#~ msgid "Start of offset must be >= its end: [{}, {}]"
+#~ msgstr "O começo do deslocamento deve ser >= ao seu final: [{}, {}]"
+
+#~ msgid ""
+#~ "Parameter '{}' informed for task '{}'                                    "
+#~ "must be at >= 2"
+#~ msgstr ""
+#~ "Parâmetro '{}' informado para tarefa "
+#~ "'{}'                                    deve ser pelo menos >= 2"
+
+#~ msgid ""
+#~ "Parameter '{}' must be informed                                 for task "
+#~ "{}"
+#~ msgstr ""
+#~ "Parâmetro '{}' deve ser informado                                 para "
+#~ "tarefa {}"
+
+#~ msgid "Summary for K-fold"
+#~ msgstr "Sumário para K-partições (folds)"
+
+#~ msgid ""
+#~ "Transformation has an invalid expression. Maybe variables are using "
+#~ "spaces in their names."
+#~ msgstr ""
+#~ "Transformação possui uma expressão inválida. Talvez os nomes das "
+#~ "variáveis contenham espaço."
+
+#~ msgid "Unknown type: {}"
+#~ msgstr "Tipo desconhecido: {}"
+
+#~ msgid "Invalid parameters for function: {}()"
+#~ msgstr "Parâmetro inválido para a função: {}()"
+
+#~ msgid "Function set() expects exactly 1 argument."
+#~ msgstr "Função set() espera exatamente 1 argumento."
+
+#~ msgid "Must be implemented in children classes"
+#~ msgstr "Deve ser implementado nas classes descendentes"
+
+#~ msgid "Metrics for task"
+#~ msgstr "Métricas para a tarefa"
+
+#~ msgid "Parameter {} must be one of these: {}"
+#~ msgstr "Parâmetro {} deve ser um destes: {}"
+
+#~ msgid "type"
+#~ msgstr "tipo"
+
+#~ msgid "keep"
+#~ msgstr "manter"
+
+#~ msgid "skip"
+#~ msgstr "ignorar"
+
+#~ msgid "error"
+#~ msgstr "erro"
+
+#~ msgid "Invalid value for {}: \"{}\"."
+#~ msgstr "Valor inválido para {}: \"{}\""
+
+#~ msgid "splits"
+#~ msgstr "divisões"
+
+#~ msgid "You must inform at least {} values for parameter {}."
+#~ msgstr "Você deve informar pelo menos {} valores para o parâmetro {}."
+
+#~ msgid "Values for {} must be sorted in ascending order."
+#~ msgstr "Valores para {} devem ser estar ordenados de forma ascendente."
+
+#~ msgid "Invalid value for {}: {}"
+#~ msgstr "Valor inválido para {}: {}"
+
+#~ msgid "relative_error"
+#~ msgstr "relative_error"
+
+#~ msgid "buckets"
+#~ msgstr "buckets"
+
+#~ msgid ""
+#~ "Invalid zipped shapefile. It must contains both *.shp and *.dbf files."
+#~ msgstr ""
+#~ "Arquivo compactado para shape file inválido. Ele deve conter arquivos *."
+#~ "shp e *.dbf."
+
+#~ msgid "Values for latitude and longitude columns must be informed"
+#~ msgstr "Valores para as colunas latitude e longitude devem ser informados"
+
+#~ msgid "Model is being saved twice (unsupported)."
+#~ msgstr "Modelo está sendo salvo duas vezes (não suportado)."
+
+#~ msgid ""
+#~ "If a workflow generates a model, it must save such model in order to be "
+#~ "deployed"
+#~ msgstr ""
+#~ "Se um fluxo gera um modelo, o modelo deve ser salvo para que possa ser "
+#~ "implantado"
+
+#~ msgid ""
+#~ "Storage for save model operation (required for deployment) is not "
+#~ "correctly configured."
+#~ msgstr ""
+#~ "Storage for save model operation (required for deployment) is not "
+#~ "correctly configured."
+
+#~ msgid "No training data was informed for model building."
+#~ msgstr "Nenhum treino foi informado para construir o modelo."
+
+#~ msgid "Parameter '{}' must be in range [x>=0] for task {}"
+#~ msgstr "Parâmetro '{}' deve estar na faixa [x>=0] para tarefa {}"
+
+#~ msgid "Parameters '{}', '{}' and '{}' must be informed for task {}"
+#~ msgstr "Parâmetro '{}' , '{}' e '{}' devem ser informado para a tarefa {}"
+
+#~ msgid "F1 measure"
+#~ msgstr "Medida F (F1)"
+
+#~ msgid "Weighted precision"
+#~ msgstr "Precisão ponderada"
+
+#~ msgid "Weighted recall"
+#~ msgstr "Revocação ponderada"
+
+#~ msgid "Accuracy"
+#~ msgstr "Acurácia"
+
+#~ msgid "Summary"
+#~ msgstr "Sumário"
+
+#~ msgid ""
+#~ "Features are not assembled as a vector. They will be implicitly assembled "
+#~ "and rows with null values will be discarded. If this is undesirable, "
+#~ "explicitly add a feature assembler in the workflow."
+#~ msgstr ""
+#~ "Features não estão na forma de um vetor. Elas serão implicitamente "
+#~ "agrupadas em um vetor e os registros com valores nulos serão descartados. "
+#~ "Se este comportamento não é desejável, adicione explicitamente um "
+#~ "montador de features ao fluxo."
+
+#~ msgid ""
+#~ "Label attribute is categorical, it will be implicitly indexed as string."
+#~ msgstr ""
+#~ "Atributo usado como rótulo é categórico e portanto será implicitamente "
+#~ "indexado."
+
+#~ msgid "Metric ({}) average for {} folds: {}"
+#~ msgstr "Média da métrica ({}) para {} folds: {}"
+
+#~ msgid "Generated classification model parameters"
+#~ msgstr "Parâmetros gerados para o modelo de classificação"
+
+#~ msgid "Parameter"
+#~ msgstr "Parâmetro"
+
+#~ msgid "Fold"
+#~ msgstr "Fold (partição)"
+
+#~ msgid "Results"
+#~ msgstr "Resultados"
+
+#~ msgid "Average"
+#~ msgstr "Média"
+
+#~ msgid "Parameter output must be informed for classifier {}"
+#~ msgstr "Parâmetro de saída deve ser informado para o classificador {}"
+
+#~ msgid "Models used in ensemble classification"
+#~ msgstr "Modelos usados na classificação por comitê"
+
+#~ msgid "name"
+#~ msgstr "nome"
+
+#~ msgid "order"
+#~ msgstr "ordem"
+
+#~ msgid "weight"
+#~ msgstr "peso"
+
+#~ msgid "Clustering result"
+#~ msgstr "Resultado do agrupamento"
+
+#~ msgid "Regression only support numerical features."
+#~ msgstr "Regressão suporta apenas features numéricas."
+
+#~ msgid ""
+#~ "Invalid document concentration: {}. It must be a single decimal value or "
+#~ "a list of decimal numbers separated by comma."
+#~ msgstr ""
+#~ "Parâmetro \"concentração de documentos\" inválido: {}. Ele deve ser um "
+#~ "único valor decimal ou uma lista de valores decimais separados por "
+#~ "vírgula."
+
+#~ msgid "Invalid type {} for class {}"
+#~ msgstr "Tipo inválido {} para a classe {}"
+
+#~ msgid "You must inform all input ports for this operation"
+#~ msgstr "Você deve informar todas as portas de entrada para esta operação"
+
+#~ msgid "Assemble features in a vector before using a regression model"
+#~ msgstr "Monte um vetor de features antes de usar um modelo de regressão"
+
+#~ msgid "Coefficients"
+#~ msgstr "Coeficientes"
+
+#~ msgid "Intercept"
+#~ msgstr "Interseção"
+
+#~ msgid "Scale"
+#~ msgstr "Escala"
+
+#~ msgid "Missing parameters. Check if values for parameters {} were informed"
+#~ msgstr ""
+#~ "Parâmetros ausentes. Verifique se os valores para os parâmetros {} foram "
+#~ "informados"
+
+#~ msgid "Invalid value for parameter {param}: {value}"
+#~ msgstr "Valor inválido para o parâmetro {param}: {value}"
+
+#~ msgid ""
+#~ "You cannot mix models with and without evaluation (e.g. indexers) when "
+#~ "saving models and criteria is different from ALL"
+#~ msgstr ""
+#~ "Você não pode misturar modelos com e sem avaliação (por exemplo, "
+#~ "indexadores) ao salvar modelos e sendo o critério diferente de ALL"
+
+#~ msgid "You cannot mix models built using with different metrics ({})."
+#~ msgstr ""
+#~ "Você não pode misturar modelos construídos usando métricas diferentes "
+#~ "({})."
+
+#~ msgid "Invalid type '{}' for class {}"
+#~ msgstr "Tipo inválido '{}' para classe {}"
+
+#~ msgid "Confusion matrix"
+#~ msgstr "Matriz de confusão"
+
+#~ msgid "Label"
+#~ msgstr "Rótulo"
+
+#~ msgid "Predicted"
+#~ msgstr "Predição"
+
+#~ msgid "Area under curve"
+#~ msgstr "Área sob a curva "
+
+#~ msgid "False positive rate"
+#~ msgstr "Taxa de falsos positivos"
+
+#~ msgid "True positive rate"
+#~ msgstr "Taxa de positivos verdadeiros"
+
+#~ msgid "Precision"
+#~ msgstr "Precisão"
+
+#~ msgid "Recall"
+#~ msgstr "Revocação"
+
+#~ msgid "SPARK_HOME set to %s"
+#~ msgstr "SPARK_HOME definido como %s"
+
+#~ msgid "SPARK_HOME environment variable is not defined"
+#~ msgstr "Variável de ambiente SPARK_HOME não está definida"
+
+#~ msgid "Unsupported cluster type, it cannot run Spark applications."
+#~ msgstr ""
+#~ "Tipo de cluster não suportado, ele não pode executar aplicações Spark."
+
+#~ msgid "Minion is configured to stop Spark after each execution"
+#~ msgstr "Minion está configurado para parar o Spark após cada execução"
+
+#~ msgid "Creating a new Spark session"
+#~ msgstr "Criando um nova sessão Spark"
+
+#~ msgid "Setting spark configuration %s"
+#~ msgstr "Ajustando as configurações do spark %s"
+
+#~ msgid "Minion is using '%s' as Spark master"
+#~ msgstr "Minion está usando '%s\" como mestre Spark"
+
+#~ msgid "Kaplar-Meier survival"
+#~ msgstr "Kaplar-Meier survival"
+
+#~ msgid "KM_estimate"
+#~ msgstr "KM_estimate"
+
+#~ msgid "value"
+#~ msgstr "valor"
+
+#~ msgid "timeline"
+#~ msgstr "linha temporal"
+
+#~ msgid "Cox Proportional Hazard"
+#~ msgstr "Cox Proportional Hazard"
+
+#~ msgid "Bias/Fairness Report"
+#~ msgstr "Relatório de viés/justiça"
+
+#~ msgid "click to open"
+#~ msgstr "click para abrir"
+
+#~ msgid "Input attribute(s) must be informed for box plot."
+#~ msgstr "Atributo(s) de  entrada deve(m) ser informado(s) para o box plot."
+
+#~ msgid "Input attribute(s) must be informed for histogram."
+#~ msgstr "O atributo de entrada deve ser informado para o histograma."
+
+#~ msgid "Attribute {} must be numeric (actual: {})."
+#~ msgstr "Atributo {} deve ser numérico (atual: {})."
+
+#~ msgid "Attribute {} not found in input data."
+#~ msgstr "Atributo {} não encontrado nos dados de entrada."
+
+#~ msgid "Histogram"
+#~ msgstr "Histograma"
+
+#~ msgid ""
+#~ "Features are not assembled as a vector. They will be implicitly assembled "
+#~ "and rows with null values will be discarded. If this is undesirable, "
+#~ "explicitly add a attribute vectorizer, handle missing data and "
+#~ "categorical attributes in the workflow."
+#~ msgstr ""
+#~ "Features não estão na forma de um vetor. Elas serão implicitamente "
+#~ "agrupadas em um vetor e os registros com valores nulos serão descartados. "
+#~ "Se este comportamento não é desejável, adicione explicitamente uma tarefa "
+#~ "vetorizar atributos, trate os dados ausentes e atributos categóricos no "
+#~ "fluxo."
+
+#~ msgid ""
+#~ "Invalid input data for visualization. It should contains 2 (name, value) "
+#~ "or 3 columns (id, name, value)."
+#~ msgstr ""
+#~ "Entrada de dados invalida para a visualização.  Deve conter 2 (nome, "
+#~ "valor) ou  3 colunas (id, nome, valor)."
+
+#~ msgid "Attribute"
+#~ msgstr "Atributo"
+
+#~ msgid "Type"
+#~ msgstr "Tipo"
+
+#~ msgid "Metadata (Spark)"
+#~ msgstr "Metadados (Spark)"
+
+#~ msgid "Schema for {}"
+#~ msgstr "Schema para {}"
+
+#~ msgid "Sample data for {}"
+#~ msgstr "Amostra de dados para {}"
+
+#~ msgid "Attribute {} not found. Valid attributes: {}"
+#~ msgstr "Atributo {} não encontrado. Atributos válidos: {}"
+
+#~ msgid ""
+#~ "When using Window Operation with range type, the order by attribute must "
+#~ "be numeric."
+#~ msgstr ""
+#~ "Quando usando operações de janela com tipo \"faixa\", o atributo de "
+#~ "ordenação deve ser numérico."
+
+#~ msgid ""
+#~ "When using Window Operation with range type, the order option must "
+#~ "include only one attribute."
+#~ msgstr ""
+#~ "Quando usando operações de janela com tipo \"faixa\", a opção de "
+#~ "ordenação deve incluir apenas um atributo."
+
+#~ msgid "Data source does not exist. It may have been deleted."
+#~ msgstr "Fonte de dados não existe. Ela deve ter sido excluída."
+
+#~ msgid "Attribute {} not found."
+#~ msgstr "Atributo {} não encontrado."
+
+#~ msgid ""
+#~ "Attribute {attr} must be one of these types [{correct}], but it is {used}"
+#~ msgstr ""
+#~ "Atributo {attr} deve ser de um destes tipo: [{correct}. mas ele é do do "
+#~ "tipo {used}"
+
+#~ msgid "Binomial family only supports 1 or 2 outcome classes but found {}"
+#~ msgstr ""
+#~ "Família binomial suporta apenas 1 ou 2 classes resultantes, mas foram "
+#~ "encontradas {}"
+
+#~ msgid "Invalid numeric data in at least one data source (value: {})"
+#~ msgstr ""
+#~ "Dados numéricos inválidos em pelo menos uma das fontes de dados (valor: "
+#~ "{})"
+
+#~ msgid "At least one input data source is not in the correct format."
+#~ msgstr ""
+#~ "Pelo menos uma fonte de dados de entrada não está no formato correto."
+
+#~ msgid ""
+#~ "There is null values in your data set and Spark cannot handle them. "
+#~ "Please, remove them before applying a data transformation."
+#~ msgstr ""
+#~ "Existem valores nulos no conjunto de dados e o Spark não consegue tratá-"
+#~ "los. Por favor, remova-os antes de aplicar a transformação."
+
+#~ msgid ""
+#~ "Cannot read data from the data source. In this case, it may be a "
+#~ "configuration problem with HDFS. Please, check if HDFS namenode is up and "
+#~ "you correctly configured the option dfs.client.use.datanode.hostname in "
+#~ "Juicer' config."
+#~ msgstr ""
+#~ "Não foi possível ler dados da fonte de dados. Neste caso, pode ser um "
+#~ "problema com a configuração do HDFS. Por favor, verifique se o servidor "
+#~ "namenode do HDFS está executando e se você configurou corretamente a "
+#~ "opção dfs.client.use.datanode.hostname na configuração do Juicer."
+
+#~ msgid ""
+#~ "You do not have permissions to read or write in the storage. Probably, it "
+#~ "is a configuration problem. Please, contact the support."
+#~ msgstr ""
+#~ "Você não tem permissões para ler ou escrever no armazenamento. "
+#~ "Provavelmente trata-se de um problema de configuração. Por favor, "
+#~ "contacte o suporte."
+
+#~ msgid "GBT classifier requires labels to be in [0, 1] range."
+#~ msgstr "Classificador GBT requer que rótulos estejam na faixa in [0, 1]."
+
+#~ msgid ""
+#~ "CSV format does not support the data type {}. Try to convert the "
+#~ "attribute to string (see to_json()) before saving."
+#~ msgstr ""
+#~ "O formato CSV não suporta o tipo de dados {}. Tente converter o atributo "
+#~ "para texto (veja to_json()) antes de salvá-lo."
+
+#~ msgid "File does not exist in HAR: {}"
+#~ msgstr "Arquivo não existe no HAR: {}"
+
+#~ msgid ""
+#~ "Key error parsing template for instance {instance} {id}. Probably there "
+#~ "is a problem with port specification"
+#~ msgstr ""
+#~ "Erro de chave ao passar o template para a instância {instance} {id}. "
+#~ "Provavelmente existe um problema com a especificação de porta"
+
+#~ msgid "Type error in template"
+#~ msgstr "Erro de tipo no template"
+
+#~ msgid "Type error parsing template for instance {id} {instance}."
+#~ msgstr ""
+#~ "Erro de tipo analisando modelo (template) para instância {id} {instance}"
+
+#~ msgid "Parameter task name is invalid."
+#~ msgstr "O nome da tarefa é inválido."
+
+#~ msgid "Port '{}/{}' must be informed for operation{}"
+#~ msgstr "Porta '{}/{}' deve ser informado para operação {}"
+
+#~ msgid "Task names must be unique."
+#~ msgstr "Nomes de tarefas devem ser únicos (sem repetição)"
+
+#~ msgid "Task {task} uses an invalid or disabled operation ({op})"
+#~ msgstr ""
+#~ "Tarefa {task} está usando uma operação inválida ou disabilitada ({op})"
+
+#~ msgid "Incorrect configuration for ports: %s, %s"
+#~ msgstr "Configuração incorreta para as portas: %s, %s"
+
+#~ msgid "Invalid or non-existing port: '{op}' {s} {t}"
+#~ msgstr "Porta inválida ou inexistente: '{op}' {s} {t}"
+
+#~ msgid "Bias Report"
+#~ msgstr "Relatório de viés"
+
+#~ msgid "Audit Date"
+#~ msgstr "Data da auditoria"
+
+#~ msgid "Data Audited"
+#~ msgstr "Dados auditados"
+
+#~ msgid "rows"
+#~ msgstr "linhas"
+
+#~ msgid "Attribute(s) Audited"
+#~ msgstr "Atributo(s) auditado(s)"
+
+#~ msgid "Audit Goal(s)"
+#~ msgstr "Meta(s) da auditoria"
+
+#~ msgid "Equal Parity"
+#~ msgstr "Paridade equalitária"
+
+#~ msgid "Proportional Parity"
+#~ msgstr "Paridade proporcional"
+
+#~ msgid "False Positive Rate Parity"
+#~ msgstr "Paridade baseada em taxa de falso-positivos"
+
+#~ msgid "False Discovery Rate Parity"
+#~ msgstr "Paridade baseada em taxa de falsa descoberta"
+
+#~ msgid "False Negative Rate Parity"
+#~ msgstr "Paridade baseada em taxa de falso-negative"
+
+#~ msgid "False Omission Rate Parity"
+#~ msgstr "Paridade baseada em taxa de falsa-omissão"
+
+#~ msgid "Reference Groups"
+#~ msgstr "Grupos de referência"
+
+#~ msgid "Fairness Threshold"
+#~ msgstr "Limiar de justiça"
+
+#~ msgid ""
+#~ "If disparity for a group is within {tau:,.2f}%% and {inverse_tau:,.2f}%% "
+#~ "of the value of the reference group on a group metric (e.g. False "
+#~ "Positive Rate), this audit will pass."
+#~ msgstr ""
+#~ "Se a disparidade para o grupo está entre  {tau:,.2f}%% e "
+#~ "{inverse_tau:,.2f}%% do valor do grupo de referência em uma métrica de "
+#~ "grupo (ex. taxa de falso-positivos), este item passará na auditoria."
+
+#~ msgid "Audit Summary"
+#~ msgstr "Resumido da auditoria"
+
+#~ msgid ""
+#~ "Ensure all protected groups are have equal representation in the selected "
+#~ "set."
+#~ msgstr ""
+#~ "Garantir que todos os grupos protegidos têm representação igual no "
+#~ "conjunto selecionado."
+
+#~ msgid ""
+#~ "Ensure all protected groups are selected proportional to their percentage "
+#~ "of the population."
+#~ msgstr ""
+#~ "Garantir que todos os grupos são selecionados de forma proporcional ao "
+#~ "respectivo percentual da população."
+
+#~ msgid ""
+#~ "Ensure all protected groups have the same false positive rates as the "
+#~ "reference group)."
+#~ msgstr ""
+#~ "Garantir que todos os grupos tenham a mesma taxa de falso-positivos como "
+#~ "o grupo de referência."
+
+#~ msgid ""
+#~ "Ensure all protected groups have equally proportional false positives "
+#~ "within the selected set (compared to the reference group)."
+#~ msgstr ""
+#~ "Garantir que todos os grupos protegidos tenham, proporcionalmente, a "
+#~ "mesma  quantidade de falsos-positivos dentro do conjunto selecionado "
+#~ "(comparado ao grupo de referência)."
+
+#~ msgid ""
+#~ "Ensure all protected groups have the same false negative rates (as the "
+#~ "reference group)."
+#~ msgstr ""
+#~ "Garantir que todos os grupos protegidos tenham a mesma taxa de falso-"
+#~ "negativos (como o grupo de referência)."
+
+#~ msgid ""
+#~ "Ensure all protected groups have equally proportional false negatives "
+#~ "within the non-selected set (compared to the reference group)."
+#~ msgstr ""
+#~ "Garantir que todos os grupos protegidos tenham, proporcionalmente, a "
+#~ "mesma  quantidade de falsos-negativos dentro do conjunto selecionado "
+#~ "(comparado ao grupo de referência)."
+
+#~ msgid "Passed"
+#~ msgstr "Passou"
+
+#~ msgid "Failed"
+#~ msgstr "Falhou"
+
+#~ msgid "Details"
+#~ msgstr "Detalhes"
+
+#~ msgid "Audit Results: Details by Fairness Measures"
+#~ msgstr "Resultado de auditoria: detalhes por medidas de justiça"
+
+#~ msgid "Success"
+#~ msgstr "Sucesso"
+
+#~ msgid "When does it matter?"
+#~ msgstr "Quando é relevante?"
+
+#~ msgid "Ref"
+#~ msgstr "Referência"
+
+#~ msgid "Parameter {} needs to be like 60%-20%-20%"
+#~ msgstr "Parâmetro {} precisa ser algo como 60%-20%-20%"
+
+#~ msgid "Parameter {} needs to be 0 < x < 100"
+#~ msgstr "Parâmetro {} precisa estar na faixa 0 < x < 100"
+
+#~ msgid "Parameter {} is required. The format is: (x, y)"
+#~ msgstr "Parâmetro {} é obrigatório. O formato é: (x, y)"
+
+#~ msgid "Attribute {} must be numeric."
+#~ msgstr "Atributo {} deve ser numérico."
+
+#~ msgid "Waiting for new commands in %s"
+#~ msgstr "Esperando por um novo comando em %s"
+
+#~ msgid "Spawning %s greenlets connecting to Redis..."
+#~ msgstr "Criando %s greenlets conexões para Regis..."
+
+#~ msgid "# active `threading` threads: %s"
+#~ msgstr "# ativando 'threading' de threads: %s"
+
+#~ msgid "# Redis connections created: %s"
+#~ msgstr "# Conexão Regis criada: %s"
+
+#~ msgid "# Redis connections in use: %s"
+#~ msgstr "# Conexão Regis em uso: %s"
+
+#~ msgid "# Redis connections available: %s"
+#~ msgstr "# Conexão Regis disponível: %s"
+
+#~ msgid "Waiting for Redis connection greenlets to terminate..."
+#~ msgstr "Esperando que os greenlets da conexão Regis terminem..."
+
+#~ msgid "All Redis connection greenlets terminated. Duration: %.2f s."
+#~ msgstr ""
+#~ "Todos os greenlets da conexão Regis foram encerrados. Duração: %.2f s."
+
+#~ msgid "p-values"
+#~ msgstr "Valores de p (p-values)"
+
+#~ msgid "Parameter '{}' informed for task {} must be >= 2"
+#~ msgstr "Parâmeter '{}' informado para tarefa {} deve ser >= 2"
+
+#~ msgid "Warning k-folds splitting!"
+#~ msgstr "Aviso: k-folds"
+
+#~ msgid "Parameter type has an invalid value {}"
+#~ msgstr "Tipo de parâmetro tem um valor inválido {}"
+
+#~ msgid "Metadata"
+#~ msgstr "Metadados"
+
+#~ msgid "Error in URL {}: HTTP {} - {}"
+#~ msgstr "Erro na URL {}: HTTP {} - {}"
+
+#~ msgid "Error loading {} id {}: HTTP {} - {}"
+#~ msgstr "Erro ao carregar {} id {}: HTTP {} - {}"
+
+#~ msgid "Unable to connect to MySQL while reading data source."
+#~ msgstr ""
+#~ "Não foi possível conectar ao servidor MySQL para ler a fonte de dados."
+
+#~ msgid ""
+#~ "File already exist. Use an option to override it (if it is possible) and "
+#~ "if you want to replace it."
+#~ msgstr ""
+#~ "Arquivo já existe. Use a opção de sobrescrita (se possível) e se você "
+#~ "quer substituí-lo."
+
+#~ msgid "Syntax error querying data in MySQL: {}"
+#~ msgstr "Erro de sintaxe enquanto consultando dados no MySQL: {}"
+
+#~ msgid "Port '{} in node {}' missing, must be informed for operation {}"
+#~ msgstr "Porta '{} no nó {}' ausente, deve ser informada para a operação {}"
+
+#~ msgid "Port '{}' missing, must be informed for operation {}"
+#~ msgstr "Porta '{}' ausente, deve ser informado para a operação {}"
+
+#~ msgid "The node informed doesn't exist"
+#~ msgstr "O nó informado não existe"
+
+#~ msgid ""
+#~ "If disparity for a group is within {tau:,.2f}% and {inverse_tau:,.2f}% of "
+#~ "the value of the reference group on a group metric (e.g. False Positive "
+#~ "Rate), this audit will pass."
+#~ msgstr ""
+#~ "Se a disparidade para o grupo está entre  {tau:,.2f}% e "
+#~ "{inverse_tau:,.2f}% do valor do grupo de referência em uma métrica de "
+#~ "grupo (ex. taxa de falso-positivos), este item passará na auditoria."
+
+#~ msgid ""
+#~ "\n"
+#~ " ERROR! Status code: {},{} \n"
+#~ msgstr ""
+#~ "\n"
+#~ "ERRO! Estado do código: {},{}\n"
+
+#~ msgid "Libprocess configuration: {}:{}"
+#~ msgstr "Configuração do libprocess: {}:{}"
+
+#~ msgid "Invalid or inexisting port in '{op}' {s} {t}"
+#~ msgstr "Porta inválida ou inexistente na '{op}' {s} {t}"
+
+#~ msgid "Message content (workflow_id=%s,app_id=%s): %s"
+#~ msgstr "Contéudo da mensagem (workflow_id=%s, app_id=%s): %s"
+
+#~ msgid "watch subscribe: %s"
+#~ msgstr "Assistindo o assinante: %s"
+
+#~ msgid "Minion {id} stopped"
+#~ msgstr "Minion {id} parou"
+
+#~ msgid "Transformation has an invalid expression."
+#~ msgstr "Transformação possui uma expressão inválida."
+
+#~ msgid ""
+#~ "Running job, but it requires allocating of cluster computers first and it "
+#~ "takes time."
+#~ msgstr "Executando o job, mas ele requer"
+
+#~ msgid "Description"
+#~ msgstr "Descrição"
+
+#~ msgid "Default"
+#~ msgstr "Valor padrão"
+
+#~ msgid "Invalid numeric data in at least one data source (attribute: {})"
+#~ msgstr ""
+#~ "Dados numéricos inválidos em pelo menos uma fonte de dados (atributo: {})"
+
+#~ msgid ""
+#~ "CSV format does not support the data type {}. try to convert the "
+#~ "attribute to string (see to_json()) before saving."
+#~ msgstr "Formato CSV não suporta o tipo de dados {}. "
+
+#~ msgid ""
+#~ "There is null values in your data set and Spark cannot handle them. "
+#~ "Please, remove then before applying a data transformation."
+#~ msgstr ""
+#~ "Existem valores nulos no conjunto de dados e o Spark não consegue tratá-"
+#~ "los. Por favor, remova-os"
+
+#~ msgid "Minion (workflow_id=%s,app_id=%s) is running."
+#~ msgstr "Minion (workflow_id=%s, app_id=%s) está executando."
+
+#~ msgid "Type error parsing template for instance {id}{instance}."
+#~ msgstr "Erro ao passar o template para a instância {id}{instance}."
+
+#~ msgid "Task ignored (not used as output or by other task)"
+#~ msgstr "Tarefa ignorada (não é usada como saída ou usad"
+
+#~ msgid "Start ping"
+#~ msgstr "Iniciar ping"
+
+#~ msgid "Execute message received"
+#~ msgstr "Mensagem de execução recebida"
+
+#~ msgid "Deliver message received"
+#~ msgstr "Entrega de mensagem recebida"
+
+#~ msgid "Objects in memory after loading module: %s"
+#~ msgstr "Objetos na memoria depois de carregar o  módulo: %s"
+
+#~ msgid "Job finished"
+#~ msgstr "Tarefa finalizada"
+
+#~ msgid "Starting master process. Reading \"start\" queue "
+#~ msgstr "Inicializando processo do master. Lendo fila de \"ínicio\""
+
+#~ msgid "Configuration file"
+#~ msgstr "Arquivo de configuração"
