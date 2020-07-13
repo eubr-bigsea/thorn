@@ -23,7 +23,7 @@ def upgrade():
     sa.Column('key', sa.String(length=100), nullable=False),
     sa.Column('value', mysql.LONGTEXT(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['user_id'], ['user.id'], name='fk_user_id'),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], name='fk_user_preference_id'),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
