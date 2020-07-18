@@ -99,6 +99,8 @@ class NotificationListResponseSchema(Schema):
         required=True,
         missing=datetime.datetime.utcnow,
         default=datetime.datetime.utcnow)
+    text = fields.String(required=True)
+    link = fields.String(required=False, allow_none=True)
     status = fields.String(required=True, missing="UNREAD", default="UNREAD",
                            validate=[OneOf(list(NotificationStatus.__dict__.keys()))])
     from_system = fields.Boolean(required=True, missing=True, default=True)
@@ -122,6 +124,8 @@ class NotificationItemResponseSchema(Schema):
         required=True,
         missing=datetime.datetime.utcnow,
         default=datetime.datetime.utcnow)
+    text = fields.String(required=True)
+    link = fields.String(required=False, allow_none=True)
     status = fields.String(required=True, missing="UNREAD", default="UNREAD",
                            validate=[OneOf(list(NotificationStatus.__dict__.keys()))])
     from_system = fields.Boolean(required=True, missing=True, default=True)
@@ -140,19 +144,14 @@ class NotificationItemResponseSchema(Schema):
 
 class NotificationCreateRequestSchema(Schema):
     """ JSON serialization schema """
-    id = fields.Integer(required=True)
-    created = fields.DateTime(
-        required=True,
-        missing=datetime.datetime.utcnow,
-        default=datetime.datetime.utcnow)
+    text = fields.String(required=True)
+    link = fields.String(required=False, allow_none=True)
     status = fields.String(required=True, missing="UNREAD", default="UNREAD",
                            validate=[OneOf(list(NotificationStatus.__dict__.keys()))])
     from_system = fields.Boolean(required=True, missing=True, default=True)
     type = fields.String(required=True, missing="INFO", default="INFO",
                          validate=[OneOf(list(NotificationType.__dict__.keys()))])
-    user = fields.Nested(
-        'thorn.schema.UserCreateRequestSchema',
-        required=True)
+    user_id = fields.Integer(allow_none=True)
 
     # noinspection PyUnresolvedReferences
     @post_load

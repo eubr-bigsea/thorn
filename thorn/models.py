@@ -241,6 +241,8 @@ class Notification(db.Model):
     created = Column(DateTime,
                      default=datetime.datetime.utcnow, nullable=False,
                      onupdate=datetime.datetime.utcnow)
+    text = Column(String(2000), nullable=False)
+    link = Column(String(200))
     status = Column(Enum(*list(NotificationStatus.values()),
                          name='NotificationStatusEnumType'),
                     default="UNREAD", nullable=False)
