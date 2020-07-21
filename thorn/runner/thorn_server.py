@@ -1,37 +1,59 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# noinspection PyBroadException
+if __name__ == '__main__':
+    import eventlet
+    eventlet.monkey_patch(all=True)
+    # 
+    # See BUG: https://github.com/eventlet/eventlet/issues/592
+    import __original_module_threading
+    import threading
+    __original_module_threading.current_thread.__globals__['_active'] = threading._active
+# 
+# Eventlet is not being used anymore because there is a severe bug:
+# https://github.com/eventlet/eventlet/issues/526
+
+# from gevent import monkey
+# monkey.patch_all()
+
+# from gevent.pywsgi import WSGIServer
+
 import logging
 import logging.config
-
-import argparse
-import eventlet
-import eventlet.wsgi
 import os
+
+import eventlet.wsgi
 import sqlalchemy_utils
 import yaml
-from thorn.dashboard_api import DashboardDetailApi, DashboardListApi
-from thorn.visualization_api import VisualizationDetailApi, \
-    VisualizationListApi
-from thorn.models import Dashboard
+from thorn import rq
 from flask import Flask, request
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_babel import get_locale, Babel
 from flask_cors import CORS
-from flask_restful import Api, abort
-from thorn.models import db
-from thorn.runner import configuration
+from flask_restful import Api
+from thorn.gateway import ApiGateway
+from thorn.models import db, User
+from thorn.permission_api import PermissionListApi
+from thorn.user_api import UserListApi, \
+    ResetPasswordApi, ApproveUserApi, UserDetailApi, ProfileApi, \
+    RegisterApi
+from thorn.auth_api import ValidateTokenApi, AuthenticationApi
+from thorn.role_api import RoleListApi, RoleDetailApi
+from thorn.notification_api import NotificationListApi, NotificationDetailApi, \
+    NotificationSummaryApi
+from thorn.configuration_api import ConfigurationListApi
+import rq_dashboard
 
 sqlalchemy_utils.i18n.get_locale = get_locale
 
-eventlet.monkey_patch(all=True)
 app = Flask(__name__)
-
+app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.abspath('thorn/i18n/locales') 
 babel = Babel(app)
 
 logging.config.fileConfig('logging_config.ini')
 
-app.secret_key = 'l3m0n4d1'
+app.secret_key = '0e36528dc34844e79963436a7af9258f'
 # Flask Admin 
 admin = Admin(app, name='Lemonade', template_mode='bootstrap3')
 
@@ -39,95 +61,79 @@ admin = Admin(app, name='Lemonade', template_mode='bootstrap3')
 CORS(app, resources={r"/*": {"origins": "*"}})
 api = Api(app)
 
+# RQ dashboard
+app.config.from_object(rq_dashboard.default_settings)
+app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
+
 mappings = {
-    '/dashboards': DashboardListApi,
-    '/dashboards/<int:dashboard_id>': DashboardDetailApi,
-    '/visualizations/<int:job_id>/<string:task_id>': VisualizationDetailApi,
-    '/visualizations': VisualizationListApi,
+    '/approve/<int:user_id>': ApproveUserApi,
+    '/auth/validate': ValidateTokenApi,
+    '/auth/login': AuthenticationApi,
+    '/configurations': ConfigurationListApi,
+    '/password/reset': ResetPasswordApi,
+    '/permissions': PermissionListApi,
+    '/notifications': NotificationListApi,
+    '/notifications/summary': NotificationSummaryApi,
+    '/notifications/<int:notification_id>': NotificationDetailApi,
+    '/roles': RoleListApi,
+    '/roles/<int:role_id>': RoleDetailApi,
+    '/users/me': ProfileApi,
+    '/users': UserListApi,
+    '/register': RegisterApi,
+    '/users/<int:user_id>': UserDetailApi,
+    #    '/dashboards/<int:dashboard_id>': DashboardDetailApi,
+    #    '/visualizations/<int:job_id>/<task_id>': VisualizationDetailApi,
+    #    '/visualizations': VisualizationListApi,
 }
 for path, view in list(mappings.items()):
     api.add_resource(view, path)
 
-# @app.before_request
-def before():
-    if request.args and 'lang' in request.args:
-        if request.args['lang'] not in ('es', 'en'):
-            return abort(404)
-
 
 @babel.localeselector
 def get_locale():
-    return request.args.get('lang', 'en')
+    return request.headers.get('X-Locale', 'pt')
 
 
 def main(is_main_module):
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--config", type=str,
-            help="Config file", required=True)
-    args = parser.parse_args()
+    config_file = os.environ.get('THORN_CONFIG')
 
-    config_file = args.config
-
+    os.chdir(os.environ.get('THORN_HOME', '.'))
     logger = logging.getLogger(__name__)
     if config_file:
         with open(config_file) as f:
-            config = yaml.load(f)
-            configuration.set_config(config)
-            thorn_config = config['thorn']
+            config = yaml.load(f, Loader=yaml.FullLoader)['thorn']
 
         app.config["RESTFUL_JSON"] = {"cls": app.json_encoder}
 
-        server_config = thorn_config.get('servers', {})
+        server_config = config.get('servers', {})
         app.config['SQLALCHEMY_DATABASE_URI'] = server_config.get(
             'database_url')
         app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
         app.config['SQLALCHEMY_POOL_SIZE'] = 10
         app.config['SQLALCHEMY_POOL_RECYCLE'] = 240
+        app.config['RQ_REDIS_URL'] = config['servers']['redis_url']
+        app.config['RQ_DASHBOARD_REDIS_URL'] = app.config['RQ_REDIS_URL']
 
-        app.config.update(thorn_config.get('config', {}))
-        app.config['CAIPIRINHA_CONFIG'] = thorn_config
+        app.config.update(config.get('config', {}))
+        app.config['THORN_CONFIG'] = config
 
         db.init_app(app)
+        rq.init_app(app)
 
-        port = int(thorn_config.get('port', 5000))
-        logger.debug('Running in %s mode', thorn_config.get('environment'))
+        port = int(config.get('port', 5000))
+        logger.debug('Running in %s mode', config.get('environment'))
 
         if is_main_module:
-            if thorn_config.get('environment', 'dev') == 'dev':
-                admin.add_view(ModelView(Dashboard, db.session))
+            if config.get('environment', 'dev') == 'dev':
+                admin.add_view(ModelView(User, db.session))
                 app.run(debug=True, port=port)
             else:
                 eventlet.wsgi.server(eventlet.listen(('', port)), app)
+                # http_server = WSGIServer(('0.0.0.0', port), app)
+                # http_server.serve_forever()
     else:
-        logger.error('Please, set CAIPIRINHA_CONFIG environment variable')
+        logger.error('Please, set THORN_CONFIG environment variable')
         exit(1)
 
 
 main(__name__ == '__main__')
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--config", type=str,
-            help="Config file", required=True)
-    args = parser.parse_args()
-
-    eventlet.monkey_patch(all=True)
-
-    from thorn.factory import create_app, create_babel_i18n, \
-        create_socket_io_app, create_redis_store
-
-    app = create_app(config_file=args.config)
-    babel = create_babel_i18n(app)
-    # socketio, socketio_app = create_socket_io_app(app)
-    thorn_socket_io = StandSocketIO(app)
-    redis_store = create_redis_store(app)
-
-    if app.debug:
-        app.run(debug=True)
-    else:        
-        port = int(app.config['CAIPIRINHA_CONFIG'].get('port', 5000))
-
-        # noinspection PyUnresolvedReferences
-        eventlet.wsgi.server(eventlet.listen(('', port)),
-                         thorn_socket_io.socket_app)
