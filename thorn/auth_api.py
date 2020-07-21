@@ -102,14 +102,14 @@ class AuthenticationApi(Resource):
                     result = Response(
                         json.dumps({'status': 'ERROR', 'message': msg}), 401,
                         mimetype="application/json")
-            else:
-                ldap_data = ldap_authentication(ldap_config, login, password)
-                if ldap_data:
-                    ldap_user = ldap_data[0][1]
-                    _create_ldap_user(ldap_user)
-                    result = Response(json.dumps(
-                        {'status': 'OK', 'token': _get_jwt_token(user)}),
-                        200, mimetype="application/json")
+            # else:
+            #     ldap_data = ldap_authentication(ldap_config, login, password)
+            #     if ldap_data:
+            #         ldap_user = ldap_data[0][1]
+            #         _create_ldap_user(ldap_user)
+            #         result = Response(json.dumps(
+            #             {'status': 'OK', 'token': _get_jwt_token(user)}),
+            #             200, mimetype="application/json")
     
         return result
 

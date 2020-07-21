@@ -18,11 +18,14 @@ def check_password(password: str, hashed: str):
 
 # noinspection PyUnresolvedReferences
 def ldap_authentication(ldap_config: dict, login: str, password: str):
-    # @FIXME Move to configuration
-    ldap_server = 'ldap.dcc.ufmg.br'
-    base_dn = 'dc=dcc,dc=ufmg,dc=br'
-    user_dn = 'uid={login},ou=People,dc=dcc,dc=ufmg,dc=br'.format(
-        login=login)
+    if not ('LDAP_BASE_DN' in ldap_config and 'LDAP_SERVER' in ldap_config 
+            and 'LDAP_USER_DN' in ldap_config):
+        log.error(gettext('LDAP server is not correctly configured.'))
+        return None
+
+    ldap_server = ldap_config.get('LDAP_SERVER')
+    base_dn = ldap_config.get('LDAP_BASE_DN')
+    user_dn = ldap_config.get('LDAP_USER_DN').format(login=login)
 
     connect = ldap.initialize('ldap://' + ldap_server)
     try:
