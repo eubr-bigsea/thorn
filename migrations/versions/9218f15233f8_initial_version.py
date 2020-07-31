@@ -120,7 +120,7 @@ def upgrade():
                     sa.Column('value', mysql.LONGTEXT(), nullable=False),
                     sa.Column('enabled', sa.Boolean(), nullable=False),
                     sa.Column('editor', sa.Enum('TEXT', 'TEXTAREA', 'INTEGER', 'FLOAT', 
-                        'DATE', 'DATETIME', 'PASSWORD', 'URL', 'EMAIL', 'IMAGE', 'TEXT',
+                        'DATE', 'DATETIME', 'PASSWORD', 'URL', 'EMAIL', 'IMAGE', 
                         name='EditorTypeEnumType'), nullable=False),
                     sa.Column('internal', sa.Boolean(), nullable=False),
                     sa.PrimaryKeyConstraint('id')
