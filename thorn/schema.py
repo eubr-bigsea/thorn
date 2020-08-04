@@ -321,6 +321,8 @@ class UserItemResponseSchema(Schema):
     enabled = fields.Boolean(required=True, missing=True, default=True)
     status = fields.String(required=True, missing='ENABLED', default='ENABLED',
                            validate=[OneOf(list(UserStatus.__dict__.keys()))])
+    authentication_type = fields.String(required=False, allow_none=True, missing='INTERNAL', default='INTERNAL',
+                                        validate=[OneOf(list(AuthenticationType.__dict__.keys()))])
     first_name = fields.String(required=False, allow_none=True)
     last_name = fields.String(required=False, allow_none=True)
     locale = fields.String(required=False, allow_none=True)
