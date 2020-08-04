@@ -110,7 +110,6 @@ class AuthenticationApi(Resource):
             elif 'ldap' in config['providers']:
                 ldap_data = ldap_authentication(ldap_config, login, password)
                 if ldap_data:
-                    import pdb; pdb.set_trace()
                     ldap_user = ldap_data[0][1]
                     user = _create_ldap_user(login, ldap_user)
                     result = Response(json.dumps(
