@@ -56,7 +56,7 @@ def _success(user):
 
 def _create_ldap_user(login: str, ldap_user:dict):
     first_name, last_name = ldap_user.get(
-        'displayName')[0].decode('utf8').split(' ', 1)
+        'displayName', ldap_user.get('nome', ['User']))[0].decode('utf8').split(' ', 1)
     user = User(login=login, email=ldap_user.get('mail', [''])[0],
                 notes=gettext('LDAP User'), first_name=first_name,
                 last_name=last_name.strip(),
