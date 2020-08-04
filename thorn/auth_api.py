@@ -54,7 +54,7 @@ def _success(user):
         mimetype="application/json")
 
 
-def _create_ldap_user():
+def _create_ldap_user(login: str, ldap_user:dict):
     first_name, last_name = ldap_user.get(
         'displayName')[0].decode('utf8').split(' ', 1)
     user = User(login=login, email=ldap_user.get('mail', [''])[0],
@@ -64,6 +64,7 @@ def _create_ldap_user():
                 encrypted_password=encrypt_password('dummy'))
     db.session.add(user)
     db.session.commit()
+    return user
 
 
 class AuthenticationApi(Resource):
@@ -82,9 +83,13 @@ class AuthenticationApi(Resource):
         else:
             password = request.form.get('password')
             login = request.form.get('login')
+
+        config = current_app.config['THORN_CONFIG']
         if all([login, password]):
             user = User.query.filter(User.login == login).first()
-            ldap_config = {}
+            ldap_keys = ['LDAP_SERVER', 'LDAP_BASE_DN', 'LDAP_USER_DN']
+            query = Configuration.query.filter(Configuration.name.in_(ldap_keys))
+            ldap_config = dict( (c.name, c.value) for c in query)
             if user:
                 if user.enabled:
                     if user.authentication_type == AuthenticationType.INTERNAL:
@@ -102,14 +107,15 @@ class AuthenticationApi(Resource):
                     result = Response(
                         json.dumps({'status': 'ERROR', 'message': msg}), 401,
                         mimetype="application/json")
-            # else:
-            #     ldap_data = ldap_authentication(ldap_config, login, password)
-            #     if ldap_data:
-            #         ldap_user = ldap_data[0][1]
-            #         _create_ldap_user(ldap_user)
-            #         result = Response(json.dumps(
-            #             {'status': 'OK', 'token': _get_jwt_token(user)}),
-            #             200, mimetype="application/json")
+            elif 'ldap' in config['providers']:
+                ldap_data = ldap_authentication(ldap_config, login, password)
+                if ldap_data:
+                    import pdb; pdb.set_trace()
+                    ldap_user = ldap_data[0][1]
+                    user = _create_ldap_user(login, ldap_user)
+                    result = Response(json.dumps(
+                        {'status': 'OK', 'token': _get_jwt_token(user)}),
+                        200, mimetype="application/json")
     
         return result
 

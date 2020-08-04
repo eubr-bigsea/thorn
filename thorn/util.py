@@ -28,6 +28,7 @@ def ldap_authentication(ldap_config: dict, login: str, password: str):
     user_dn = ldap_config.get('LDAP_USER_DN').format(login=login)
 
     connect = ldap.initialize('ldap://' + ldap_server)
+    connect.set_option(ldap.OPT_NETWORK_TIMEOUT, 5.0)
     try:
         connect.set_option(ldap.OPT_REFERRALS, 0)
         connect.simple_bind_s(user_dn, password)
