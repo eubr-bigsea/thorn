@@ -288,7 +288,11 @@ class UserListResponseSchema(Schema):
         default=datetime.datetime.utcnow)
     first_name = fields.String(required=False, allow_none=True)
     last_name = fields.String(required=False, allow_none=True)
-    locale = fields.String(required=False, allow_none=True)
+    locale = fields.String(
+        required=False,
+        allow_none=True,
+        missing='pt',
+        default='pt')
     confirmed_at = fields.DateTime(required=False, allow_none=True)
     notes = fields.String(required=False, allow_none=True)
     roles = fields.Nested(
@@ -325,7 +329,11 @@ class UserItemResponseSchema(Schema):
                                         validate=[OneOf(list(AuthenticationType.__dict__.keys()))])
     first_name = fields.String(required=False, allow_none=True)
     last_name = fields.String(required=False, allow_none=True)
-    locale = fields.String(required=False, allow_none=True)
+    locale = fields.String(
+        required=False,
+        allow_none=True,
+        missing='pt',
+        default='pt')
     roles = fields.Nested(
         'thorn.schema.RoleItemResponseSchema',
         required=True,
@@ -358,7 +366,11 @@ class UserCreateRequestSchema(Schema):
     remember_created_at = fields.DateTime(required=False, allow_none=True)
     first_name = fields.String(required=False, allow_none=True)
     last_name = fields.String(required=False, allow_none=True)
-    locale = fields.String(required=False, allow_none=True)
+    locale = fields.String(
+        required=False,
+        allow_none=True,
+        missing='pt',
+        default='pt')
     confirmed_at = fields.DateTime(required=False, allow_none=True)
     confirmation_sent_at = fields.DateTime(required=False, allow_none=True)
     unconfirmed_email = fields.String(required=False, allow_none=True)

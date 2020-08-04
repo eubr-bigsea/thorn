@@ -60,6 +60,7 @@ def _create_ldap_user(login: str, ldap_user:dict):
     user = User(login=login, email=ldap_user.get('mail', [''])[0],
                 notes=gettext('LDAP User'), first_name=first_name,
                 last_name=last_name.strip(),
+                locale='pt',
                 authentication_type=AuthenticationType.LDAP,
                 encrypted_password=encrypt_password('dummy'))
     db.session.add(user)
@@ -112,9 +113,7 @@ class AuthenticationApi(Resource):
                 if ldap_data:
                     ldap_user = ldap_data[0][1]
                     user = _create_ldap_user(login, ldap_user)
-                    result = Response(json.dumps(
-                        {'status': 'OK', 'token': _get_jwt_token(user)}),
-                        200, mimetype="application/json")
+                    result = _success(user)
     
         return result
 

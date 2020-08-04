@@ -258,8 +258,9 @@ def _change_user(user_id, administrative, human_name):
                 form.data.id = user_id
                 user = User.query.get(user_id)
                 change_pass_ok = new_password is None \
-                        or confirm == new_password 
-                if not administrative and (
+                        or confirm == new_password \
+                        or user.authentication_type == 'LDAP'
+                if user.authentication_type != 'LDAP' and not administrative and (
                         not password or not check_password or not check_password(
                         password.encode('utf8'), 
                         user.encrypted_password.encode('utf8'))):
