@@ -374,7 +374,7 @@ class User(db.Model):
     roles = relationship(
         "Role",
         secondary=user_role,
-        cascade="delete",
+        cascade="all, delete",
         secondaryjoin=(
             "and_("
             "Role.id==user_role.c.role_id,"

@@ -238,7 +238,8 @@ class RoleItemResponseSchema(Schema):
     users = fields.Nested(
         'thorn.schema.UserItemResponseSchema',
         required=True,
-        many=True)
+        many=True,
+        only=['id', 'first_name', 'last_name', 'email', 'login'])
 
     # noinspection PyUnresolvedReferences
     @post_load
@@ -256,6 +257,10 @@ class RoleCreateRequestSchema(Schema):
     label = fields.String(required=True)
     description = fields.String(required=True)
     enabled = fields.Boolean(required=True, missing=True, default=True)
+    users = fields.Nested(
+        'thorn.schema.UserCreateRequestSchema',
+        required=True,
+        many=True)
 
     # noinspection PyUnresolvedReferences
     @post_load
@@ -375,6 +380,11 @@ class UserCreateRequestSchema(Schema):
     confirmation_sent_at = fields.DateTime(required=False, allow_none=True)
     unconfirmed_email = fields.String(required=False, allow_none=True)
     notes = fields.String(required=False, allow_none=True)
+    roles = fields.Nested(
+        'thorn.schema.RoleCreateRequestSchema',
+        required=True,
+        many=True,
+        only=['id'])
     workspace = fields.Nested(
         'thorn.schema.WorkspaceCreateRequestSchema',
         allow_none=True)

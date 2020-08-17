@@ -242,7 +242,7 @@ def _change_user(user_id, administrative, human_name):
         log.debug(gettext('Updating %s (id=%s)'), human_name,
                   user_id)
     if request.json:
-        roles = request.json.pop('roles', [])
+        # roles = request.json.pop('roles', [])
 
         request_schema = partial_schema_factory(
             UserCreateRequestSchema)
@@ -271,8 +271,8 @@ def _change_user(user_id, administrative, human_name):
                     if new_password is not None and len(new_password) > 0:
                         form.data.encrypted_password = encrypt_password(
                                 new_password).decode('utf8')
-                    form.data.roles = list(Role.query.filter(
-                            Role.id.in_([r['id'] for r in roles])))
+                    # form.data.roles = list(Role.query.filter(
+                    #         Role.id.in_([r['id'] for r in roles])))
                     db.session.merge(form.data)
                     db.session.commit()
 
@@ -412,8 +412,6 @@ class UserDetailApi(Resource):
         user = User.query.get(user_id)
         return_code = 200
         if user is not None:
-            # Retrieve roles the apply to all users
-            user.roles.extend(Role.query.filter(Role.all_user==True))
             result = {
                 'status': 'OK',
                 'data': [UserItemResponseSchema(exclude=('roles.users',)).dump(

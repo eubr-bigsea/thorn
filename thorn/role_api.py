@@ -222,37 +222,38 @@ class RoleDetailApi(Resource):
             users = request.json.pop('users') \
                     if 'users' in request.json else []
 
+            role = Role.query.get(role_id)
+            if role.system:
+                # Only users can be added to a system role
+                data = {'users': users}
+            else:
+                data = request.json
             # Ignore missing fields to allow partial updates
-            form = request_schema.load(request.json, partial=True)
+            form = request_schema.load(data, partial=True)
+
             response_schema = RoleItemResponseSchema(exclude=('users.roles',))
             if not form.errors:
                 try:
                     form.data.id = role_id
                     role = db.session.merge(form.data)
-                    if role.system:
-                        result = {'status': 'ERROR', 
-                                'message': gettext(
-                                    'A system role cannot be changed')}
-                        return_code = 400
-                    else:
-                        role.permissions = list(Permission.query.filter(
-                                Permission.id.in_([p.get('id', 0) 
-                                    for p in permissions])))
-                        role.users = list(User.query.filter(
-                            User.id.in_([u.get('id', 0) for u in users])))
-                        db.session.commit()
+                    role.permissions = list(Permission.query.filter(
+                            Permission.id.in_([p.get('id', 0) 
+                                for p in permissions])))
+                    role.users = list(User.query.filter(
+                        User.id.in_([u.get('id', 0) for u in users])))
+                    db.session.commit()
 
-                        if role is not None:
-                            return_code = 200
-                            result = {
-                                'status': 'OK',
-                                'message': gettext(
-                                    '%(n)s (id=%(id)s) was updated with success!',
-                                    n=self.human_name,
-                                    id=role_id),
-                                'data': [response_schema.dump(
-                                    role)]
-                            }
+                    if role is not None:
+                        return_code = 200
+                        result = {
+                            'status': 'OK',
+                            'message': gettext(
+                                '%(n)s (id=%(id)s) was updated with success!',
+                                n=self.human_name,
+                                id=role_id),
+                            'data': [response_schema.dump(
+                                role)]
+                        }
                 except Exception as e:
                     result = {'status': 'ERROR',
                               'message': gettext("Internal error")}
