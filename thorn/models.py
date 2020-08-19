@@ -364,17 +364,19 @@ class User(db.Model):
                         onupdate=datetime.datetime.utcnow)
     first_name = Column(String(255))
     last_name = Column(String(255))
-    locale = Column(String(20))
+    locale = Column(String(20),
+                    default='pt')
     confirmed_at = Column(DateTime)
     confirmation_sent_at = Column(DateTime)
     unconfirmed_email = Column(String(200))
     notes = Column(String(500))
+    api_token = Column(String(200))
 
     # Associations
     roles = relationship(
         "Role",
         secondary=user_role,
-        cascade="all, delete",
+        cascade="delete",
         secondaryjoin=(
             "and_("
             "Role.id==user_role.c.role_id,"

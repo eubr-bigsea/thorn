@@ -49,9 +49,6 @@ def requires_permission(*permissions):
     def real_requires_permission(f):
         @wraps(f)
         def decorated(*_args, **kwargs):
-            # fullfill = any(
-            #     p for r in flask_g.user.roles for p in r.permissions if
-            #     p.name in permissions)
             fullfill = len(set(permissions).intersection(
                     set(flask_g.user.permissions))) > 0
             if fullfill:

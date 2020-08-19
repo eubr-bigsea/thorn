@@ -37,7 +37,7 @@ from thorn.models import db, User
 from thorn.permission_api import PermissionListApi
 from thorn.user_api import UserListApi, \
     ResetPasswordApi, ApproveUserApi, UserDetailApi, ProfileApi, \
-    RegisterApi
+    RegisterApi, GenerateUserTokenApi
 from thorn.auth_api import ValidateTokenApi, AuthenticationApi
 from thorn.role_api import RoleListApi, RoleDetailApi
 from thorn.notification_api import NotificationListApi, NotificationDetailApi, \
@@ -80,6 +80,7 @@ mappings = {
     '/users/me': ProfileApi,
     '/users': UserListApi,
     '/register': RegisterApi,
+    '/token/<int:user_id>': GenerateUserTokenApi,
     '/users/<int:user_id>': UserDetailApi,
     #    '/dashboards/<int:dashboard_id>': DashboardDetailApi,
     #    '/visualizations/<int:job_id>/<task_id>': VisualizationDetailApi,

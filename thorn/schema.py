@@ -339,6 +339,7 @@ class UserItemResponseSchema(Schema):
         allow_none=True,
         missing='pt',
         default='pt')
+    api_token = fields.String(required=False, allow_none=True)
     roles = fields.Nested(
         'thorn.schema.RoleItemResponseSchema',
         required=True,

@@ -134,8 +134,14 @@ class ValidateTokenApi(Resource):
         # Check if URL is unprotected
         unprotected = config.get(
             'unprotected_urls', {})
-        path = request.headers.get('X-Original-URI', '').split('?')[0]
+        path = request.headers.get('X-Original-URI', '')
+        qs = {}
+        if '?' in path:
+            path, qs = path.split('?')
+            qs = urllib.parse.parse_qs(qs)
+
         method = request.headers.get('X-Original-Method', 'INVALID')
+
         if method in unprotected.get(path, []) or unprotected.get(path) == [] \
                 or '/public/' in path:
             status_code = 200
@@ -151,6 +157,11 @@ class ValidateTokenApi(Resource):
                         'Admin', 'Lemonade',
                         'pt')
                     }
+        elif 'api_token' in qs:
+            user = User.query.filter(User.api_token==qs.get('api_token')[0]).first()
+            if user is not None and user.enabled and user.status == UserStatus.ENABLED:
+                result = self._get_result(user)
+                status_code = 200
         else: 
             authorization = request.headers.get('Authorization')
             offset = 7 if authorization and authorization.startswith(
@@ -158,9 +169,6 @@ class ValidateTokenApi(Resource):
             result = {'status': 'ERROR', 
                     'msg': gettext('Invalid authentication')}
             if authorization is None:
-                qs = {}
-                if 'X-Original-URI' in request.headers:
-                    qs = urllib.parse.parse_qs(request.headers['X-Original-URI'])
                 authorization = qs.get('token')[0] if 'token' in qs else None
                 offset = 0
             if authorization is not None:
@@ -169,20 +177,25 @@ class ValidateTokenApi(Resource):
                                          current_app.secret_key)
                     user = User.query.get(int(decoded.get('id')))
                     if user.enabled and user.status == UserStatus.ENABLED:
-                        global_roles = _get_global_roles()
-                        result = {
-                              'X-User-Id': user.id,
-                              'X-Permissions': ','.join([p.name for r in user.roles 
-                                  for p in r.permissions]),
-                              'X-Roles': ','.join(map(str, [
-                                  r.id for r in user.roles] + global_roles)),
-                              'X-Locale': user.locale,
-                              'X-User-Data': '{};{};{} {};{}'.format(
-                                  user.login, user.email,
-                                  user.first_name, user.last_name,
-                                  user.locale)
-                              }
+                        result = self._get_result(user)
                         status_code = 200
                 except Exception as ex:
                     log.error(ex)
         return '', status_code, result
+
+    def _get_result(self, user):
+        global_roles = _get_global_roles()
+        return {
+              'X-User-Id': user.id,
+              'X-Permissions': ','.join([p.name for r in user.roles 
+                  for p in r.permissions]),
+              'X-Roles': ','.join(map(str, [
+                  r.id for r in user.roles] + global_roles)),
+              'X-Locale': user.locale,
+              'X-User-Data': '{};{};{} {};{}'.format(
+                  user.login, user.email,
+                  user.first_name, user.last_name,
+                  user.locale)
+              }
+    
+

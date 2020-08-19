@@ -8,6 +8,8 @@ import math
 import uuid
 import datetime
 import rq
+import random
+import string
 import logging
 from thorn.schema import *
 from flask_babel import gettext, get_locale
@@ -16,6 +18,11 @@ import json
 from thorn.models import Configuration
 from thorn.util import translate_validation
 
+def _get_random_string(length):
+    # Random string with the combination of lower and upper case
+    letters = string.ascii_letters + string.digits
+    return ''.join(random.choice(letters) for i in range(length))
+
 log = logging.getLogger(__name__)
 
 # region Protected\s*
@@ -23,6 +30,21 @@ class ChangeLocaleApi(Resource):
     @requires_auth
     def change_locale(self, user_id):
         pass
+
+class GenerateUserTokenApi(Resource):
+    @staticmethod
+    @requires_auth
+    @requires_permission('ADMINISTRATOR')
+    def post(user_id):
+        user = User.query.get(user_id)
+        if not user:
+            return {'status': 'ERROR', 'message': 'not found'}, 404
+        user.api_token = _get_random_string(15)
+        db.session.add(user)
+        db.session.commit()
+        return {'status': 'OK', 'token': user.api_token, 'message': 
+                gettext('A new token was generated.')}, 200
+
 
 class ApproveUserApi(Resource):
     @staticmethod
