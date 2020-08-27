@@ -58,7 +58,11 @@ class ConfigurationListApi(Resource):
                             or_(Configuration.name.like(q), 
                                 text(
                                     'configuration_translation_1.description LIKE :q',
-                                    bindparams=[param_q])))
+                                    bindparams=[param_q]),
+                                text(
+                                    'configuration_translation_1.category LIKE :q',
+                                    bindparams=[param_q])
+                                ))
         page = request.args.get('page') or '1'
         if page is not None and page.isdigit():
             page_size = int(request.args.get('size', 20))
