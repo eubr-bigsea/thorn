@@ -302,7 +302,7 @@ class UserListResponseSchema(Schema):
     notes = fields.String(required=False, allow_none=True)
     roles = fields.Nested(
         'thorn.schema.RoleListResponseSchema',
-        required=True,
+        allow_none=True,
         many=True)
     workspace = fields.Nested(
         'thorn.schema.WorkspaceListResponseSchema',
@@ -342,7 +342,7 @@ class UserItemResponseSchema(Schema):
     api_token = fields.String(required=False, allow_none=True)
     roles = fields.Nested(
         'thorn.schema.RoleItemResponseSchema',
-        required=True,
+        allow_none=True,
         many=True)
     workspace = fields.Nested(
         'thorn.schema.WorkspaceItemResponseSchema',
@@ -383,7 +383,7 @@ class UserCreateRequestSchema(Schema):
     notes = fields.String(required=False, allow_none=True)
     roles = fields.Nested(
         'thorn.schema.RoleCreateRequestSchema',
-        required=True,
+        allow_none=True,
         many=True,
         only=['id'])
     workspace = fields.Nested(
