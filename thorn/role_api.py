@@ -86,14 +86,13 @@ class RoleListApi(Resource):
             response_schema = RoleItemResponseSchema(exclude=('users.roles',))
             #FIXME
             request.json['label'] = request.json.get('name')
-            form = request_schema.load(request.json)
 
             permissions = request.json.pop('permissions') \
                     if 'permissions' in request.json else []
             users = request.json.pop('users') \
                     if 'users' in request.json else []
 
-
+            form = request_schema.load(request.json)
             if form.errors:
                 result = {'status': 'ERROR',
                           'message': gettext("Validation error"),
