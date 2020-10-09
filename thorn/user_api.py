@@ -268,6 +268,9 @@ def _change_user(user_id, administrative, human_name):
 
         request_schema = partial_schema_factory(
             UserCreateRequestSchema)
+        roles = [Role.query.get_or_404(r.get('id')) for r in 
+                request.json.get('roles', [])]
+
         # Ignore missing fields to allow partial updates
         form = request_schema.load(request.json, partial=True)
         response_schema = UserItemResponseSchema(exclude=('roles.users',))
@@ -279,6 +282,7 @@ def _change_user(user_id, administrative, human_name):
                 confirm = request.json.get('password_confirmation', '')
                 form.data.id = user_id
                 user = User.query.get(user_id)
+                user.roles = roles
                 change_pass_ok = new_password is None \
                         or confirm == new_password \
                         or user.authentication_type == 'LDAP'
@@ -436,7 +440,8 @@ class UserDetailApi(Resource):
         if user is not None:
             result = {
                 'status': 'OK',
-                'data': [UserItemResponseSchema(exclude=('roles.users',)).dump(
+                'data': [UserItemResponseSchema(
+                    exclude=('roles.users', 'roles.permissions',)).dump(
                     user).data]
             }
         else:
