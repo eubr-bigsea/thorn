@@ -13,7 +13,7 @@ from alembic import op
 from sqlalchemy import String, Integer, DateTime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import table, column
-
+from thorn.migration_utils import is_mysql
 
 
 # revision identifiers, used by Alembic.
@@ -50,41 +50,43 @@ def _insert_role():
     )
     columns = [c.name for c in tb.columns]
     data = [
-        (101, 'everybody', 1, 1, 1),
+        (101, 'everybody', True, True, True),
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
     op.bulk_insert(tb, rows)
 
-
-all_commands = [
-    (_insert_role, 'DELETE FROM role WHERE id = 101'),
-    (_insert_role_translation, 'DELETE FROM role_translation WHERE id = 101'),
-    ('UPDATE role SET `system` = 1 WHERE id in (1, 100)', 
-        'UPDATE role set `system` = 1  WHERE id in (1, 100)'),
-    (""" update role_translation 
-         SET label = 'Administrador', 
-         description='Administra todo o sistema, tem todas as permissões' 
-         WHERE id = 1 and locale = 'pt' """, None),
-    (""" update role_translation 
-         SET label = 'Administrator', 
-         description='System admin, has all permissions' 
-         WHERE id = 1 and locale = 'en' """, None),
-    (""" update role_translation 
-         SET label = 'Público', 
-         description='Qualquer usuário, autenticado ou não' 
-         WHERE id = 100 and locale = 'pt' """, None),
-    (""" update role_translation 
-         SET label = 'Public', 
-         description='Any user, authenticated or not' 
-         WHERE id = 100 and locale = 'en' """, None),
-
-]
+def get_commands():
+    system_name = '`system`' if is_mysql() else 'system'
+    all_commands = [
+        (_insert_role, 'DELETE FROM role WHERE id = 101'),
+        (_insert_role_translation, 'DELETE FROM role_translation WHERE id = 101'),
+        (f'UPDATE role SET {system_name} = true WHERE id in (1, 100)', 
+            f'UPDATE role set {system_name} = true  WHERE id in (1, 100)'),
+        (""" update role_translation 
+             SET label = 'Administrador', 
+             description='Administra todo o sistema, tem todas as permissões' 
+             WHERE id = 1 and locale = 'pt' """, None),
+        (""" update role_translation 
+             SET label = 'Administrator', 
+             description='System admin, has all permissions' 
+             WHERE id = 1 and locale = 'en' """, None),
+        (""" update role_translation 
+             SET label = 'Público', 
+             description='Qualquer usuário, autenticado ou não' 
+             WHERE id = 100 and locale = 'pt' """, None),
+        (""" update role_translation 
+             SET label = 'Public', 
+             description='Any user, authenticated or not' 
+             WHERE id = 100 and locale = 'en' """, None),
+    ]
+    return all_commands
 
 
 def upgrade():
     ctx = context.get_context()
     session = sessionmaker(bind=ctx.bind)()
     connection = session.connection()
+    all_commands = get_commands()
 
     try:
         for cmd in all_commands:
@@ -105,6 +107,7 @@ def downgrade():
     ctx = context.get_context()
     session = sessionmaker(bind=ctx.bind)()
     connection = session.connection()
+    all_commands = get_commands()
 
     try:
         for cmd in reversed(all_commands):

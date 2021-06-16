@@ -13,6 +13,9 @@ from alembic import op
 from sqlalchemy import String, Integer, DateTime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import table, column
+from thorn.migration_utils import (is_mysql, upgrade_actions,
+        get_psql_enum_alter_commands)
+
 
 # revision identifiers, used by Alembic.
 revision = '9c908beaa51a'
@@ -31,13 +34,13 @@ def _insert_permissions():
 
     columns = [c.name for c in tb.columns]
     data = [
-        (17, 'JOB_VIEW_ANY', 'JOB', 1),
-        (18, 'JOB_EDIT_ANY', 'JOB', 1),
-        (19, 'APP_EDIT', 'APP', 1),
-        (20, 'APP_USE', 'APP', 1),
+        (17, 'JOB_VIEW_ANY', 'JOB', True),
+        (18, 'JOB_EDIT_ANY', 'JOB', True),
+        (19, 'APP_EDIT', 'APP', True),
+        (20, 'APP_USE', 'APP', True),
 
-        (103, 'DEPLOYMENT_MANAGE', 'DEPLOYMENT', 1),
-        (104, 'RUN_WORKFLOW_API', 'JOB', 1),
+        (103, 'DEPLOYMENT_MANAGE', 'DEPLOYMENT', True),
+        (104, 'RUN_WORKFLOW_API', 'JOB', True),
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
     op.bulk_insert(tb, rows)
@@ -69,27 +72,31 @@ def _insert_permission_translations():
     rows = [dict(list(zip(columns, row))) for row in data]
     op.bulk_insert(tb, rows)
 
-
-all_commands = [
-    ('''ALTER TABLE permission CHANGE 
-         applicable_to `applicable_to` enum('SYSTEM','DASHBOARD','DATA_SOURCE',
-         'JOB', 'APP', 'DEPLOYMENT', 'API',
-         'WORKFLOW','VISUALIZATION','USER')'''
-        , 'SELECT 1'
-    ),
-    (_insert_permissions, 'DELETE FROM permission WHERE id BETWEEN 17 AND 20 OR '
-                          'id BETWEEN 103 AND 104 '),
-    (_insert_permission_translations,
-     'DELETE FROM permission_translation WHERE id BETWEEN 17 AND 20 OR '
-                          'id BETWEEN 103 AND 104 ' ),
-
-]
+def get_commands():
+    all_commands = [
+        ('''ALTER TABLE permission CHANGE 
+             applicable_to `applicable_to` enum('SYSTEM','DASHBOARD','DATA_SOURCE',
+             'JOB', 'APP', 'DEPLOYMENT', 'API',
+             'WORKFLOW','VISUALIZATION','USER')''' if is_mysql() else get_psql_enum_alter_commands(
+                 ['permission', 'asset'], ['applicable_to', 'type'], 'AssetTypeEnumType', 
+                   ['SYSTEM','DASHBOARD','DATA_SOURCE', 'JOB', 'APP', 'DEPLOYMENT', 'API',
+                     'WORKFLOW','VISUALIZATION','USER'], 'USER'), 
+                   'SELECT 1'
+        ),
+        (_insert_permissions, 'DELETE FROM permission WHERE id BETWEEN 17 AND 20 OR '
+                              'id BETWEEN 103 AND 104 '),
+        (_insert_permission_translations,
+         'DELETE FROM permission_translation WHERE id BETWEEN 17 AND 20 OR '
+                              'id BETWEEN 103 AND 104 ' ),
+    ]
+    return all_commands
 
 
 def upgrade():
     ctx = context.get_context()
     session = sessionmaker(bind=ctx.bind)()
     connection = session.connection()
+    all_commands = get_commands()
 
     try:
         for cmd in all_commands:
@@ -110,6 +117,7 @@ def downgrade():
     ctx = context.get_context()
     session = sessionmaker(bind=ctx.bind)()
     connection = session.connection()
+    all_commands = get_commands()
 
     try:
         for cmd in reversed(all_commands):

@@ -8,6 +8,7 @@ Create Date: 2020-06-23 22:53:32.662141
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
+from thorn.migration_utils import is_mysql
 
 # revision identifiers, used by Alembic.
 revision = '301419649460'
@@ -21,7 +22,7 @@ def upgrade():
     op.create_table('user_preference',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('key', sa.String(length=100), nullable=False),
-    sa.Column('value', mysql.LONGTEXT(), nullable=False),
+    sa.Column('value', mysql.LONGTEXT() if is_mysql() else sa.Text(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], name='fk_user_preference_id'),
     sa.PrimaryKeyConstraint('id')

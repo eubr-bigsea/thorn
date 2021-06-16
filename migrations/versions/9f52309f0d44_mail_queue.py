@@ -8,6 +8,7 @@ Create Date: 2020-03-25 10:49:23.112831
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
+from thorn.migration_utils import is_mysql
 
 # revision identifiers, used by Alembic.
 revision = '9f52309f0d44'
@@ -23,7 +24,7 @@ def upgrade():
     sa.Column('created', sa.DateTime(), nullable=False),
     sa.Column('status', sa.String(length=50), nullable=False),
     sa.Column('attempts', sa.Integer(), nullable=False),
-    sa.Column('json_data', mysql.LONGTEXT(), nullable=False),
+    sa.Column('json_data', mysql.LONGTEXT() if is_mysql() else sa.Text(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###

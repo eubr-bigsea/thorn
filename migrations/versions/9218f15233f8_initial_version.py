@@ -10,6 +10,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 from sqlalchemy.dialects import mysql
+from thorn.migration_utils import is_mysql, is_psql
 
 revision = '9218f15233f8'
 down_revision = None
@@ -117,7 +118,7 @@ def upgrade():
     op.create_table('configuration',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('name', sa.String(length=100), nullable=False),
-                    sa.Column('value', mysql.LONGTEXT(), nullable=False),
+                    sa.Column('value', mysql.LONGTEXT() if is_mysql() else sa.Text(), nullable=False),
                     sa.Column('enabled', sa.Boolean(), nullable=False),
                     sa.Column('editor', sa.Enum('TEXT', 'TEXTAREA', 'INTEGER', 'FLOAT', 
                         'DATE', 'DATETIME', 'PASSWORD', 'URL', 'EMAIL', 'IMAGE', 
@@ -150,6 +151,10 @@ def downgrade():
     op.drop_table('permission')
     op.drop_table('configuration_translation')
     op.drop_table('configuration')
-    pass
+
+    if is_psql():
+        op.get_bind().execute('DROP TYPE "EditorTypeEnumType"')
+        op.get_bind().execute('DROP TYPE "AssetTypeEnumType"')
+        op.get_bind().execute('DROP TYPE "AuthenticationTypeEnumType"')
 
 # ### end Alembic commands ###

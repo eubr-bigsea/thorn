@@ -2,7 +2,7 @@
 import datetime
 import json
 from copy import deepcopy
-from marshmallow import Schema, fields, post_load
+from marshmallow import Schema, fields, post_load, post_dump
 from marshmallow.validate import OneOf
 from thorn.models import *
 
@@ -21,28 +21,44 @@ def load_json(str_value):
     try:
         return json.loads(str_value)
     except BaseException:
-        return "Error loading JSON"
+        return None
 
 
 # region Protected\s*
 # endregion
 
+class BaseSchema(Schema):
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None and value != []
+        }
 
-class ConfigurationListResponseSchema(Schema):
+
+class ConfigurationListResponseSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     name = fields.String(required=True)
     description = fields.String(required=True)
     category = fields.String(required=False, allow_none=True)
     value = fields.String(required=True)
-    enabled = fields.Boolean(required=True, missing=True, default=True)
-    internal = fields.Boolean(required=True, missing=True, default=True)
-    editor = fields.String(required=True, missing='TEXT', default='TEXT',
+    enabled = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
+    internal = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
+    editor = fields.String(required=False, allow_none=True, missing='TEXT', default='TEXT',
                            validate=[OneOf(list(EditorType.__dict__.keys()))])
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Configuration"""
         return Configuration(**data)
 
@@ -50,21 +66,29 @@ class ConfigurationListResponseSchema(Schema):
         ordered = True
 
 
-class ConfigurationItemResponseSchema(Schema):
+class ConfigurationItemResponseSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     name = fields.String(required=True)
     description = fields.String(required=True)
     category = fields.String(required=False, allow_none=True)
     value = fields.String(required=True)
-    enabled = fields.Boolean(required=True, missing=True, default=True)
-    internal = fields.Boolean(required=True, missing=True, default=True)
-    editor = fields.String(required=True, missing='TEXT', default='TEXT',
+    enabled = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
+    internal = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
+    editor = fields.String(required=False, allow_none=True, missing='TEXT', default='TEXT',
                            validate=[OneOf(list(EditorType.__dict__.keys()))])
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Configuration"""
         return Configuration(**data)
 
@@ -72,19 +96,27 @@ class ConfigurationItemResponseSchema(Schema):
         ordered = True
 
 
-class ConfigurationCreateRequestSchema(Schema):
+class ConfigurationCreateRequestSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     category = fields.String(required=False, allow_none=True)
     value = fields.String(required=True)
-    enabled = fields.Boolean(required=True, missing=True, default=True)
-    internal = fields.Boolean(required=True, missing=True, default=True)
-    editor = fields.String(required=True, missing='TEXT', default='TEXT',
+    enabled = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
+    internal = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
+    editor = fields.String(required=False, allow_none=True, missing='TEXT', default='TEXT',
                            validate=[OneOf(list(EditorType.__dict__.keys()))])
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Configuration"""
         return Configuration(**data)
 
@@ -92,24 +124,29 @@ class ConfigurationCreateRequestSchema(Schema):
         ordered = True
 
 
-class NotificationListResponseSchema(Schema):
+class NotificationListResponseSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     created = fields.DateTime(
-        required=True,
+        required=False,
+        allow_none=True,
         missing=datetime.datetime.utcnow,
         default=datetime.datetime.utcnow)
     text = fields.String(required=True)
     link = fields.String(required=False, allow_none=True)
-    status = fields.String(required=True, missing="UNREAD", default="UNREAD",
+    status = fields.String(required=False, allow_none=True, missing="UNREAD", default="UNREAD",
                            validate=[OneOf(list(NotificationStatus.__dict__.keys()))])
-    from_system = fields.Boolean(required=True, missing=True, default=True)
-    type = fields.String(required=True, missing="INFO", default="INFO",
+    from_system = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
+    type = fields.String(required=False, allow_none=True, missing="INFO", default="INFO",
                          validate=[OneOf(list(NotificationType.__dict__.keys()))])
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Notification"""
         return Notification(**data)
 
@@ -117,24 +154,29 @@ class NotificationListResponseSchema(Schema):
         ordered = True
 
 
-class NotificationItemResponseSchema(Schema):
+class NotificationItemResponseSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     created = fields.DateTime(
-        required=True,
+        required=False,
+        allow_none=True,
         missing=datetime.datetime.utcnow,
         default=datetime.datetime.utcnow)
     text = fields.String(required=True)
     link = fields.String(required=False, allow_none=True)
-    status = fields.String(required=True, missing="UNREAD", default="UNREAD",
+    status = fields.String(required=False, allow_none=True, missing="UNREAD", default="UNREAD",
                            validate=[OneOf(list(NotificationStatus.__dict__.keys()))])
-    from_system = fields.Boolean(required=True, missing=True, default=True)
-    type = fields.String(required=True, missing="INFO", default="INFO",
+    from_system = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
+    type = fields.String(required=False, allow_none=True, missing="INFO", default="INFO",
                          validate=[OneOf(list(NotificationType.__dict__.keys()))])
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Notification"""
         return Notification(**data)
 
@@ -142,20 +184,24 @@ class NotificationItemResponseSchema(Schema):
         ordered = True
 
 
-class NotificationCreateRequestSchema(Schema):
+class NotificationCreateRequestSchema(BaseSchema):
     """ JSON serialization schema """
     text = fields.String(required=True)
     link = fields.String(required=False, allow_none=True)
-    status = fields.String(required=True, missing="UNREAD", default="UNREAD",
+    status = fields.String(required=False, allow_none=True, missing="UNREAD", default="UNREAD",
                            validate=[OneOf(list(NotificationStatus.__dict__.keys()))])
-    from_system = fields.Boolean(required=True, missing=True, default=True)
-    type = fields.String(required=True, missing="INFO", default="INFO",
+    from_system = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
+    type = fields.String(required=False, allow_none=True, missing="INFO", default="INFO",
                          validate=[OneOf(list(NotificationType.__dict__.keys()))])
     user_id = fields.Integer(allow_none=True)
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Notification"""
         return Notification(**data)
 
@@ -163,7 +209,7 @@ class NotificationCreateRequestSchema(Schema):
         ordered = True
 
 
-class PermissionListResponseSchema(Schema):
+class PermissionListResponseSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     name = fields.String(required=True)
@@ -173,7 +219,7 @@ class PermissionListResponseSchema(Schema):
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Permission"""
         return Permission(**data)
 
@@ -181,18 +227,22 @@ class PermissionListResponseSchema(Schema):
         ordered = True
 
 
-class PermissionItemResponseSchema(Schema):
+class PermissionItemResponseSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     name = fields.String(required=True)
     description = fields.String(required=True)
     applicable_to = fields.String(required=False, allow_none=True,
                                   validate=[OneOf(list(AssetType.__dict__.keys()))])
-    enabled = fields.Boolean(required=True, missing=True, default=True)
+    enabled = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Permission"""
         return Permission(**data)
 
@@ -200,13 +250,17 @@ class PermissionItemResponseSchema(Schema):
         ordered = True
 
 
-class RoleListResponseSchema(Schema):
+class RoleListResponseSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     name = fields.String(required=True)
     label = fields.String(required=True)
     description = fields.String(required=True)
-    system = fields.Boolean(required=True, missing=False, default=False)
+    system = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=False,
+        default=False)
     users = fields.Nested(
         'thorn.schema.UserListResponseSchema',
         allow_none=True,
@@ -214,7 +268,7 @@ class RoleListResponseSchema(Schema):
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Role"""
         return Role(**data)
 
@@ -222,15 +276,27 @@ class RoleListResponseSchema(Schema):
         ordered = True
 
 
-class RoleItemResponseSchema(Schema):
+class RoleItemResponseSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     name = fields.String(required=True)
     label = fields.String(required=True)
     description = fields.String(required=True)
-    all_user = fields.Boolean(required=True, missing=False, default=False)
-    system = fields.Boolean(required=True, missing=False, default=False)
-    enabled = fields.Boolean(required=True, missing=True, default=True)
+    all_user = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=False,
+        default=False)
+    system = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=False,
+        default=False)
+    enabled = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
     permissions = fields.Nested(
         'thorn.schema.PermissionItemResponseSchema',
         required=True,
@@ -243,7 +309,7 @@ class RoleItemResponseSchema(Schema):
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Role"""
         return Role(**data)
 
@@ -251,12 +317,16 @@ class RoleItemResponseSchema(Schema):
         ordered = True
 
 
-class RoleCreateRequestSchema(Schema):
+class RoleCreateRequestSchema(BaseSchema):
     """ JSON serialization schema """
     name = fields.String(required=True)
     label = fields.String(required=True)
     description = fields.String(required=True)
-    enabled = fields.Boolean(required=True, missing=True, default=True)
+    enabled = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
     users = fields.Nested(
         'thorn.schema.UserCreateRequestSchema',
         allow_none=True,
@@ -264,7 +334,7 @@ class RoleCreateRequestSchema(Schema):
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Role"""
         return Role(**data)
 
@@ -272,18 +342,23 @@ class RoleCreateRequestSchema(Schema):
         ordered = True
 
 
-class UserListResponseSchema(Schema):
+class UserListResponseSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     login = fields.String(required=True)
     email = fields.String(required=True)
-    enabled = fields.Boolean(required=True, missing=True, default=True)
-    status = fields.String(required=True, missing='ENABLED', default='ENABLED',
+    enabled = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
+    status = fields.String(required=False, allow_none=True, missing='ENABLED', default='ENABLED',
                            validate=[OneOf(list(UserStatus.__dict__.keys()))])
     authentication_type = fields.String(required=False, allow_none=True, missing='INTERNAL', default='INTERNAL',
                                         validate=[OneOf(list(AuthenticationType.__dict__.keys()))])
     created_at = fields.DateTime(
-        required=True,
+        required=False,
+        allow_none=True,
         missing=datetime.datetime.utcnow,
         default=datetime.datetime.utcnow)
     updated_at = fields.DateTime(
@@ -314,7 +389,7 @@ class UserListResponseSchema(Schema):
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of User"""
         return User(**data)
 
@@ -322,13 +397,17 @@ class UserListResponseSchema(Schema):
         ordered = True
 
 
-class UserItemResponseSchema(Schema):
+class UserItemResponseSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     login = fields.String(required=True)
     email = fields.String(required=True)
-    enabled = fields.Boolean(required=True, missing=True, default=True)
-    status = fields.String(required=True, missing='ENABLED', default='ENABLED',
+    enabled = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
+    status = fields.String(required=False, allow_none=True, missing='ENABLED', default='ENABLED',
                            validate=[OneOf(list(UserStatus.__dict__.keys()))])
     authentication_type = fields.String(required=False, allow_none=True, missing='INTERNAL', default='INTERNAL',
                                         validate=[OneOf(list(AuthenticationType.__dict__.keys()))])
@@ -351,7 +430,7 @@ class UserItemResponseSchema(Schema):
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of User"""
         return User(**data)
 
@@ -359,12 +438,16 @@ class UserItemResponseSchema(Schema):
         ordered = True
 
 
-class UserCreateRequestSchema(Schema):
+class UserCreateRequestSchema(BaseSchema):
     """ JSON serialization schema """
     login = fields.String(required=True)
     email = fields.String(required=True)
-    enabled = fields.Boolean(required=True, missing=True, default=True)
-    status = fields.String(required=True, missing='ENABLED', default='ENABLED',
+    enabled = fields.Boolean(
+        required=False,
+        allow_none=True,
+        missing=True,
+        default=True)
+    status = fields.String(required=False, allow_none=True, missing='ENABLED', default='ENABLED',
                            validate=[OneOf(list(UserStatus.__dict__.keys()))])
     authentication_type = fields.String(required=False, allow_none=True, missing='INTERNAL', default='INTERNAL',
                                         validate=[OneOf(list(AuthenticationType.__dict__.keys()))])
@@ -392,7 +475,7 @@ class UserCreateRequestSchema(Schema):
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of User"""
         return User(**data)
 
@@ -400,7 +483,7 @@ class UserCreateRequestSchema(Schema):
         ordered = True
 
 
-class WorkspaceListResponseSchema(Schema):
+class WorkspaceListResponseSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     name = fields.String(required=True)
@@ -410,7 +493,7 @@ class WorkspaceListResponseSchema(Schema):
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Workspace"""
         return Workspace(**data)
 
@@ -418,7 +501,7 @@ class WorkspaceListResponseSchema(Schema):
         ordered = True
 
 
-class WorkspaceItemResponseSchema(Schema):
+class WorkspaceItemResponseSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     name = fields.String(required=True)
@@ -428,7 +511,7 @@ class WorkspaceItemResponseSchema(Schema):
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Workspace"""
         return Workspace(**data)
 
@@ -436,7 +519,7 @@ class WorkspaceItemResponseSchema(Schema):
         ordered = True
 
 
-class WorkspaceCreateRequestSchema(Schema):
+class WorkspaceCreateRequestSchema(BaseSchema):
     """ JSON serialization schema """
     id = fields.Integer(required=True)
     name = fields.String(required=True)
@@ -446,7 +529,7 @@ class WorkspaceCreateRequestSchema(Schema):
 
     # noinspection PyUnresolvedReferences
     @post_load
-    def make_object(self, data):
+    def make_object(self, data, **kwargs):
         """ Deserialize data into an instance of Workspace"""
         return Workspace(**data)
 

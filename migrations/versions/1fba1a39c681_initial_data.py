@@ -13,6 +13,7 @@ from alembic import op
 from sqlalchemy import String, Integer, DateTime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import table, column
+from thorn.migration_utils import is_mysql
 
 # revision identifiers, used by Alembic.
 revision = '1fba1a39c681'
@@ -32,30 +33,30 @@ def _insert_permissions():
 
     columns = [c.name for c in tb.columns]
     data = [
-        (1, 'WORKFLOW_VIEW_ANY', 'WORKFLOW', 1),
-        (2, 'WORKFLOW_EDIT_ANY', 'WORKFLOW', 1),
-        (3, 'WORKFLOW_EXECUTE_ANY', 'WORKFLOW', 1),
-        (4, 'WORKFLOW_VIEW', 'WORKFLOW', 1),
-        (5, 'WORKFLOW_EDIT', 'WORKFLOW', 1),
-        (6, 'WORKFLOW_EXECUTE', 'WORKFLOW', 1),
+        (1, 'WORKFLOW_VIEW_ANY', 'WORKFLOW', True),
+        (2, 'WORKFLOW_EDIT_ANY', 'WORKFLOW', True),
+        (3, 'WORKFLOW_EXECUTE_ANY', 'WORKFLOW', True),
+        (4, 'WORKFLOW_VIEW', 'WORKFLOW', True),
+        (5, 'WORKFLOW_EDIT', 'WORKFLOW', True),
+        (6, 'WORKFLOW_EXECUTE', 'WORKFLOW', True),
 
-        (7, 'DATA_SOURCE_VIEW_ANY', 'DATA_SOURCE', 1),
-        (8, 'DATA_SOURCE_EDIT_ANY', 'DATA_SOURCE', 1),
-        (9, 'DATA_SOURCE_USE_ANY', 'DATA_SOURCE', 1),
-        (10, 'DATA_SOURCE_VIEW', 'DATA_SOURCE', 1),
-        (11, 'DATA_SOURCE_EDIT', 'DATA_SOURCE', 1),
-        (12, 'DATA_SOURCE_USE', 'DATA_SOURCE', 1),
+        (7, 'DATA_SOURCE_VIEW_ANY', 'DATA_SOURCE', True),
+        (8, 'DATA_SOURCE_EDIT_ANY', 'DATA_SOURCE', True),
+        (9, 'DATA_SOURCE_USE_ANY', 'DATA_SOURCE', True),
+        (10, 'DATA_SOURCE_VIEW', 'DATA_SOURCE', True),
+        (11, 'DATA_SOURCE_EDIT', 'DATA_SOURCE', True),
+        (12, 'DATA_SOURCE_USE', 'DATA_SOURCE', True),
 
-        (13, 'DASHBOARD_VIEW_ANY', 'DASHBOARD', 1),
-        (14, 'DASHBOARD_EDIT_ANY', 'DASHBOARD', 1),
-        (15, 'DASHBOARD_VIEW', 'DASHBOARD', 1),
-        (16, 'DASHBOARD_EDIT', 'DASHBOARD', 1),
+        (13, 'DASHBOARD_VIEW_ANY', 'DASHBOARD', True),
+        (14, 'DASHBOARD_EDIT_ANY', 'DASHBOARD', True),
+        (15, 'DASHBOARD_VIEW', 'DASHBOARD', True),
+        (16, 'DASHBOARD_EDIT', 'DASHBOARD', True),
 
-        (100, 'USER_MANAGE', 'USER', 1),
-        (101, 'STORAGE_MANAGE', 'SYSTEM', 1),
-        (102, 'CLUSTER_MANAGE', 'SYSTEM', 1),
+        (100, 'USER_MANAGE', 'USER', True),
+        (101, 'STORAGE_MANAGE', 'SYSTEM', True),
+        (102, 'CLUSTER_MANAGE', 'SYSTEM', True),
 
-        (1000, 'ADMINISTRATOR', 'SYSTEM', 1),
+        (1000, 'ADMINISTRATOR', 'SYSTEM', True),
 
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
@@ -142,7 +143,7 @@ def _insert_admin():
                            bcrypt.gensalt(12)).decode('utf8')
     data = [
         (1, 'admin@lemonade.org.br', 'admin@lemonade.org.br',
-         hashed, datetime.datetime.now(), 'Admin', '', 'pt', 1, 'INTERNAL'),
+         hashed, datetime.datetime.now(), 'Admin', '', 'pt', True, 'INTERNAL'),
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
     op.bulk_insert(tb, rows)
@@ -158,8 +159,8 @@ def _insert_roles():
     )
     columns = [c.name for c in tb.columns]
     data = [
-        (1, 'admin', 0, 1),
-        (100, 'public', 1, 1),
+        (1, 'admin', False, True),
+        (100, 'public', True, True),
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
     op.bulk_insert(tb, rows)
@@ -210,32 +211,33 @@ def _insert_role_permission():
     rows = [dict(list(zip(columns, row))) for row in data]
     op.bulk_insert(tb, rows)
 
-
-
-all_commands = [
-    (_insert_permissions, 'DELETE FROM permission WHERE id BETWEEN 1 AND 16 OR '
-                          'id BETWEEN 100 AND 102 OR id BETWEEN 1000 AND 1000'),
-    (_insert_permission_translations,
-     'DELETE FROM permission_translation WHERE id BETWEEN 1 AND 16 OR '
-     'id BETWEEN 100 AND 102 OR id BETWEEN 1000 AND 1000'),
-
-    (_insert_admin, 'DELETE FROM user WHERE id BETWEEN 1 AND 1 '),
-    (_insert_roles, 'DELETE FROM role WHERE id BETWEEN 1 AND 1 OR id '
-                    'BETWEEN 100 AND 100'),
-    (_insert_role_translations,
-     'DELETE FROM role_translation WHERE id BETWEEN 1 AND 1 OR id '
-     'BETWEEN 100 AND 100'),
-    (_insert_user_roles, 'DELETE FROM user_role WHERE user_id BETWEEN 1 AND 1'),
-
-    (_insert_role_permission, 'DELETE FROM role_permission WHERE role_id = 1 '
-                              'AND permission_id = 1000')
-]
-
+def get_commands():
+    user_table = 'user' if is_mysql() else '"user"'
+    all_commands = [
+        (_insert_permissions, 'DELETE FROM permission WHERE id BETWEEN 1 AND 16 OR '
+                              'id BETWEEN 100 AND 102 OR id BETWEEN 1000 AND 1000'),
+        (_insert_permission_translations,
+         'DELETE FROM permission_translation WHERE id BETWEEN 1 AND 16 OR '
+         'id BETWEEN 100 AND 102 OR id BETWEEN 1000 AND 1000'),
+    
+        (_insert_admin, f'DELETE FROM {user_table} WHERE id BETWEEN 1 AND 1 '),
+        (_insert_roles, 'DELETE FROM role WHERE id BETWEEN 1 AND 1 OR id '
+                        'BETWEEN 100 AND 100'),
+        (_insert_role_translations,
+         'DELETE FROM role_translation WHERE id BETWEEN 1 AND 1 OR id '
+         'BETWEEN 100 AND 100'),
+        (_insert_user_roles, 'DELETE FROM user_role WHERE user_id BETWEEN 1 AND 1'),
+    
+        (_insert_role_permission, 'DELETE FROM role_permission WHERE role_id = 1 '
+                                  'AND permission_id = 1000')
+    ]
+    return all_commands
 
 def upgrade():
     ctx = context.get_context()
     session = sessionmaker(bind=ctx.bind)()
     connection = session.connection()
+    all_commands = get_commands()
 
     try:
         for cmd in all_commands:
@@ -256,6 +258,7 @@ def downgrade():
     ctx = context.get_context()
     session = sessionmaker(bind=ctx.bind)()
     connection = session.connection()
+    all_commands = get_commands()
 
     try:
         for cmd in reversed(all_commands):

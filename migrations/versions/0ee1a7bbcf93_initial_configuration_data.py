@@ -65,15 +65,15 @@ def _insert_configuration():
     )
     columns = [c.name for c in tb.columns]
     data = [
-        (1, 'LDAP_SERVER', 'ldap.domain.com', 1, 1, 'TEXT'),
-        (2, 'LDAP_BASE_DN', 'dc=domain,dc=com', 1, 1, 'TEXT'),
-        (3, 'LDAP_USER_DN', 'uid={login},ou=People,dc=domain,dc=com', 1, 1, 'TEXT'),
-        (4, 'SERVER_BASE_URL', 'http://localhost:8000', 1, 0, 'URL'),
-        (5, 'SUPPORT_EMAIL', 'supporte@domain', 1, 0, 'EMAIL'),
-        (6, 'SMTP_SERVER', 'smtp.domain.com', 1, 1, 'TEXT'),
-        (7, 'SMTP_USER', 'lemonade.user', 1, 1, 'TEXT'),
-        (8, 'SMTP_PASSWORD', 'secret', 1, 1, 'PASSWORD'),
-        (9, 'SMTP_PORT', '465', 1, 1, 'INTEGER'),
+        (1, 'LDAP_SERVER', 'ldap.domain.com', True, True, 'TEXT'),
+        (2, 'LDAP_BASE_DN', 'dc=domain,dc=com', True, True, 'TEXT'),
+        (3, 'LDAP_USER_DN', 'uid={login},ou=People,dc=domain,dc=com', True, True, 'TEXT'),
+        (4, 'SERVER_BASE_URL', 'http://localhost:8000', True, False, 'URL'),
+        (5, 'SUPPORT_EMAIL', 'supporte@domain', True, False, 'EMAIL'),
+        (6, 'SMTP_SERVER', 'smtp.domain.com', True, True, 'TEXT'),
+        (7, 'SMTP_USER', 'lemonade.user', True, True, 'TEXT'),
+        (8, 'SMTP_PASSWORD', 'secret', True, True, 'PASSWORD'),
+        (9, 'SMTP_PORT', '465', True, True, 'INTEGER'),
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
     op.bulk_insert(tb, rows)

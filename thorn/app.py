@@ -25,10 +25,9 @@ import os
 import eventlet.wsgi
 import sqlalchemy_utils
 import yaml
+from flask_migrate import Migrate
 from thorn import rq
 from flask import Flask, request
-from flask_admin import Admin
-from flask_admin.contrib.sqla import ModelView
 from flask_babel import get_locale, Babel
 from flask_cors import CORS
 from flask_restful import Api
@@ -43,7 +42,6 @@ from thorn.role_api import RoleListApi, RoleDetailApi
 from thorn.notification_api import NotificationListApi, NotificationDetailApi, \
     NotificationSummaryApi
 from thorn.configuration_api import ConfigurationListApi
-import rq_dashboard
 
 sqlalchemy_utils.i18n.get_locale = get_locale
 
@@ -54,16 +52,10 @@ babel = Babel(app)
 logging.config.fileConfig('logging_config.ini')
 
 app.secret_key = '0e36528dc34844e79963436a7af9258f'
-# Flask Admin 
-admin = Admin(app, name='Lemonade', template_mode='bootstrap3')
 
 # CORS
 CORS(app, resources={r"/*": {"origins": "*"}})
 api = Api(app)
-
-# RQ dashboard
-app.config.from_object(rq_dashboard.default_settings)
-app.register_blueprint(rq_dashboard.blueprint, url_prefix="/rq")
 
 mappings = {
     '/approve/<int:user_id>': ApproveUserApi,
@@ -121,12 +113,12 @@ def main(is_main_module):
         db.init_app(app)
         rq.init_app(app)
 
+        migrate = Migrate(app, db)        
         port = int(config.get('port', 5000))
         logger.debug('Running in %s mode', config.get('environment'))
 
         if is_main_module:
             if config.get('environment', 'dev') == 'dev':
-                admin.add_view(ModelView(User, db.session))
                 app.run(debug=True, port=port)
             else:
                 eventlet.wsgi.server(eventlet.listen(('', port)), app)
