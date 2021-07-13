@@ -29,7 +29,7 @@ def _get_jwt_token(user):
             #'locale': user.locale,
             #'permissions': [p.name for r in user.roles
             #                for p in r.permissions]
-        }, current_app.secret_key).decode('utf8')
+        }, current_app.secret_key)
 
 
 def _success(user):
@@ -174,7 +174,8 @@ class ValidateTokenApi(Resource):
             if authorization is not None:
                 try:
                     decoded = jwt.decode(authorization[offset:],
-                                         current_app.secret_key)
+                                         current_app.secret_key,
+                                         algorithms=["HS256"])
                     user = User.query.get(int(decoded.get('id')))
                     if user.enabled and user.status == UserStatus.ENABLED:
                         result = self._get_result(user)

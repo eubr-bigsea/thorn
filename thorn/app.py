@@ -31,6 +31,7 @@ from flask import Flask, request
 from flask_babel import get_locale, Babel
 from flask_cors import CORS
 from flask_restful import Api
+from flask_swagger_ui import get_swaggerui_blueprint
 from thorn.gateway import ApiGateway
 from thorn.models import db, User
 from thorn.permission_api import PermissionListApi
@@ -43,51 +44,63 @@ from thorn.notification_api import NotificationListApi, NotificationDetailApi, \
     NotificationSummaryApi
 from thorn.configuration_api import ConfigurationListApi
 
-sqlalchemy_utils.i18n.get_locale = get_locale
+def create_app(is_main_module=False):
+    
+    app = Flask(__name__)
+    app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.abspath('thorn/i18n/locales') 
+    babel = Babel(app)
+    
+    logging.config.fileConfig('logging_config.ini')
+    
+    app.secret_key = '0e36528dc34844e79963436a7af9258f'
+    
+    # CORS
+    CORS(app, resources={r"/*": {"origins": "*"}})
 
-app = Flask(__name__)
-app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.abspath('thorn/i18n/locales') 
-babel = Babel(app)
+    # Swagger
+    swaggerui_blueprint = get_swaggerui_blueprint(
+        '/api/docs',  
+        '/static/swagger.yaml',
+        config={  # Swagger UI config overrides
+            'app_name': "Lemonade Thorn"
+        },
+    )
+    
+    app.register_blueprint(swaggerui_blueprint)
 
-logging.config.fileConfig('logging_config.ini')
-
-app.secret_key = '0e36528dc34844e79963436a7af9258f'
-
-# CORS
-CORS(app, resources={r"/*": {"origins": "*"}})
-api = Api(app)
-
-mappings = {
-    '/approve/<int:user_id>': ApproveUserApi,
-    '/auth/validate': ValidateTokenApi,
-    '/auth/login': AuthenticationApi,
-    '/configurations': ConfigurationListApi,
-    '/password/reset': ResetPasswordApi,
-    '/permissions': PermissionListApi,
-    '/notifications': NotificationListApi,
-    '/notifications/summary': NotificationSummaryApi,
-    '/notifications/<int:notification_id>': NotificationDetailApi,
-    '/roles': RoleListApi,
-    '/roles/<int:role_id>': RoleDetailApi,
-    '/users/me': ProfileApi,
-    '/users': UserListApi,
-    '/register': RegisterApi,
-    '/token/<int:user_id>': GenerateUserTokenApi,
-    '/users/<int:user_id>': UserDetailApi,
-    #    '/dashboards/<int:dashboard_id>': DashboardDetailApi,
-    #    '/visualizations/<int:job_id>/<task_id>': VisualizationDetailApi,
-    #    '/visualizations': VisualizationListApi,
-}
-for path, view in list(mappings.items()):
-    api.add_resource(view, path)
-
-
-@babel.localeselector
-def get_locale():
-    return request.headers.get('X-Locale', 'pt')
-
-
-def main(is_main_module):
+    api = Api(app)
+    
+    mappings = {
+        '/approve/<int:user_id>': ApproveUserApi,
+        '/auth/validate': ValidateTokenApi,
+        '/auth/login': AuthenticationApi,
+        '/configurations': ConfigurationListApi,
+        '/password/reset': ResetPasswordApi,
+        '/permissions': PermissionListApi,
+        '/notifications': NotificationListApi,
+        '/notifications/summary': NotificationSummaryApi,
+        '/notifications/<int:notification_id>': NotificationDetailApi,
+        '/roles': RoleListApi,
+        '/roles/<int:role_id>': RoleDetailApi,
+        '/users/me': ProfileApi,
+        '/users': UserListApi,
+        '/register': RegisterApi,
+        '/token/<int:user_id>': GenerateUserTokenApi,
+        '/users/<int:user_id>': UserDetailApi,
+        #    '/dashboards/<int:dashboard_id>': DashboardDetailApi,
+        #    '/visualizations/<int:job_id>/<task_id>': VisualizationDetailApi,
+        #    '/visualizations': VisualizationListApi,
+    }
+    for path, view in list(mappings.items()):
+        api.add_resource(view, path)
+    
+    
+    @babel.localeselector
+    def get_locale():
+        return request.headers.get('X-Locale', 'pt')
+    
+    sqlalchemy_utils.i18n.get_locale = get_locale
+    
     config_file = os.environ.get('THORN_CONFIG')
 
     os.chdir(os.environ.get('THORN_HOME', '.'))
@@ -113,6 +126,7 @@ def main(is_main_module):
         db.init_app(app)
         rq.init_app(app)
 
+        
         migrate = Migrate(app, db)        
         port = int(config.get('port', 5000))
         logger.debug('Running in %s mode', config.get('environment'))
@@ -127,6 +141,8 @@ def main(is_main_module):
     else:
         logger.error('Please, set THORN_CONFIG environment variable')
         exit(1)
+    return app
 
 
-main(__name__ == '__main__')
+if __name__ == '__main__':
+    create_app(True)

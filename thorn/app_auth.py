@@ -67,19 +67,27 @@ def requires_auth(f):
     @wraps(f)
     def decorated(*_args, **kwargs):
         config = current_app.config[CONFIG_KEY]
-        # TODO: User uma configuração / chave no thorn conhecida aqui
-        user_id = request.headers.get('x-user-id')
-        permissions = request.headers.get('x-permissions', '')
-        user_data = request.headers.get('x-user-data')
-
-        if all([user_data, user_id]):
-            login, email, name, locale = user_data.split(';')
+        if str(config.get('secret')) == str(request.headers.get('X-Auth-Token')):
+            user_id = 1
+            user = User.query.get(user_id)
+            
+            login, email, name, locale = user.login, user.email, user.first_name, 'en'
             setattr(flask_g, 'user', 
                     SessionUser(user_id, login, email, name, locale, '', '',
-                permissions.split(',')))
+                    ['ADMINISTRATOR']))
             return f(*_args, **kwargs)
         else:
-            return authenticate(MSG1, {'message': 'Invalid authentication'})
+            user_id = request.headers.get('x-user-id')
+            permissions = request.headers.get('x-permissions', '')
+            user_data = request.headers.get('x-user-data')
+            if all([user_data, user_id]):
+                login, email, name, locale = user_data.split(';')
+                setattr(flask_g, 'user', 
+                        SessionUser(user_id, login, email, name, locale, '', '',
+                    permissions.split(',')))
+                return f(*_args, **kwargs)
+            else:
+                return authenticate(MSG1, {'message': 'Invalid authentication'})
 
     return decorated
 

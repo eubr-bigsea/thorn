@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import datetime
 import json
 from flask_sqlalchemy import SQLAlchemy
@@ -110,23 +109,30 @@ class AuthenticationType:
 managed_resource_role = db.Table(
     'managed_resource_role',
     Column('managed_resource_id', Integer,
-           ForeignKey('managed_resource.id'), nullable=False),
+           ForeignKey('managed_resource.id'), nullable=False, index=True),
     Column('role_id', Integer,
-           ForeignKey('role.id'), nullable=False))
+           ForeignKey('role.id'), nullable=False, index=True))
 # noinspection PyUnresolvedReferences
 role_permission = db.Table(
     'role_permission',
     Column('role_id', Integer,
-           ForeignKey('role.id'), nullable=False),
+           ForeignKey('role.id'), nullable=False, index=True),
     Column('permission_id', Integer,
-           ForeignKey('permission.id'), nullable=False))
+           ForeignKey('permission.id'), nullable=False, index=True))
+# noinspection PyUnresolvedReferences
+role_managed_resource = db.Table(
+    'role_managed_resource',
+    Column('role_id', Integer,
+           ForeignKey('role.id'), nullable=False, index=True),
+    Column('managed_resource_id', Integer,
+           ForeignKey('managed_resource.id'), nullable=False, index=True))
 # noinspection PyUnresolvedReferences
 user_role = db.Table(
     'user_role',
     Column('user_id', Integer,
-           ForeignKey('user.id'), nullable=False),
+           ForeignKey('user.id'), nullable=False, index=True),
     Column('role_id', Integer,
-           ForeignKey('role.id'), nullable=False))
+           ForeignKey('role.id'), nullable=False, index=True))
 
 
 class Asset(db.Model):
@@ -143,7 +149,8 @@ class Asset(db.Model):
     # Associations
     owner_id = Column(Integer,
                       ForeignKey("user.id",
-                                 name="fk_user_id"), nullable=False)
+                                 name="fk_asset_owner_id"), nullable=False,
+                      index=True)
     owner = relationship(
         "User",
         foreign_keys=[owner_id])
@@ -255,7 +262,8 @@ class Notification(db.Model):
     # Associations
     user_id = Column(Integer,
                      ForeignKey("user.id",
-                                name="fk_user_id"), nullable=False)
+                                name="fk_notification_user_id"), nullable=False,
+                     index=True)
     user = relationship(
         "User",
         foreign_keys=[user_id])
@@ -319,6 +327,10 @@ class Role(db.Model, Translatable):
         "User",
         secondary=user_role,
         cascade="save-update")
+    managed_resource = relationship(
+        "ManagedResource",
+        secondary=role_managed_resource,
+        cascade="save-update")
 
     def __str__(self):
         return self.name
@@ -380,10 +392,11 @@ class User(db.Model):
         secondaryjoin=(
             "and_("
             "Role.id==user_role.c.role_id,"
-            "Role.enabled==1)"))
+            "Role.enabled==True)"))
     workspace_id = Column(Integer,
                           ForeignKey("workspace.id",
-                                     name="fk_workspace_id"))
+                                     name="fk_user_workspace_id"),
+                          index=True)
     workspace = relationship(
         "Workspace",
         foreign_keys=[workspace_id])
@@ -421,7 +434,8 @@ class UserPreference(db.Model):
     # Associations
     user_id = Column(Integer,
                      ForeignKey("user.id",
-                                name="fk_user_id"), nullable=False)
+                                name="fk_user_preference_user_id"), nullable=False,
+                     index=True)
     user = relationship(
         "User",
         foreign_keys=[user_id])
@@ -444,7 +458,8 @@ class Workspace(db.Model):
     # Associations
     owner_id = Column(Integer,
                       ForeignKey("user.id",
-                                 name="fk_user_id"), nullable=False)
+                                 name="fk_workspace_owner_id"), nullable=False,
+                      index=True)
     owner = relationship(
         "User",
         foreign_keys=[owner_id])
