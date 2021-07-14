@@ -7,7 +7,7 @@ function start_server
 
 function db_migrate
 {
-  python ${THORN_HOME}/thorn/manage.py db upgrade
+  flask db upgrade
 
   if [ $? -eq 0 ]
   then
@@ -24,6 +24,7 @@ export THORN_CONFIG=${THORN_CONFIG:-${THORN_HOME}/conf/thorn.yaml}
 
 export FLASK_APP=${FLASK_APP:-${THORN_HOME}/thorn/app.py}
 export PYTHONPATH=${THORN_HOME}:${PYTHONPATH}
+export FLASK_APP=thorn.app
 
 CMD=$1
 case $CMD in

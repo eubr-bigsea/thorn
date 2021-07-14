@@ -39,7 +39,7 @@ thorn:
         SQLALCHEMY_POOL_RECYCLE: 60
 ```
 ### Create tables in the database
-THORN_CONFIG=thorn.yaml PYTHONPATH=. python thorn/manage.py upgrade
+THORN_CONFIG=thorn.yaml PYTHONPATH=. FLASK_APP=thorn.app flask db upgrade
 
 ### Run
 ```

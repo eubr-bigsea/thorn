@@ -24,7 +24,7 @@ export THORN_LOG_DIR=${THORN_LOG_DIR:-${THORN_HOME}/logs}
 
 # get pid directory
 export THORN_PID_DIR=${THORN_PID_DIR:-/var/run}
-
+export FLASK_APP=thorn.app
 mkdir -p ${THORN_PID_DIR} ${THORN_LOG_DIR}
 
 # log and pid files
@@ -35,8 +35,7 @@ case $cmd_option in
   (start)
     # set python path
     PYTHONPATH=${THORN_HOME}:${PYTHONPATH} \
-      python ${THORN_HOME}/thorn/manage.py \
-      db upgrade
+      flask db upgrade
     if [ $? -eq 0 ]
     then
       echo "DB migration: successful"
@@ -56,8 +55,7 @@ case $cmd_option in
     trap "$0 stop" SIGINT SIGTERM
     # set python path
     PYTHONPATH=${THORN_HOME}:${PYTHONPATH} \
-      python ${THORN_HOME}/thorn/manage.py \
-      db upgrade
+      flask db upgrade
     # check if the db migration was successful
     if [ $? -eq 0 ]
     then
