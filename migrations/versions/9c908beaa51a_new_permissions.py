@@ -14,7 +14,7 @@ from sqlalchemy import String, Integer, DateTime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import table, column
 from thorn.migration_utils import (is_mysql, upgrade_actions,
-        get_psql_enum_alter_commands)
+        get_psql_enum_alter_commands, is_sqlite)
 
 
 # revision identifiers, used by Alembic.
@@ -73,16 +73,19 @@ def _insert_permission_translations():
     op.bulk_insert(tb, rows)
 
 def get_commands():
-    all_commands = [
-        ('''ALTER TABLE permission CHANGE 
+    if is_mysql():
+        cmd = '''ALTER TABLE permission CHANGE 
              applicable_to `applicable_to` enum('SYSTEM','DASHBOARD','DATA_SOURCE',
              'JOB', 'APP', 'DEPLOYMENT', 'API',
-             'WORKFLOW','VISUALIZATION','USER')''' if is_mysql() else get_psql_enum_alter_commands(
+             'WORKFLOW','VISUALIZATION','USER')'''
+    elif is_sqlite():
+        cmd = 'SELECT 1'
+    else: get_psql_enum_alter_commands(
                  ['permission', 'asset'], ['applicable_to', 'type'], 'AssetTypeEnumType', 
                    ['SYSTEM','DASHBOARD','DATA_SOURCE', 'JOB', 'APP', 'DEPLOYMENT', 'API',
-                     'WORKFLOW','VISUALIZATION','USER'], 'USER'), 
-                   'SELECT 1'
-        ),
+                     'WORKFLOW','VISUALIZATION','USER'], 'USER') 
+
+    all_commands = [ (cmd, 'SELECT 1'),
         (_insert_permissions, 'DELETE FROM permission WHERE id BETWEEN 17 AND 20 OR '
                               'id BETWEEN 103 AND 104 '),
         (_insert_permission_translations,
