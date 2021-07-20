@@ -106,26 +106,12 @@ class AuthenticationType:
 
 # Association tables definition
     # noinspection PyUnresolvedReferences
-managed_resource_role = db.Table(
-    'managed_resource_role',
-    Column('managed_resource_id', Integer,
-           ForeignKey('managed_resource.id'), nullable=False, index=True),
-    Column('role_id', Integer,
-           ForeignKey('role.id'), nullable=False, index=True))
-# noinspection PyUnresolvedReferences
 role_permission = db.Table(
     'role_permission',
     Column('role_id', Integer,
            ForeignKey('role.id'), nullable=False, index=True),
     Column('permission_id', Integer,
            ForeignKey('permission.id'), nullable=False, index=True))
-# noinspection PyUnresolvedReferences
-role_managed_resource = db.Table(
-    'role_managed_resource',
-    Column('role_id', Integer,
-           ForeignKey('role.id'), nullable=False, index=True),
-    Column('managed_resource_id', Integer,
-           ForeignKey('managed_resource.id'), nullable=False, index=True))
 # noinspection PyUnresolvedReferences
 user_role = db.Table(
     'user_role',
@@ -211,29 +197,6 @@ class MailQueue(db.Model):
 
     def __str__(self):
         return self.created
-
-    def __repr__(self):
-        return '<Instance {}: {}>'.format(self.__class__, self.id)
-
-
-class ManagedResource(db.Model):
-    """ Resource managed by thorn """
-    __tablename__ = 'managed_resource'
-
-    # Fields
-    id = Column(Integer, primary_key=True)
-    path = Column(String(1000), nullable=False)
-    target = Column(String(1000), nullable=False)
-    allowed_methods = Column(String(200),
-                             default='*', nullable=False)
-
-    # Associations
-    roles = relationship(
-        "Role",
-        secondary=managed_resource_role)
-
-    def __str__(self):
-        return self.path
 
     def __repr__(self):
         return '<Instance {}: {}>'.format(self.__class__, self.id)
@@ -327,10 +290,6 @@ class Role(db.Model, Translatable):
         "User",
         secondary=user_role,
         cascade="save-update")
-    managed_resource = relationship(
-        "ManagedResource",
-        secondary=role_managed_resource,
-        cascade="save-update")
 
     def __str__(self):
         return self.name
@@ -360,7 +319,7 @@ class User(db.Model):
                      default=True, nullable=False)
     status = Column(Enum(*list(UserStatus.values()),
                          name='UserStatusEnumType'),
-                    default='ENABLED', nullable=False)
+                    default='ENABLED')
     authentication_type = Column(Enum(*list(AuthenticationType.values()),
                                       name='AuthenticationTypeEnumType'),
                                  default='INTERNAL')
@@ -395,7 +354,8 @@ class User(db.Model):
             "Role.enabled==True)"))
     workspace_id = Column(Integer,
                           ForeignKey("workspace.id",
-                                     name="fk_user_workspace_id"),
+                                     name="fk_user_workspace_id",
+                                     use_alter=True),
                           index=True)
     workspace = relationship(
         "Workspace",

@@ -115,12 +115,20 @@ def create_app(is_main_module=False):
         app.config['SQLALCHEMY_DATABASE_URI'] = server_config.get(
             'database_url')
         app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config['SQLALCHEMY_POOL_SIZE'] = 10
-        app.config['SQLALCHEMY_POOL_RECYCLE'] = 240
         app.config['RQ_REDIS_URL'] = config['servers']['redis_url']
         app.config['RQ_DASHBOARD_REDIS_URL'] = app.config['RQ_REDIS_URL']
 
-        app.config.update(config.get('config', {}))
+        engine_config = config.get('config', {})
+
+        if engine_config:
+            final_config = {'pool_pre_ping': True}
+            if 'mysql://' in app.config['SQLALCHEMY_DATABASE_URI']:
+                if 'SQLALCHEMY_POOL_SIZE' in engine_config: 
+                    final_config['pool_size'] = engine_config['SQLALCHEMY_POOL_SIZE'] 
+                if 'SQLALCHEMY_POOL_RECYCLE' in engine_config: 
+                    final_config['pool_recycle'] = engine_config['SQLALCHEMY_POOL_RECYCLE']
+            app.config['SQLALCHEMY_ENGINE_OPTIONS'] = final_config
+
         app.config['THORN_CONFIG'] = config
 
         db.init_app(app)

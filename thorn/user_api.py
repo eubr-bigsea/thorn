@@ -3,11 +3,10 @@ from thorn.app_auth import requires_auth, requires_permission
 from flask import request, current_app, g as flask_globals
 from flask_restful import Resource
 from sqlalchemy import or_
-from thorn.util import check_password, ldap_authentication, encrypt_password
+from thorn.util import check_password, encrypt_password, translate_validation
 import math
 import uuid
 import datetime
-import rq
 import random
 import string
 import logging
@@ -16,7 +15,7 @@ from flask_babel import gettext, get_locale
 from thorn.jobs import send_email
 import json
 from thorn.models import Configuration
-from thorn.util import translate_validation
+from marshmallow import ValidationError
 
 def _get_random_string(length):
     # Random string with the combination of lower and upper case
@@ -215,44 +214,42 @@ def _add_user(human_name, administrative=False):
         data['encrypted_password'] = encrypt_password(
                 request.json.get('password'))
 
-        form = request_schema.load(data)
-        if form.errors:
-            result = {'status': 'ERROR',
-                      'message': gettext("Validation error"),
-                      'errors': translate_validation(form.errors)}
-        else:
-            try:
-                email_in_use = User.query.with_entities(User.id).filter(
-                        User.email==form.data.email, 
-                        User.status!=UserStatus.DELETED).scalar() is not None
-                if email_in_use:
-                    result = {'status': 'ERROR',
-                          'message': gettext("Email in use. Please, inform another.")}
-                    return_code = 400
-                else:
-                    if log.isEnabledFor(logging.DEBUG):
-                        log.debug(gettext('Adding %s'), human_name)
-                    user = form.data
-                    mail = {'type': 'REGISTRATION', 'user': user.login}
-                    q = MailQueue(json_data=json.dumps(mail), status='PENDING')
-                    db.session.add(user)
-                    db.session.add(q)
-                    db.session.commit()
-                    result = {
-                        'status': 'OK',
-                        'message': gettext('User registered with success!'),
-                        'data': response_schema.dump(user).data
-                    }
-                    return_code = 200
-            except Exception as e:
+        try:
+            user = request_schema.load(data)
+            email_in_use = User.query.with_entities(User.id).filter(
+                    User.email==user.email, 
+                    User.enabled).scalar() is not None
+            if email_in_use:
                 result = {'status': 'ERROR',
-                          'message': gettext("Internal error")}
-                return_code = 500
-                if current_app.debug:
-                    result['debug_detail'] = str(e)
+                        'message': gettext("Email in use. Please, inform another.")}
+                return_code = 400
+            else:
+                if log.isEnabledFor(logging.DEBUG):
+                    log.debug(gettext('Adding %s'), human_name)
+                mail = {'type': 'REGISTRATION', 'user': user.login}
+                q = MailQueue(json_data=json.dumps(mail), status='PENDING')
+                db.session.add(user)
+                db.session.add(q)
+                db.session.commit()
+                result = {
+                    'status': 'OK',
+                    'message': gettext('User registered with success!'),
+                    'data': response_schema.dump(user)
+                }
+                return_code = 200
+        except ValidationError as e:
+                result = {'status': 'ERROR',
+                            'message': gettext("Validation error"),
+                            'errors': translate_validation(e.messages)}
+        except Exception as e:
+            result = {'status': 'ERROR',
+                        'message': gettext("Internal error")}
+            return_code = 500
+            if current_app.debug:
+                result['debug_detail'] = str(e)
 
-                log.exception(e)
-                db.session.rollback()
+            log.exception(e)
+            db.session.rollback()
 
     return result, return_code
 
@@ -268,66 +265,66 @@ def _change_user(user_id, administrative, human_name):
 
         request_schema = partial_schema_factory(
             UserCreateRequestSchema)
-        roles = [Role.query.get_or_404(r.get('id')) for r in 
+        if 'roles' in request.json:
+            roles = [Role.query.get_or_404(r.get('id')) for r in 
                 request.json.get('roles', [])]
+            del request.json['roles']
+        else:
+            roles = []
 
         # Ignore missing fields to allow partial updates
-        form = request_schema.load(request.json, partial=True)
         response_schema = UserItemResponseSchema(exclude=('roles.users',))
 
-        if not form.errors:
-            try:
-                password = request.json.get('current_password')
-                new_password= request.json.get('password', '')
-                confirm = request.json.get('password_confirmation', '')
-                form.data.id = user_id
-                user = User.query.get(user_id)
-                user.roles = roles
-                change_pass_ok = new_password is None \
-                        or confirm == new_password \
-                        or user.authentication_type == 'LDAP'
-                if user.authentication_type != 'LDAP' and not administrative and (
-                        not password or not check_password or not check_password(
-                        password.encode('utf8'), 
-                        user.encrypted_password.encode('utf8'))):
-                    result = {'status': 'ERROR', 'message': 
-                            gettext('Invalid password or confirmation')}
-                    return_code = 401
-                else:
-                    if new_password is not None and len(new_password) > 0:
-                        form.data.encrypted_password = encrypt_password(
-                                new_password).decode('utf8')
-                    # form.data.roles = list(Role.query.filter(
-                    #         Role.id.in_([r['id'] for r in roles])))
-                    db.session.merge(form.data)
-                    db.session.commit()
+        try:
+            user = request_schema.load(request.json, partial=True)
+            password = request.json.get('current_password')
+            new_password= request.json.get('password', '')
+            confirm = request.json.get('password_confirmation', '')
+            user.id = user_id
+            user = db.session.merge(user)
+            user.roles = roles
+            change_pass_ok = new_password is None \
+                    or confirm == new_password \
+                    or user.authentication_type == 'LDAP'
+            if user.authentication_type != 'LDAP' and not administrative and (
+                    not password or not check_password or not check_password(
+                    password.encode('utf8'), 
+                    user.encrypted_password.encode('utf8'))):
+                result = {'status': 'ERROR', 'message': 
+                        gettext('Invalid password or confirmation')}
+                return_code = 401
+            else:
+                if new_password is not None and len(new_password) > 0:
+                    user.encrypted_password = encrypt_password(
+                            new_password).decode('utf8')
+                # user.roles = list(Role.query.filter(
+                #         Role.id.in_([r['id'] for r in roles])))
+                db.session.merge(user)
+                db.session.commit()
 
-                    if user is not None:
-                        return_code = 200
-                        result = {
-                            'status': 'OK',
-                            'message': gettext(
-                                '%(n)s (id=%(id)s) was updated with success!',
-                                n=human_name,
-                                id=user_id),
-                            'data': [response_schema.dump(
-                                user).data]
-                        }
-            except Exception as e:
+                if user is not None:
+                    return_code = 200
+                    result = {
+                        'status': 'OK',
+                        'message': gettext(
+                            '%(n)s (id=%(id)s) was updated with success!',
+                            n=human_name,
+                            id=user_id),
+                        'data': [response_schema.dump(
+                            user)]
+                    }
+        except ValidationError as e:
                 result = {'status': 'ERROR',
-                          'message': gettext("Internal error")}
-                return_code = 500
-                if current_app.debug:
-                    result['debug_detail'] = str(e)
-                db.session.rollback()
-        else:
-            result = {
-                'status': 'ERROR',
-                'message': gettext('Invalid data for %(name)s (id=%(id)s)',
-                                   name=human_name,
-                                   id=user_id),
-                'errors': form.errors
-            }
+                            'message': gettext("Validation error"),
+                            'errors': translate_validation(e.messages)}
+        except Exception as e:
+            result = {'status': 'ERROR',
+                        'message': gettext("Internal error")}
+            return_code = 500
+            if current_app.debug:
+                result['debug_detail'] = str(e)
+            db.session.rollback()
+        
     return result, return_code
 
     
@@ -401,7 +398,7 @@ class UserListApi(Resource):
             exclude.append('roles.users')
             result = {
                 'data': UserListResponseSchema(
-                    many=True, only=only, exclude=exclude).dump(pagination.items).data,
+                    many=True, only=only, exclude=exclude).dump(pagination.items),
                 'pagination': {
                     'page': page, 'size': page_size,
                     'total': pagination.total,
@@ -442,7 +439,7 @@ class UserDetailApi(Resource):
                 'status': 'OK',
                 'data': [UserItemResponseSchema(
                     exclude=('roles.users', 'roles.permissions',)).dump(
-                    user).data]
+                    user)]
             }
         else:
             return_code = 404

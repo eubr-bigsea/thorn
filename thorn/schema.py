@@ -2,8 +2,9 @@
 import datetime
 import json
 from copy import deepcopy
-from marshmallow import Schema, fields, post_load, post_dump
+from marshmallow import Schema, fields, post_load, post_dump, EXCLUDE, INCLUDE
 from marshmallow.validate import OneOf
+from flask_babel import gettext
 from thorn.models import *
 
 
@@ -15,6 +16,15 @@ def partial_schema_factory(schema_cls):
             new_field.schema.partial = True
             schema.fields[field_name] = new_field
     return schema
+
+
+def translate_validation(validation_errors):
+    for field, errors in list(validation_errors.items()):
+        if isinstance(errors, dict):
+            validation_errors[field] = translate_validation(errors)
+        else:
+            validation_errors[field] = [gettext(error) for error in errors]
+        return validation_errors
 
 
 def load_json(str_value):
@@ -32,7 +42,7 @@ class BaseSchema(Schema):
     def remove_skip_values(self, data, **kwargs):
         return {
             key: value for key, value in data.items()
-            if value is not None and value != []
+            if value is not None  # Empty lists must be kept!
         }
 
 
@@ -64,6 +74,7 @@ class ConfigurationListResponseSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class ConfigurationItemResponseSchema(BaseSchema):
@@ -94,6 +105,7 @@ class ConfigurationItemResponseSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class ConfigurationCreateRequestSchema(BaseSchema):
@@ -122,6 +134,7 @@ class ConfigurationCreateRequestSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class NotificationListResponseSchema(BaseSchema):
@@ -152,6 +165,7 @@ class NotificationListResponseSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class NotificationItemResponseSchema(BaseSchema):
@@ -182,6 +196,7 @@ class NotificationItemResponseSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class NotificationCreateRequestSchema(BaseSchema):
@@ -207,6 +222,7 @@ class NotificationCreateRequestSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class PermissionListResponseSchema(BaseSchema):
@@ -225,6 +241,7 @@ class PermissionListResponseSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class PermissionItemResponseSchema(BaseSchema):
@@ -248,6 +265,7 @@ class PermissionItemResponseSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class RoleListResponseSchema(BaseSchema):
@@ -274,6 +292,7 @@ class RoleListResponseSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class RoleItemResponseSchema(BaseSchema):
@@ -315,6 +334,7 @@ class RoleItemResponseSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class RoleCreateRequestSchema(BaseSchema):
@@ -340,6 +360,7 @@ class RoleCreateRequestSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class UserListResponseSchema(BaseSchema):
@@ -395,6 +416,7 @@ class UserListResponseSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class UserItemResponseSchema(BaseSchema):
@@ -436,6 +458,7 @@ class UserItemResponseSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class UserCreateRequestSchema(BaseSchema):
@@ -467,8 +490,7 @@ class UserCreateRequestSchema(BaseSchema):
     roles = fields.Nested(
         'thorn.schema.RoleCreateRequestSchema',
         allow_none=True,
-        many=True,
-        only=['id'])
+        many=True)
     workspace = fields.Nested(
         'thorn.schema.WorkspaceCreateRequestSchema',
         allow_none=True)
@@ -481,6 +503,7 @@ class UserCreateRequestSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class WorkspaceListResponseSchema(BaseSchema):
@@ -499,6 +522,7 @@ class WorkspaceListResponseSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class WorkspaceItemResponseSchema(BaseSchema):
@@ -517,6 +541,7 @@ class WorkspaceItemResponseSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
 
 class WorkspaceCreateRequestSchema(BaseSchema):
@@ -535,4 +560,5 @@ class WorkspaceCreateRequestSchema(BaseSchema):
 
     class Meta:
         ordered = True
+        unknown = EXCLUDE
 
