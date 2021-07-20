@@ -10,6 +10,7 @@ import logging
 from thorn.schema import *
 from flask_babel import gettext
 from thorn.util import translate_validation
+from marshmallow import ValidationError
 
 log = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ class RoleListApi(Resource):
             result = {
                 'data': RoleListResponseSchema(
                     many=True, only=only, exclude=('users.roles',)).dump(
-                        pagination.items).data,
+                        pagination.items),
                 'pagination': {
                     'page': page, 'size': page_size,
                     'total': pagination.total,
@@ -69,7 +70,7 @@ class RoleListApi(Resource):
             result = {
                 'data': RoleListResponseSchema(
                     many=True, only=only).dump(
-                    roles).data}
+                    roles)}
 
         if log.isEnabledFor(logging.DEBUG):
             log.debug(gettext('Listing %(name)s', name=self.human_name))
@@ -92,40 +93,40 @@ class RoleListApi(Resource):
             users = request.json.pop('users') \
                     if 'users' in request.json else []
 
-            form = request_schema.load(request.json)
-            if form.errors:
-                result = {'status': 'ERROR',
-                          'message': gettext("Validation error"),
-                          'errors': translate_validation(form.errors)}
-            elif form.data.system:
-                        result = {'status': 'ERROR', 
-                                'message': gettext(
-                                    'A system role cannot be changed')}
-                        return_code = 400
-            else:
-                try:
-                    role = form.data
+            try:
+                role = request_schema.load(request.json)
+                if role.system:
+                    result = {'status': 'ERROR', 
+                            'message': gettext(
+                                'A system role cannot be changed')}
+                    return_code = 400
+                else:
                     role.permissions = list(Permission.query.filter(
-                            Permission.id.in_([p.get('id', 0) 
-                                for p in permissions])))
+                        Permission.id.in_([p.get('id', 0) 
+                            for p in permissions])))
                     role.users = list(User.query.filter(
-                    User.id.in_([u.get('id', 0) for u in users])))
+                        User.id.in_([u.get('id', 0) for u in users])))
 
                     if log.isEnabledFor(logging.DEBUG):
                         log.debug(gettext('Adding %s'), self.human_name)
+
                     db.session.add(role)
                     db.session.commit()
-                    result = response_schema.dump(role).data
+                    result = response_schema.dump(role)
                     return_code = 200
-                except Exception as e:
-                    result = {'status': 'ERROR',
-                              'message': gettext("Internal error")}
-                    return_code = 500
-                    if current_app.debug:
-                        result['debug_detail'] = str(e)
+            except ValidationError as e:
+                result = {'status': 'ERROR',
+                            'message': gettext("Validation error"),
+                            'errors': translate_validation(e.messages)}
+            except Exception as e:
+                result = {'status': 'ERROR',
+                          'message': gettext("Internal error")}
+                return_code = 500
+                if current_app.debug:
+                    result['debug_detail'] = str(e)
 
-                    log.exception(e)
-                    db.session.rollback()
+                log.exception(e)
+                db.session.rollback()
 
         return result, return_code
 
@@ -153,7 +154,7 @@ class RoleDetailApi(Resource):
                 'status': 'OK',
                 'data': [RoleItemResponseSchema(
                     exclude=('users.roles',)).dump(
-                    role).data]
+                    role)]
             }
         else:
             return_code = 404
@@ -221,51 +222,46 @@ class RoleDetailApi(Resource):
             users = request.json.pop('users') \
                     if 'users' in request.json else []
 
-            role = Role.query.get(role_id)
-            if role.system:
+            tmp_role = Role.query.get(role_id)
+            if tmp_role and tmp_role.system:
                 # Only users can be added to a system role
                 data = {'users': users}
             else:
                 data = request.json
-            # Ignore missing fields to allow partial updates
-            form = request_schema.load(data, partial=True)
 
+            data['id'] = role_id
             response_schema = RoleItemResponseSchema(exclude=('users.roles',))
-            if not form.errors:
-                try:
-                    form.data.id = role_id
-                    role = db.session.merge(form.data)
-                    role.permissions = list(Permission.query.filter(
-                            Permission.id.in_([p.get('id', 0) 
-                                for p in permissions])))
-                    role.users = list(User.query.filter(
-                        User.id.in_([u.get('id', 0) for u in users])))
-                    db.session.commit()
+            try:
+                # Ignore missing fields to allow partial updates
+                role = db.session.merge(request_schema.load(data, partial=True))
+                role = db.session.merge(role)
+                role.permissions = list(Permission.query.filter(
+                        Permission.id.in_([p.get('id', 0) 
+                            for p in permissions])))
+                role.users = list(User.query.filter(
+                    User.id.in_([u.get('id', 0) for u in users])))
+                db.session.commit()
 
-                    if role is not None:
-                        return_code = 200
-                        result = {
-                            'status': 'OK',
-                            'message': gettext(
-                                '%(n)s (id=%(id)s) was updated with success!',
-                                n=self.human_name,
-                                id=role_id),
-                            'data': [response_schema.dump(
-                                role)]
-                        }
-                except Exception as e:
-                    result = {'status': 'ERROR',
-                              'message': gettext("Internal error")}
-                    return_code = 500
-                    if current_app.debug:
-                        result['debug_detail'] = str(e)
-                    db.session.rollback()
-            else:
-                result = {
-                    'status': 'ERROR',
-                    'message': gettext('Invalid data for %(name)s (id=%(id)s)',
-                                       name=self.human_name,
-                                       id=role_id),
-                    'errors': form.errors
-                }
+                if role is not None:
+                    return_code = 200
+                    result = {
+                        'status': 'OK',
+                        'message': gettext(
+                            '%(n)s (id=%(id)s) was updated with success!',
+                            n=self.human_name,
+                            id=role_id),
+                        'data': [response_schema.dump(
+                            role)]
+                    }
+            except ValidationError as e:
+                result = {'status': 'ERROR',
+                          'message': gettext("Validation error"),
+                          'errors': translate_validation(e.messages)}
+            except Exception as e:
+                result = {'status': 'ERROR',
+                          'message': gettext("Internal error")}
+                return_code = 500
+                if current_app.debug:
+                    result['debug_detail'] = str(e)
+                db.session.rollback()
         return result, return_code

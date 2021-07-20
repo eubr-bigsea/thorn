@@ -45,7 +45,7 @@ class PermissionListApi(Resource):
             pagination = permissions.paginate(page, page_size, True)
             result = {
                 'data': PermissionListResponseSchema(
-                    many=True, only=only).dump(pagination.items).data,
+                    many=True, only=only).dump(pagination.items),
                 'pagination': {
                     'page': page, 'size': page_size,
                     'total': pagination.total,
@@ -55,7 +55,7 @@ class PermissionListApi(Resource):
             result = {
                 'data': PermissionListResponseSchema(
                     many=True, only=only).dump(
-                    permissions).data}
+                    permissions)}
 
         if log.isEnabledFor(logging.DEBUG):
             log.debug(gettext('Listing %(name)s', name=self.human_name))
