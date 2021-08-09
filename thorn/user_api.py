@@ -263,8 +263,6 @@ def _change_user(user_id, administrative, human_name):
     if request.json:
         # roles = request.json.pop('roles', [])
 
-        request_schema = partial_schema_factory(
-            UserCreateRequestSchema)
         if 'roles' in request.json:
             roles = [Role.query.get_or_404(r.get('id')) for r in 
                 request.json.get('roles', [])]
@@ -272,10 +270,16 @@ def _change_user(user_id, administrative, human_name):
         else:
             roles = []
 
+        request_schema = partial_schema_factory(
+            UserCreateRequestSchema)
         # Ignore missing fields to allow partial updates
         response_schema = UserItemResponseSchema(exclude=('roles.users',))
 
         try:
+            if 'id' in request.json:
+                del request.json['id']
+            if 'name' in request.json:
+                del request.json['name']
             user = request_schema.load(request.json, partial=True)
             password = request.json.get('current_password')
             new_password= request.json.get('password', '')

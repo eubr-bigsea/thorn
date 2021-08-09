@@ -349,10 +349,6 @@ class RoleCreateRequestSchema(BaseSchema):
         'thorn.schema.UserCreateRequestSchema',
         allow_none=True,
         many=True)
-    managed_resource = fields.Nested(
-        'thorn.schema.ManagedResourceCreateRequestSchema',
-        required=True,
-        many=True)
 
     # noinspection PyUnresolvedReferences
     @post_load
@@ -490,7 +486,7 @@ class UserCreateRequestSchema(BaseSchema):
         'thorn.schema.RoleCreateRequestSchema',
         allow_none=True,
         many=True,
-        only=['id'])
+        only=['name'])
     workspace = fields.Nested(
         'thorn.schema.WorkspaceCreateRequestSchema',
         allow_none=True)

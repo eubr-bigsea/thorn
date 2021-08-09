@@ -94,6 +94,8 @@ class RoleListApi(Resource):
                     if 'users' in request.json else []
 
             try:
+                if 'id' in request.json: 
+                    del request.json['id']
                 role = request_schema.load(request.json)
                 if role.system:
                     result = {'status': 'ERROR', 
