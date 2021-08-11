@@ -8,7 +8,7 @@ Create Date: 2020-08-19 16:18:56.221869
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
-from thorn.migration_utils import is_sqlite
+from thorn.migration_utils import is_sqlite, is_mysql
 
 # revision identifiers, used by Alembic.
 revision = '04205e193be1'
@@ -23,6 +23,9 @@ def upgrade():
     if is_sqlite():
         with op.batch_alter_table('user') as batch_op:
             batch_op.alter_column('authentication_type', nullable=True)
+    elif is_mysql():
+        op.alter_column('user', 'authentication_type', nullable=True, 
+            existing_type=mysql.ENUM('LDAP', 'INTERNAL', 'AD', collation='utf8_unicode_ci'))
     else:
         op.alter_column('user', 'authentication_type', nullable=True)
     # ### end Alembic commands ###
@@ -34,6 +37,9 @@ def downgrade():
         with op.batch_alter_table('user') as batch_op:
             batch_op.alter_column('authentication_type', nullable=False)
             batch_op.drop_column('api_token')
+    elif is_mysql():
+        op.alter_column('user', 'authentication_type', nullable=False, 
+            existing_type=mysql.ENUM('LDAP', 'INTERNAL', 'AD', collation='utf8_unicode_ci'))
     else:
         op.alter_column('user', 'authentication_type', nullable=False)
         op.drop_column('user', 'api_token')
