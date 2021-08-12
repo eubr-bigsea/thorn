@@ -182,6 +182,8 @@ class ValidateTokenApi(Resource):
                         status_code = 200
                 except Exception as ex:
                     log.error(ex)
+            else:
+                log.warn(gettext('No suitable authentication method found.'))
         return '', status_code, result
 
     def _get_result(self, user):
