@@ -159,7 +159,9 @@ class ValidateTokenApi(Resource):
                     }
         elif 'api_token' in qs:
             user = User.query.filter(User.api_token==qs.get('api_token')[0]).first()
-            if user is not None and user.enabled and user.status == UserStatus.ENABLED:
+            if user is not None and user.enabled \
+                    and user.status not in [UserStatus.DELETED, 
+                        UserStatus.PENDING_APPROVAL]:
                 result = self._get_result(user)
                 status_code = 200
         else: 
