@@ -136,6 +136,7 @@ def _insert_admin():
         column('locale', String),
         column('enabled', Integer),
         column('authentication_type', String),
+        column('status', String)
     )
 
     columns = [c.name for c in tb.columns]
@@ -143,7 +144,8 @@ def _insert_admin():
                            bcrypt.gensalt(12)).decode('utf8')
     data = [
         (1, 'admin@lemonade.org.br', 'admin@lemonade.org.br',
-         hashed, datetime.datetime.now(), 'Admin', '', 'pt', True, 'INTERNAL'),
+         hashed, datetime.datetime.now(), 'Admin', '', 'pt', True, 'INTERNAL',
+         'ENABLED'),
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
     op.bulk_insert(tb, rows)
