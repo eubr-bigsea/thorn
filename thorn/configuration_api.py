@@ -70,7 +70,7 @@ class ConfigurationListApi(Resource):
             pagination = configurations.paginate(page, page_size, True)
             result = {
                 'data': ConfigurationListResponseSchema(
-                    many=True, only=only).dump(pagination.items).data,
+                    many=True, only=only).dump(pagination.items),
                 'pagination': {
                     'page': page, 'size': page_size,
                     'total': pagination.total,
@@ -110,7 +110,7 @@ class ConfigurationListApi(Resource):
                         'message': gettext(
                             '%(n)s was updated with success!', n=self.human_name),
                         'data': [response_schema.dump(
-                            configurations, many=True).data]
+                            configurations, many=True)]
                     }
                 except Exception as e:
                     result = {'status': 'ERROR',
