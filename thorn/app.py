@@ -42,7 +42,8 @@ from thorn.auth_api import ValidateTokenApi, AuthenticationApi
 from thorn.role_api import RoleListApi, RoleDetailApi
 from thorn.notification_api import NotificationListApi, NotificationDetailApi, \
     NotificationSummaryApi
-from thorn.configuration_api import ConfigurationListApi
+from thorn.configuration_api import (ConfigurationListApi, 
+    UserInterfaceConfigurationDetailApi)
 
 def create_app(is_main_module=False):
     
@@ -75,6 +76,7 @@ def create_app(is_main_module=False):
         '/auth/validate': ValidateTokenApi,
         '/auth/login': AuthenticationApi,
         '/configurations': ConfigurationListApi,
+        '/configurations/<name>': UserInterfaceConfigurationDetailApi,
         '/password/reset': ResetPasswordApi,
         '/permissions': PermissionListApi,
         '/notifications': NotificationListApi,

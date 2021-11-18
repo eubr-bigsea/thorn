@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-}
 from thorn.app_auth import requires_auth, requires_permission
-from flask import request, current_app, g as flask_globals
+from flask import request, current_app, g as flask_globals, abort
 from flask_restful import Resource
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
@@ -9,6 +9,7 @@ import math
 import logging
 from thorn.schema import *
 from flask_babel import gettext
+import json
 
 log = logging.getLogger(__name__)
 
@@ -127,3 +128,20 @@ class ConfigurationListApi(Resource):
                     'errors': form.errors
                 }
         return result, return_code
+
+class UserInterfaceConfigurationDetailApi(Resource):
+
+    def __init__(self):
+        self.human_name = gettext('Configuration')
+
+    def get(self, name):
+        config = Configuration.query.filter(Configuration.name==name, 
+                Configuration.internal==False).first()
+        if config:
+            try:
+                return {'data': json.loads(config.value)}
+            except:
+                abort(500)
+        else:
+            abort(404)
+ 
