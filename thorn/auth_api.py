@@ -127,7 +127,7 @@ class ValidateTokenApi(Resource):
     @requires_auth
     def get(self):
         return "OK", 200
-
+        0
     def post(self):
         status_code = 401
         user = None
@@ -168,7 +168,8 @@ class ValidateTokenApi(Resource):
                 result = self._get_result(user)
                 status_code = 200
         else: 
-            authorization = request.headers.get('Authorization')
+            authorization = (request.headers.get('Authorization') or 
+                request.headers.get('X-Authentication'))
             offset = 7 if authorization and authorization.startswith(
                     'Bearer ') else 0
             result = {'status': 'ERROR', 
@@ -177,15 +178,15 @@ class ValidateTokenApi(Resource):
                 authorization = qs.get('token')[0] if 'token' in qs else None
                 offset = 0
             if authorization is not None:
+                token = authorization[offset:]
                 try:
-
                     openId_keys = ['OPENID_CONFIG', 'OPENID_JWT_PUB_KEY']
                     query = Configuration.query.filter(
                         Configuration.name.in_(openId_keys))
                     openId_config = dict((c.name, c.value) for c in query)
 
                     use_internal_token = True
-                    if ('OPENID_CONFIG' in openId_config and 
+                    if (False and 'OPENID_CONFIG' in openId_config and 
                             'OPENID_JWT_PUB_KEY' in openId_config):
                         json_conf = json.loads(openId_config['OPENID_CONFIG'])
                         if json_conf['enabled']:
@@ -193,14 +194,14 @@ class ValidateTokenApi(Resource):
                                 'utf8')
                             pkey = serialization.load_pem_public_key(cert, 
                                 backend=default_backend())
-                            # import pdb; pdb.set_trace()
                             jwt.decode(token.encode('utf8'), pkey, 
                                 audience=json_conf.get('client_id'))
                             status_code = 200
                 
                     if use_internal_token:
-                        decoded = jwt.decode(token,
-                                         current_app.secret_key)
+                        # import pdb; pdb.set_trace()
+                        decoded = jwt.decode(token, current_app.secret_key, 
+                            algorithms=["HS256"])
                         user = User.query.get(int(decoded.get('id')))
                         if user.enabled and user.status == UserStatus.ENABLED:
                             result = self._get_result(user)

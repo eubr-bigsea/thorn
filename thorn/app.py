@@ -76,7 +76,9 @@ def create_app(is_main_module=False):
         '/auth/validate': ValidateTokenApi,
         '/auth/login': AuthenticationApi,
         '/configurations': ConfigurationListApi,
-        '/configurations/<name>': UserInterfaceConfigurationDetailApi,
+
+        # Must be public, because it doesn't require authentication
+        '/public/configurations/<name>': UserInterfaceConfigurationDetailApi,
         '/password/reset': ResetPasswordApi,
         '/permissions': PermissionListApi,
         '/notifications': NotificationListApi,
