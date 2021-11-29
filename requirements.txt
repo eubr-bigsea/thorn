@@ -20,8 +20,8 @@ pyaml==20.4.0
 pyjwt==2.1.0
 pyjwt==2.1.0
 pytest==6.2.4
-python-ldap==3.3.1
-python-ldap==3.3.1
+python-ldap==3.4.0
+python-ldap==3.4.0
 python-socketio==5.3.0
 requests==2.26.0
 socketio==0.2.1
