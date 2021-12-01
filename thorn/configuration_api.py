@@ -99,7 +99,7 @@ class ConfigurationListApi(Resource):
         if request.json:
             request_schema = ConfigurationCreateRequestSchema( many=True)
             # Ignore missing fields to allow partial updates
-           try:
+            try:
                 config = request_schema.load(request.json, partial=True)
                 response_schema = ConfigurationItemResponseSchema()
                 configurations = []
