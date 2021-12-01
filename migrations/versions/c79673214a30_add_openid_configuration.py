@@ -34,7 +34,7 @@ def _insert_configuration_translation():
     data = [
         (10, 'pt', 'Configuração para OpenID (JSON, requer reinício)', 'Autenticação'),
         (10, 'en', 'OpenID configuration (JSON, requires restart)', 'Authentication'),
-        (11, 'pt', 'OpenID+JWT: chave pública (usada para valir o token, requer reinício) ', 'Autenticação'),
+        (11, 'pt', 'OpenID+JWT: chave pública (usada para validar o token, requer reinício) ', 'Autenticação'),
         (11, 'en', 'OpenID+JWT public key (used to validate the token, requires restart)', 'Authentication'),
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
