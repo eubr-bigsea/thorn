@@ -1,7 +1,7 @@
 """ Add OpenID configuration  
 
 Revision ID: c79673214a30
-Revises: 731386923937
+Revises: 1fbc565aa957
 Create Date: 2021-05-06 16:32:13.484353
 
 """
@@ -18,7 +18,7 @@ from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
 revision = 'c79673214a30'
-down_revision = '731386923937'
+down_revision = '1fbc565aa957'
 branch_labels = None
 depends_on = None
 
