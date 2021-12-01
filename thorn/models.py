@@ -97,6 +97,7 @@ class AuthenticationType:
     AD = 'AD'
     INTERNAL = 'INTERNAL'
     LDAP = 'LDAP'
+    OPENID = 'OPENID'
 
     @staticmethod
     def values():

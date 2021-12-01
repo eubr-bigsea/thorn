@@ -4,6 +4,8 @@ import logging
 import urllib
 
 import jwt
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 from thorn.app_auth import requires_auth, requires_permission
 from flask import request, current_app, Response
 from flask_restful import Resource
@@ -67,6 +69,22 @@ def _create_ldap_user(login: str, ldap_user:dict):
     db.session.commit()
     return user
 
+def _create_open_id_user(openid_user:dict):
+    #first_name, last_name = openid_user.get(
+    #    'displayName', openid_user.get('nome', ['User']))[0].decode('utf8').split(' ', 1)
+    login = openid_user.get('sub')
+    first_name, last_name = login, ''
+    user = User(login=login, email=openid_user.get('mail', [''])[0],
+                notes=gettext('OpenId User'), 
+                first_name=first_name,
+                last_name=last_name.strip(),
+                locale='pt',
+                authentication_type=AuthenticationType.OPENID,
+                encrypted_password=encrypt_password('dummy'))
+    user.roles = list(Role.query.filter(Role.name=='everybody'))
+    db.session.add(user)
+    db.session.commit()
+    return user
 
 class AuthenticationApi(Resource):
     """
@@ -125,11 +143,12 @@ class ValidateTokenApi(Resource):
     @requires_auth
     def get(self):
         return "OK", 200
-
+        0
     def post(self):
         status_code = 401
         user = None
         config = current_app.config['THORN_CONFIG']
+
 
         # Check if URL is unprotected
         unprotected = config.get(
@@ -165,7 +184,8 @@ class ValidateTokenApi(Resource):
                 result = self._get_result(user)
                 status_code = 200
         else: 
-            authorization = request.headers.get('Authorization')
+            authorization = (request.headers.get('Authorization') or 
+                request.headers.get('X-Authentication'))
             offset = 7 if authorization and authorization.startswith(
                     'Bearer ') else 0
             result = {'status': 'ERROR', 
@@ -174,15 +194,46 @@ class ValidateTokenApi(Resource):
                 authorization = qs.get('token')[0] if 'token' in qs else None
                 offset = 0
             if authorization is not None:
+                token = authorization[offset:]
                 try:
-                    decoded = jwt.decode(authorization[offset:],
-                                         current_app.secret_key,
-                                         algorithms=["HS256"])
-                    user = User.query.get(int(decoded.get('id')))
-                    if user.enabled and user.status not in [
-                            UserStatus.DELETED, UserStatus.PENDING_APPROVAL]:
-                        result = self._get_result(user)
-                        status_code = 200
+                    # import pdb; pdb.set_trace()
+                    if request.headers.get('X-THORN-ID') == 'true': # Old thorn auth
+                        decoded = jwt.decode(token, current_app.secret_key, 
+                            algorithms=["HS256"])
+                        user = User.query.get(int(decoded.get('id')))
+                        if user.enabled and user.status == UserStatus.ENABLED:
+                            result = self._get_result(user)
+                            status_code = 200
+
+                    else: # using open id
+                        openId_keys = ['OPENID_CONFIG', 'OPENID_JWT_PUB_KEY']
+                        query = Configuration.query.filter(
+                            Configuration.name.in_(openId_keys))
+                        openId_config = dict((c.name, c.value) for c in query)
+
+                        has_open_id_config = ('OPENID_CONFIG' in openId_config and 
+                                'OPENID_JWT_PUB_KEY' in openId_config)
+                        if has_open_id_config:
+                            json_conf = json.loads(openId_config['OPENID_CONFIG'])
+                            if json_conf['enabled']:
+                                cert = openId_config['OPENID_JWT_PUB_KEY'].encode(
+                                    'utf8')
+                                pkey = serialization.load_pem_public_key(cert, 
+                                    backend=default_backend())
+                                decoded = jwt.decode(token.encode('utf8'), pkey, 
+                                    audience=json_conf.get('client_id'),
+                                    algorithms=["RS256"])
+                                user = User.query.filter(User.login==decoded.get(
+                                    'sub')).first()
+                                if user:
+                                    if user.enabled:
+                                        result = self._get_result(user)
+                                        status_code = 200
+                                else: # creates the user
+                                    user = _create_open_id_user(decoded)
+                                    result = self._get_result(user)
+                                    status_code = 200
+
                 except Exception as ex:
                     log.error(ex)
             else:
