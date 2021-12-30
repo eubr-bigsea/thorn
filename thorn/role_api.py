@@ -225,23 +225,21 @@ class RoleDetailApi(Resource):
                     if 'users' in request.json else []
 
             tmp_role = Role.query.get(role_id)
-            if tmp_role and tmp_role.system:
-                # Only users can be added to a system role
-                data = {'users': users}
-            else:
-                data = request.json
-
-            data['id'] = role_id
+            data = request.json
             response_schema = RoleItemResponseSchema(exclude=('users.roles',))
             try:
                 # Ignore missing fields to allow partial updates
-                role = db.session.merge(request_schema.load(data, partial=True))
+                role = request_schema.load(data, partial=True)
+                role.id = role_id
                 role = db.session.merge(role)
+
+                # Update relationships
                 role.permissions = list(Permission.query.filter(
                         Permission.id.in_([p.get('id', 0) 
                             for p in permissions])))
                 role.users = list(User.query.filter(
                     User.id.in_([u.get('id', 0) for u in users])))
+
                 db.session.commit()
 
                 if role is not None:
