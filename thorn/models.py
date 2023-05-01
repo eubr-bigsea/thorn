@@ -189,8 +189,7 @@ class MailQueue(db.Model):
     # Fields
     id = Column(Integer, primary_key=True)
     created = Column(DateTime,
-                     default=datetime.datetime.utcnow, nullable=False,
-                     onupdate=datetime.datetime.utcnow)
+                     default=datetime.datetime.utcnow, nullable=False)
     status = Column(String(50), nullable=False)
     attempts = Column(Integer,
                       default=0, nullable=False)
@@ -210,8 +209,7 @@ class Notification(db.Model):
     # Fields
     id = Column(Integer, primary_key=True)
     created = Column(DateTime,
-                     default=datetime.datetime.utcnow, nullable=False,
-                     onupdate=datetime.datetime.utcnow)
+                     default=datetime.datetime.utcnow, nullable=False)
     text = Column(String(2000), nullable=False)
     link = Column(String(200))
     status = Column(Enum(*list(NotificationStatus.values()),

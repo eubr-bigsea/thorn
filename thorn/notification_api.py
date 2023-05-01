@@ -124,7 +124,7 @@ class NotificationListApi(Resource):
                     log.debug(gettext('Adding %s'), self.human_name)
                 notification = form
                 notification.user_id = flask_globals.user.id
-                notification.created = datetime.datetime.now()
+                notification.created = datetime.datetime.utcnow()
                 db.session.add(notification)
                 result = response_schema.dump(notification)
 
