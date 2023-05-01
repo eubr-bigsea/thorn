@@ -42,7 +42,7 @@ class PermissionListApi(Resource):
         if page is not None and page.isdigit():
             page_size = int(request.args.get('size', 20))
             page = int(page)
-            pagination = permissions.paginate(page, page_size, True)
+            pagination = permissions.paginate(page, page_size, False)
             result = {
                 'data': PermissionListResponseSchema(
                     many=True, only=only).dump(pagination.items),

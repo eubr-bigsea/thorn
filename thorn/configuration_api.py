@@ -70,7 +70,7 @@ class ConfigurationListApi(Resource):
         if page is not None and page.isdigit():
             page_size = int(request.args.get('size', 20))
             page = int(page)
-            pagination = configurations.paginate(page, page_size, True)
+            pagination = configurations.paginate(page, page_size, False)
             result = {
                 'data': ConfigurationListResponseSchema(
                     many=True, only=only).dump(pagination.items),

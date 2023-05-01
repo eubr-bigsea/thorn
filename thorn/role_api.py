@@ -56,7 +56,7 @@ class RoleListApi(Resource):
         if page is not None and page.isdigit():
             page_size = int(request.args.get('size', 20))
             page = int(page)
-            pagination = roles.paginate(page, page_size, True)
+            pagination = roles.paginate(page, page_size, False)
             result = {
                 'data': RoleListResponseSchema(
                     many=True, only=only, exclude=('users.roles',)).dump(
