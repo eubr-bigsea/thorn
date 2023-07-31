@@ -2,7 +2,7 @@
 
 function start_server
 {
-	python -m gunicorn thorn.app:create_app -b 0.0.0.0:$THORN_PORT
+	python -m gunicorn thorn.app:create_app() -b 0.0.0.0:$THORN_PORT
 }
 
 function db_migrate
