@@ -4,7 +4,6 @@ import logging
 import logging.config
 import os
 
-import eventlet.wsgi
 import sqlalchemy_utils
 import yaml
 from flask_migrate import Migrate
