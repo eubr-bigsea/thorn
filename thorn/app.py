@@ -1,21 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# noinspection PyBroadException
-if __name__ == '__main__':
-    import eventlet
-    eventlet.monkey_patch(all=True)
-    # 
-    # See BUG: https://github.com/eventlet/eventlet/issues/592
-    import __original_module_threading
-    import threading
-    __original_module_threading.current_thread.__globals__['_active'] = threading._active
-# 
-# Eventlet is not being used anymore because there is a severe bug:
-# https://github.com/eventlet/eventlet/issues/526
-
-# from gevent import monkey
-# monkey.patch_all()
-# from gevent.pywsgi import WSGIServer
 
 import logging
 import logging.config
@@ -145,8 +128,7 @@ def create_app(is_main_module=False):
         if is_main_module:
             if config.get('environment', 'dev') == 'dev':
                 app.run(debug=True, port=port)
-            else:
-                eventlet.wsgi.server(eventlet.listen(('', port)), app)
+                return app
                 # http_server = WSGIServer(('0.0.0.0', port), app)
                 # http_server.serve_forever()
     else:

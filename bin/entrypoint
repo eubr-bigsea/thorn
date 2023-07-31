@@ -2,7 +2,7 @@
 
 function start_server
 {
-  python ${THORN_HOME}/thorn/app.py
+  python -m gunicorn thorn.app:create_app
 }
 
 function db_migrate
@@ -22,7 +22,6 @@ function db_migrate
 export THORN_HOME=${THORN_HOME:-$(cd $(dirname $0)/..; pwd)}
 export THORN_CONFIG=${THORN_CONFIG:-${THORN_HOME}/conf/thorn.yaml}
 
-export FLASK_APP=${FLASK_APP:-${THORN_HOME}/thorn/app.py}
 export PYTHONPATH=${THORN_HOME}:${PYTHONPATH}
 export FLASK_APP=thorn.app
 
