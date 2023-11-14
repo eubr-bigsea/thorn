@@ -6,7 +6,7 @@ Flask-RESTful==0.3.9
 Flask-RQ2==18.3
 Flask-SQLAlchemy==2.5.1
 Flask-Script==2.0.6
-Flask==2.0.1
+Flask==2.2.5
 gunicorn==21.2.0
 PyMySQL==1.0.2
 SQLAlchemy-i18n==1.1.0
@@ -26,3 +26,4 @@ python-ldap==3.3.1
 python-socketio==5.3.0
 requests==2.26.0
 socketio==0.2.1
+werkzeug==2.3.7
