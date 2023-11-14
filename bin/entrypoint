@@ -2,7 +2,7 @@
 
 function start_server
 {
-  python ${THORN_HOME}/thorn/app.py
+	python -m gunicorn 'thorn.app:create_app()' -b 0.0.0.0:$THORN_PORT
 }
 
 function db_migrate
@@ -21,8 +21,8 @@ function db_migrate
 # if unset set thorn_home to thorn root dir, without ./sbin
 export THORN_HOME=${THORN_HOME:-$(cd $(dirname $0)/..; pwd)}
 export THORN_CONFIG=${THORN_CONFIG:-${THORN_HOME}/conf/thorn.yaml}
+export THORN_PORT=$(grep port $THORN_CONFIG |sed 's/\s*port:\s*//g')
 
-export FLASK_APP=${FLASK_APP:-${THORN_HOME}/thorn/app.py}
 export PYTHONPATH=${THORN_HOME}:${PYTHONPATH}
 export FLASK_APP=thorn.app
 

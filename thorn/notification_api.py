@@ -5,6 +5,7 @@ from flask_restful import Resource
 from sqlalchemy import or_
 from thorn.util import translate_validation
 
+from marshmallow import ValidationError
 import datetime
 import math
 import logging
@@ -25,13 +26,23 @@ def _get_number_of_unread_notifications():
         Notification.user_id==flask_globals.user.id,
         Notification.status==NotificationStatus.UNREAD).count()
 
-def _update_notification_count(config):
-     mgr = socketio.RedisManager(config['servers']['redis_url'][:-1],
-         'job_output')
-     mgr.emit('notifications',
-             data={'unread': _get_number_of_unread_notifications()},
-             room='user:' + flask_globals.user.id,
-             namespace=NAMESPACE)
+def _update_notification_count(config, notification):
+    url =  config['servers']['redis_url']
+    if url[-2:] == '/1':
+        url = url[:-2]
+    mgr = socketio.RedisManager(url, 'job_output')
+    mgr.emit('notifications',
+            data={
+               'unread': _get_number_of_unread_notifications(),
+               'notification': {
+                   'text': notification.text, 
+                   'created': notification.created.isoformat()[:19], 
+                   'type': str(notification.type), 
+                   'status': 'UNREAD'
+                }
+           },
+           room=f'users/{flask_globals.user.id}',
+           namespace=NAMESPACE)
  
 class NotificationSummaryApi(Resource):
     @requires_auth
@@ -74,10 +85,10 @@ class NotificationListApi(Resource):
         if page is not None and page.isdigit():
             page_size = int(request.args.get('size', 20))
             page = int(page)
-            pagination = notifications.paginate(page, page_size, True)
+            pagination = notifications.paginate(page, page_size, False)
             result = {
                 'data': NotificationListResponseSchema(
-                    many=True, only=only).dump(pagination.items).data,
+                    many=True, only=only).dump(pagination.items),
                 'pagination': {
                     'page': page, 'size': page_size,
                     'total': pagination.total,
@@ -87,7 +98,7 @@ class NotificationListApi(Resource):
             result = {
                 'data': NotificationListResponseSchema(
                     many=True, only=only).dump(
-                    notifications).data}
+                    notifications)}
 
         if log.isEnabledFor(logging.DEBUG):
             log.debug(gettext('Listing %(name)s', name=self.human_name))
@@ -105,35 +116,36 @@ class NotificationListApi(Resource):
             return_code = 401
             result = {'status': 'ERROR'}
         elif request.json is not None:
-            request_schema = NotificationCreateRequestSchema()
-            response_schema = NotificationItemResponseSchema()
-            form = request_schema.load(request.json)
-            if form.errors:
+            try:
+                request_schema = NotificationCreateRequestSchema()
+                response_schema = NotificationItemResponseSchema()
+                form = request_schema.load(request.json)
+                if log.isEnabledFor(logging.DEBUG):
+                    log.debug(gettext('Adding %s'), self.human_name)
+                notification = form
+                notification.user_id = flask_globals.user.id
+                notification.created = datetime.datetime.utcnow()
+                db.session.add(notification)
+                result = response_schema.dump(notification)
+
+                # FIXME Thorn use a different number for Redis than stand
+                _update_notification_count(config, notification)
+                return_code = 200
+                db.session.commit()
+            except ValidationError as e:
                 result = {'status': 'ERROR',
-                          'message': gettext("Validation error"),
-                          'errors': translate_validation(form.errors)}
-            else:
-                try:
-                    if log.isEnabledFor(logging.DEBUG):
-                        log.debug(gettext('Adding %s'), self.human_name)
-                    notification = form.data
-                    notification.created = datetime.datetime.now()
-                    db.session.add(notification)
-                    db.session.commit()
-                    result = response_schema.dump(notification).data
+                            'message': gettext("Validation error"),
+                            'errors': translate_validation(e.messages)}
+            except Exception as e:
+                result = {'status': 'ERROR',
+                          'message': gettext("Internal error")}
+                return_code = 500
+                if current_app.debug:
+                    result['debug_detail'] = str(e)
 
-                    # FIXME Thorn use a different number for Redis than stand
-                    _update_notification_count(config)
-                    return_code = 200
-                except Exception as e:
-                    result = {'status': 'ERROR',
-                              'message': gettext("Internal error")}
-                    return_code = 500
-                    if current_app.debug:
-                        result['debug_detail'] = str(e)
+                log.exception(e)
+                db.session.rollback()
 
-                    log.exception(e)
-                    db.session.rollback()
 
         return result, return_code
 
@@ -158,7 +170,7 @@ class NotificationDetailApi(Resource):
             result = {
                 'status': 'OK',
                 'data': [NotificationItemResponseSchema().dump(
-                    notification).data]
+                    notification)]
             }
         else:
             return_code = 404
@@ -183,14 +195,14 @@ class NotificationDetailApi(Resource):
         if notification is not None:
             try:
                 db.session.delete(notification)
-                db.session.commit()
                 config = current_app.config[CONFIG_KEY]
-                _update_notification_count(config)
+                _update_notification_count(config, notification)
                 result = {
                     'status': 'OK',
                     'message': gettext('%(name)s deleted with success!',
                                        name=self.human_name)
                 }
+                db.session.commit()
             except Exception as e:
                 result = {'status': 'ERROR',
                           'message': gettext("Internal error")}
@@ -232,39 +244,36 @@ class NotificationDetailApi(Resource):
             payload = {'status': request.json.get('status'),
                 'id': request.json.get('id')}
             # Ignore missing fields to allow partial updates
-            form = request_schema.load(request.json, partial=True)
-            response_schema = NotificationItemResponseSchema()
-            if not form.errors:
-                try:
-                    form.data.id = notification_id
-                    notification = db.session.merge(form.data)
-                    db.session.commit()
+            try:
+                form = request_schema.load(request.json, partial=True)
+                response_schema = NotificationItemResponseSchema()
+                form.id = notification_id
+                notification = db.session.merge(form)
+                db.session.commit()
 
-                    if notification is not None:
-                        return_code = 200
-                        result = {
-                            'status': 'OK',
-                            'message': gettext(
-                                '%(n)s (id=%(id)s) was updated with success!',
-                                n=self.human_name,
-                                id=notification_id),
-                            'data': [response_schema.dump(
-                                notification).data]
-                        }
-                    _update_notification_count(current_app.config[CONFIG_KEY])
-                except Exception as e:
-                    result = {'status': 'ERROR',
-                              'message': gettext("Internal error")}
-                    return_code = 500
-                    if current_app.debug:
-                        result['debug_detail'] = str(e)
-                    db.session.rollback()
-            else:
-                result = {
-                    'status': 'ERROR',
-                    'message': gettext('Invalid data for %(name)s (id=%(id)s)',
-                                       name=self.human_name,
-                                       id=notification_id),
-                    'errors': form.errors
-                }
+                if notification is not None:
+                    return_code = 200
+                    result = {
+                        'status': 'OK',
+                        'message': gettext(
+                            '%(n)s (id=%(id)s) was updated with success!',
+                            n=self.human_name,
+                            id=notification_id),
+                        'data': [response_schema.dump(
+                            notification)]
+                    }
+                _update_notification_count(current_app.config[CONFIG_KEY], notification)
+            except ValidationError as e:
+                result = {'status': 'ERROR',
+                            'message': gettext("Validation error"),
+                            'errors': translate_validation(e.messages)}
+            except Exception as e:
+                result = {'status': 'ERROR',
+                          'message': gettext("Internal error")}
+                return_code = 500
+                if current_app.debug:
+                    result['debug_detail'] = str(e)
+
+                log.exception(e)
+                db.session.rollback()
         return result, return_code

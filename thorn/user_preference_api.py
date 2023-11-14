@@ -36,7 +36,7 @@ class UserPreferenceListApi(Resource):
         if page is not None and page.isdigit():
             page_size = int(request.args.get('size', 20))
             page = int(page)
-            pagination = user_preferences.paginate(page, page_size, True)
+            pagination = user_preferences.paginate(page, page_size, False)
             result = {
                 'data': UserPreferenceListResponseSchema(
                     many=True, only=only).dump(pagination.items),
