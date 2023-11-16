@@ -3,7 +3,7 @@ thorn:
     environment: prod
     servers:
         database_url: mysql+pymysql://user:secret@server:3306/thorn
-		redis_url: redis://redis
+        redis_url: redis://redis
     unprotected_urls:
         /api/v1/thorn/auth/login: ['POST']
         /api/v1/thorn/register: ['POST']
