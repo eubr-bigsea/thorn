@@ -1,0 +1,15 @@
+thorn:
+    port: 3319
+    environment: prod
+    servers:
+        database_url: mysql+pymysql://user:secret@server:3306/thorn
+    unprotected_urls:
+        /api/v1/thorn/auth/login: ['POST']
+        /api/v1/thorn/register: ['POST']
+        /api/v1/thorn/password/reset: ['PATCH', 'POST', 'GET']
+        /api/v1/thorn/tokens: []
+        /api/v1/stand//socket.io/: []
+        /api/v1/stand/socket.io/: []
+        /api/v1/stand/socket.io: []
+        /api/v1/tahiti/public/js/tahiti.js: ['GET']
+        /api/v1/caipirinha/public/dashboard: ['GET']
