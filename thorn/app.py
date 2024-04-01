@@ -9,7 +9,7 @@ import yaml
 from flask_migrate import Migrate
 from thorn import rq
 from flask import Flask, request
-from flask_babel import get_locale, Babel
+from flask_babel import Babel
 from flask_cors import CORS
 from flask_restful import Api
 from flask_swagger_ui import get_swaggerui_blueprint
@@ -25,6 +25,7 @@ from thorn.notification_api import NotificationListApi, NotificationDetailApi, \
     NotificationSummaryApi
 from thorn.configuration_api import (ConfigurationListApi, 
     UserInterfaceConfigurationDetailApi)
+from thorn.cache_config import cache
 
 def create_app(is_main_module=False):
     
@@ -90,6 +91,8 @@ def create_app(is_main_module=False):
 
     os.chdir(os.environ.get('THORN_HOME', '.'))
     logger = logging.getLogger(__name__)
+
+    
     if config_file:
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)['thorn']
@@ -118,9 +121,9 @@ def create_app(is_main_module=False):
 
         db.init_app(app)
         rq.init_app(app)
-
+        cache.init_app(app)
         
-        migrate = Migrate(app, db)        
+        migrate = Migrate(app, db)
         port = int(config.get('port', 5000))
         logger.debug('Running in %s mode', config.get('environment'))
 

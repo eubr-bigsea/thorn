@@ -1,24 +1,25 @@
-# -*- coding: utf-8 -*-}
 import json
 import logging
 import urllib
-
+import requests
 import jwt
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-from thorn.app_auth import requires_auth, requires_permission
-from flask import request, current_app, Response
+from flask import Response, current_app, request
+from flask_babel import gettext
 from flask_restful import Resource
-from thorn.models import User, db, AuthenticationType
-from thorn.util import check_password, ldap_authentication, encrypt_password
-from flask_babel import force_locale, gettext, get_locale
-from thorn.models import *
 
+from thorn.app_auth import requires_auth
+from thorn.models import (AuthenticationType, Configuration, Role, User, 
+                          UserStatus, db)
+from thorn.util import check_password, encrypt_password, ldap_authentication
+
+from thorn.cache_config import cache
 log = logging.getLogger(__name__)
 
 
 def _get_global_roles():
-    return [r.id for r in Role.query.filter(Role.all_user==True)]
+    return [r.id for r in Role.query.filter(Role.all_user==True)]  # noqa: E712
 
 def _get_jwt_token(user):
     return jwt.encode(
@@ -36,7 +37,7 @@ def _get_jwt_token(user):
 
 def _success(user):
     # Include global roles
-    user.roles.extend(Role.query.filter(Role.all_user==True))
+    user.roles.extend(Role.query.filter(Role.all_user==True))  # noqa: E712
     user_data = {
             'id': user.id,
             'email': user.email,
@@ -58,7 +59,8 @@ def _success(user):
 
 def _create_ldap_user(login: str, ldap_user:dict):
     first_name, last_name = ldap_user.get(
-        'displayName', ldap_user.get('nome', ['User']))[0].decode('utf8').split(' ', 1)
+        'displayName', 
+        ldap_user.get('nome', ['User']))[0].decode('utf8').split(' ', 1)
     user = User(login=login, email=ldap_user.get('mail', [''])[0],
                 notes=gettext('LDAP User'), first_name=first_name,
                 last_name=last_name.strip(),
@@ -68,17 +70,41 @@ def _create_ldap_user(login: str, ldap_user:dict):
     db.session.add(user)
     db.session.commit()
     return user
+def _update_open_id_user_information(user: User, openid_user: dict):
+    sub = openid_user.get('sub')
+    notes = f'{{"sub": "{sub}", "OpenId": true}}'
+    login = openid_user.get('username')
+    email = openid_user.get('email')
+    first_name = openid_user.get('given_name')
+    last_name = openid_user.get('family_name')
+
+    
+    if any([user.login != login, 
+           user.email != email, 
+           user.first_name != first_name, 
+           user.last_name != last_name]):
+        user.login = login
+        user.email = email
+        user.first_name = first_name
+        user.last_name = last_name
+        user.notes = notes
+        db.session.add(user)
+        db.session.commit()
 
 def _create_open_id_user(openid_user:dict):
-    #first_name, last_name = openid_user.get(
-    #    'displayName', openid_user.get('nome', ['User']))[0].decode('utf8').split(' ', 1)
-    login = openid_user.get('sub')
-    first_name, last_name = login, ''
-    user = User(login=login, email=openid_user.get('mail', [''])[0],
-                notes=gettext('OpenId User'), 
+    sub = openid_user.get('sub')
+    notes = f'{{"sub": "{sub}", "OpenId": true}}'
+    login = openid_user.get('username')
+    email = openid_user.get('email')
+    first_name = openid_user.get('given_name')
+    last_name = openid_user.get('family_name')
+
+    user = User(login=login, 
                 first_name=first_name,
-                last_name=last_name.strip(),
+                last_name=last_name,
                 locale='pt',
+                email=email,
+                notes=notes,
                 authentication_type=AuthenticationType.OPENID,
                 encrypted_password=encrypt_password('dummy'))
     user.roles = list(Role.query.filter(Role.name=='everybody'))
@@ -107,7 +133,8 @@ class AuthenticationApi(Resource):
         if all([login, password]):
             user = User.query.filter(User.login == login).first()
             ldap_keys = ['LDAP_SERVER', 'LDAP_BASE_DN', 'LDAP_USER_DN']
-            query = Configuration.query.filter(Configuration.name.in_(ldap_keys))
+            query = Configuration.query.filter(
+                Configuration.name.in_(ldap_keys))
             ldap_config = dict( (c.name, c.value) for c in query)
             if user:
                 if user.enabled:
@@ -143,7 +170,7 @@ class ValidateTokenApi(Resource):
     @requires_auth
     def get(self):
         return "OK", 200
-        0
+        
     def post(self):
         status_code = 401
         user = None
@@ -177,7 +204,8 @@ class ValidateTokenApi(Resource):
                         'pt')
                     }
         elif 'api_token' in qs:
-            user = User.query.filter(User.api_token==qs.get('api_token')[0]).first()
+            user = User.query.filter(
+                User.api_token==qs.get('api_token')[0]).first()
             if user is not None and user.enabled \
                     and user.status not in [UserStatus.DELETED, 
                         UserStatus.PENDING_APPROVAL]:
@@ -194,51 +222,88 @@ class ValidateTokenApi(Resource):
                 authorization = qs.get('token')[0] if 'token' in qs else None
                 offset = 0
             if authorization is not None:
-                token = authorization[offset:]
-                try:
-                    # import pdb; pdb.set_trace()
-                    if request.headers.get('X-THORN-ID') == 'true': # Old thorn auth
-                        decoded = jwt.decode(token, current_app.secret_key, 
-                            algorithms=["HS256"])
-                        user = User.query.get(int(decoded.get('id')))
-                        if user.enabled and user.status == UserStatus.ENABLED:
-                            result = self._get_result(user)
-                            status_code = 200
-
-                    else: # using open id
-                        openId_keys = ['OPENID_CONFIG', 'OPENID_JWT_PUB_KEY']
-                        query = Configuration.query.filter(
-                            Configuration.name.in_(openId_keys))
-                        openId_config = dict((c.name, c.value) for c in query)
-
-                        has_open_id_config = ('OPENID_CONFIG' in openId_config and 
-                                'OPENID_JWT_PUB_KEY' in openId_config)
-                        if has_open_id_config:
-                            json_conf = json.loads(openId_config['OPENID_CONFIG'])
-                            if json_conf['enabled']:
-                                cert = openId_config['OPENID_JWT_PUB_KEY'].encode(
-                                    'utf8')
-                                pkey = serialization.load_pem_public_key(cert, 
-                                    backend=default_backend())
-                                decoded = jwt.decode(token.encode('utf8'), pkey, 
-                                    audience=json_conf.get('client_id'),
-                                    algorithms=["RS256"])
-                                user = User.query.filter(User.login==decoded.get(
-                                    'sub')).first()
-                                if user:
-                                    if user.enabled:
-                                        result = self._get_result(user)
-                                        status_code = 200
-                                else: # creates the user
-                                    user = _create_open_id_user(decoded)
-                                    result = self._get_result(user)
-                                    status_code = 200
-
-                except Exception as ex:
-                    log.error(ex)
+                status_code, result = self._validate_authorization_token(
+                    authorization, offset)
             else:
                 log.warn(gettext('No suitable authentication method found.'))
         return '', status_code, result
+
+    def _validate_authorization_token(self, authorization, offset):
+        """ Validate tokens in Authorization request header (e.g. JWT tokens)
+        """
+        token = authorization[offset:]
+        status_code = 400
+        result = {}
+        try:
+            # import pdb; pdb.set_trace()
+            if request.headers.get('X-THORN-ID') == 'true': # Old thorn auth
+                decoded = jwt.decode(token, current_app.secret_key, 
+                            algorithms=["HS256"])
+                user = User.query.get(int(decoded.get('id')))
+                if user.enabled and user.status == UserStatus.ENABLED:
+                    result = self._get_result(user)
+                    status_code = 200
+
+            else: # using open id  
+                openId_keys = ['OPENID_CONFIG', 'OPENID_JWT_PUB_KEY']
+                query = Configuration.query.filter(
+                            Configuration.name.in_(openId_keys))
+                openId_config = dict((c.name, c.value) for c in query)
+
+                has_open_id_config = ('OPENID_CONFIG' in openId_config)
+                if has_open_id_config:
+                    json_conf = json.loads(openId_config['OPENID_CONFIG'])
+                    algorithms = ["RS256"]
+                    if json_conf['enabled']:
+                        log.info('Using OpenID token')
+                        if ('OPENID_JWT_PUB_KEY' in openId_config and 
+                            openId_config.get('OPENID_JWT_PUB_KEY', '').strip()):
+                            cert = (openId_config['OPENID_JWT_PUB_KEY'].encode(
+                                'utf8'))
+                            pkey = serialization.load_pem_public_key(cert, 
+                                    backend=default_backend())
+                        else:
+                            # Try to download 
+                            jwks = cache.get('OPENID_JWKS')
+                            log.info('Downloading JWS? %s', jwks is None)
+                            if jwks is None:
+                                r = requests.get(json_conf['authority'])
+                                jwks_uri = r.json()['jwks_uri']
+                                r = requests.get(jwks_uri)
+                                jwks = r.json()
+                            else:
+                                kid = jwt.get_unverified_header(token)['kid']
+                                jwks = cache.get('OPENID_JWKS')
+
+                            # keep the cache warm
+                            cache.add('OPENID_JWKS', jwks)
+                            token_kid = jwt.get_unverified_header(token)['kid']
+                            for jwk in jwks['keys']:
+                                kid = jwk['kid']
+                                if token_kid == kid:
+                                    pkey = jwt.algorithms.RSAAlgorithm.from_jwk(
+                                        json.dumps(jwk))
+                        
+                        decoded = jwt.decode(token.encode('utf8'), key=pkey, 
+                                    audience=json_conf.get('client_id'),
+                                    algorithms=algorithms)
+                        user = User.query.filter(
+                            User.login==decoded.get('username'), 
+                            User.authentication_type=='OPENID').first()
+                        
+                        if user:
+                            if user.enabled:
+                                _update_open_id_user_information(user, decoded)
+                                result = self._get_result(user)
+                                status_code = 200
+                        else: # creates the user
+                            user = _create_open_id_user(decoded)
+                            result = self._get_result(user)
+                            status_code = 200
+
+        except Exception as ex:
+            log.error(ex)
+        return status_code,result
 
     def _get_result(self, user):
         global_roles = _get_global_roles()
@@ -249,10 +314,8 @@ class ValidateTokenApi(Resource):
               'X-Roles': ','.join(map(str, [
                   r.id for r in user.roles] + global_roles)),
               'X-Locale': user.locale,
-              'X-User-Data': '{};{};{} {};{}'.format(
-                  user.login, user.email,
-                  user.first_name, user.last_name,
-                  user.locale)
+              'X-User-Data': (f'{user.login};{user.email};{user.first_name} '
+                        f'{user.last_name};{user.locale}')
               }
     
 
