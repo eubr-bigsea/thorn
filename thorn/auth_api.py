@@ -188,6 +188,7 @@ class ValidateTokenApi(Resource):
 
         method = request.headers.get('X-Original-Method', 'INVALID')
 
+        #breakpoint()
         if method in unprotected.get(path, []) or unprotected.get(path) == [] \
                 or '/public/' in path:
             status_code = 200
@@ -236,73 +237,79 @@ class ValidateTokenApi(Resource):
         result = {}
         try:
             # import pdb; pdb.set_trace()
-            if request.headers.get('X-THORN-ID') == 'true': # Old thorn auth
-                decoded = jwt.decode(token, current_app.secret_key, 
-                            algorithms=["HS256"])
-                user = User.query.get(int(decoded.get('id')))
-                if user.enabled and user.status == UserStatus.ENABLED:
-                    result = self._get_result(user)
-                    status_code = 200
+            # using open id  
+            openId_keys = ['OPENID_CONFIG', 'OPENID_JWT_PUB_KEY']
+            query = Configuration.query.filter(
+                        Configuration.name.in_(openId_keys))
+            openId_config = dict((c.name, c.value) for c in query)
 
-            else: # using open id  
-                openId_keys = ['OPENID_CONFIG', 'OPENID_JWT_PUB_KEY']
-                query = Configuration.query.filter(
-                            Configuration.name.in_(openId_keys))
-                openId_config = dict((c.name, c.value) for c in query)
-
-                has_open_id_config = ('OPENID_CONFIG' in openId_config)
-                if has_open_id_config:
-                    json_conf = json.loads(openId_config['OPENID_CONFIG'])
-                    algorithms = ["RS256"]
-                    if json_conf['enabled']:
-                        log.info('Using OpenID token')
-                        if ('OPENID_JWT_PUB_KEY' in openId_config and 
-                            openId_config.get('OPENID_JWT_PUB_KEY', '').strip()):
-                            cert = (openId_config['OPENID_JWT_PUB_KEY'].encode(
-                                'utf8'))
-                            pkey = serialization.load_pem_public_key(cert, 
-                                    backend=default_backend())
+            has_open_id_config = ('OPENID_CONFIG' in openId_config)
+            
+            open_id_success = False
+            if has_open_id_config:
+                json_conf = json.loads(openId_config['OPENID_CONFIG'])
+                algorithms = ["RS256"]
+                if json_conf['enabled']:
+                    log.info('Using OpenID token')
+                    if ('OPENID_JWT_PUB_KEY' in openId_config and 
+                        len(openId_config.get('OPENID_JWT_PUB_KEY', '')) > 5):
+                        log.info('Using provided OpenID Pub Key')
+                        cert = (openId_config['OPENID_JWT_PUB_KEY'].encode(
+                            'utf8'))
+                        pkey = serialization.load_pem_public_key(cert, 
+                                backend=default_backend())
+                    else:
+                        # Try to download 
+                        jwks = cache.get('OPENID_JWKS')
+                        log.info('Downloading JWS? %s', jwks is None)
+                        if jwks is None:
+                            r = requests.get(json_conf['authority'])
+                            jwks_uri = r.json()['jwks_uri']
+                            r = requests.get(jwks_uri)
+                            jwks = r.json()
                         else:
-                            # Try to download 
+                            kid = jwt.get_unverified_header(token)['kid']
                             jwks = cache.get('OPENID_JWKS')
-                            log.info('Downloading JWS? %s', jwks is None)
-                            if jwks is None:
-                                r = requests.get(json_conf['authority'])
-                                jwks_uri = r.json()['jwks_uri']
-                                r = requests.get(jwks_uri)
-                                jwks = r.json()
-                            else:
-                                kid = jwt.get_unverified_header(token)['kid']
-                                jwks = cache.get('OPENID_JWKS')
 
-                            # keep the cache warm
-                            cache.add('OPENID_JWKS', jwks)
-                            token_kid = jwt.get_unverified_header(token)['kid']
-                            for jwk in jwks['keys']:
-                                kid = jwk['kid']
-                                if token_kid == kid:
-                                    pkey = jwt.algorithms.RSAAlgorithm.from_jwk(
-                                        json.dumps(jwk))
-                        
-                        decoded = jwt.decode(token.encode('utf8'), key=pkey, 
-                                    audience=json_conf.get('client_id'),
-                                    algorithms=algorithms)
-                        user = User.query.filter(
-                            User.login==decoded.get('username'), 
-                            User.authentication_type=='OPENID').first()
-                        
-                        if user:
-                            if user.enabled:
-                                _update_open_id_user_information(user, decoded)
-                                result = self._get_result(user)
-                                status_code = 200
-                        else: # creates the user
-                            user = _create_open_id_user(decoded)
+                        # keep the cache warm
+                        cache.add('OPENID_JWKS', jwks)
+                        token_kid = jwt.get_unverified_header(token)['kid']
+                        for jwk in jwks['keys']:
+                            kid = jwk['kid']
+                            if token_kid == kid:
+                                pkey = jwt.algorithms.RSAAlgorithm.from_jwk(
+                                    json.dumps(jwk))
+                                log.info('Found key %s', token_kid)
+                                break
+                    
+                    decoded = jwt.decode(token.encode('utf8'), key=pkey, 
+                                audience=json_conf.get('client_id'),
+                                algorithms=algorithms)
+                    user = User.query.filter(
+                        User.login==decoded.get('username'), 
+                        User.authentication_type=='OPENID').first()
+                    
+                    if user:
+                        if user.enabled:
+                            _update_open_id_user_information(user, decoded)
                             result = self._get_result(user)
                             status_code = 200
+                    else: # creates the user
+                        user = _create_open_id_user(decoded)
+                        result = self._get_result(user)
+                        status_code = 200
+                    open_id_success = True
+            if not open_id_success:
+                if request.headers.get('X-THORN-ID') == 'true': # Old thorn auth
+                    decoded = jwt.decode(token, current_app.secret_key, 
+                            algorithms=["HS256"])
+                    user = User.query.get(int(decoded.get('id')))
+                    if user.enabled and user.status == UserStatus.ENABLED:
+                        result = self._get_result(user)
+                        status_code = 200
 
         except Exception as ex:
-            log.error(ex)
+            log.exception(ex)
         return status_code,result
 
     def _get_result(self, user):

@@ -1,8 +1,9 @@
-# -*- coding: utf-8 -*-}
+from sqlalchemy.orm import joinedload
 from thorn.app_auth import requires_auth, requires_permission
 from flask import request, current_app, g as flask_globals
 from flask_restful import Resource
 from sqlalchemy import or_
+from thorn.schema import UserCreateRequestSchema, UserItemResponseSchema, UserListResponseSchema, partial_schema_factory
 from thorn.util import check_password, encrypt_password, translate_validation
 import math
 import uuid
@@ -10,11 +11,11 @@ import datetime
 import random
 import string
 import logging
-from thorn.schema import *
-from flask_babel import gettext, get_locale
+
+from flask_babel import gettext
 from thorn.jobs import send_email
 import json
-from thorn.models import Configuration
+from thorn.models import (MailQueue, Role, db, Configuration, User, UserStatus)
 from marshmallow import ValidationError
 
 def _get_random_string(length):
@@ -371,6 +372,12 @@ class UserListApi(Resource):
                 User.enabled == (enabled_filter != 'false'))
         else:
             users = User.query
+
+        users = (
+            users.options(joinedload('roles'))
+                .options(joinedload('roles.permissions'))
+                .options(joinedload('roles.permissions.current_translation'))
+                 )
 
         exclude = [] if has_permission('ADMINISTRATOR') else [
                 'email', 'notes', 'updated_at', 'created_at', 'locale', 
