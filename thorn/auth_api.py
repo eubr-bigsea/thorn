@@ -95,7 +95,7 @@ def _create_open_id_user(openid_user:dict):
     sub = openid_user.get('sub')
     notes = f'{{"sub": "{sub}", "OpenId": true}}'
     login = openid_user.get('username')
-    email = openid_user.get('email')
+    email = openid_user.get('email') or login
     first_name = openid_user.get('given_name')
     last_name = openid_user.get('family_name')
 
@@ -167,15 +167,11 @@ class ValidateTokenApi(Resource):
     """
     Validates JWT tokens.
     """
-    @requires_auth
-    def get(self):
-        return "OK", 200
-        
+       
     def post(self):
         status_code = 401
         user = None
         config = current_app.config['THORN_CONFIG']
-
 
         # Check if URL is unprotected
         unprotected = config.get(
@@ -188,7 +184,6 @@ class ValidateTokenApi(Resource):
 
         method = request.headers.get('X-Original-Method', 'INVALID')
 
-        #breakpoint()
         if method in unprotected.get(path, []) or unprotected.get(path) == [] \
                 or '/public/' in path:
             status_code = 200
@@ -219,24 +214,28 @@ class ValidateTokenApi(Resource):
                     'Bearer ') else 0
             result = {'status': 'ERROR', 
                     'msg': gettext('Invalid authentication')}
+            #breakpoint()
             if authorization is None:
                 authorization = qs.get('token')[0] if 'token' in qs else None
                 offset = 0
             if authorization is not None:
                 status_code, result = self._validate_authorization_token(
-                    authorization, offset)
+                    authorization[offset:],
+                    request.headers.get('X-THORN-ID') == 'true',
+                    verify_exp=not current_app.testing)
             else:
                 log.warn(gettext('No suitable authentication method found.'))
         return '', status_code, result
 
-    def _validate_authorization_token(self, authorization, offset):
+    def _validate_authorization_token(self, authorization, try_old_thorn_token,
+                                      verify_exp=True):
         """ Validate tokens in Authorization request header (e.g. JWT tokens)
         """
-        token = authorization[offset:]
+        token = authorization
         status_code = 400
         result = {}
         try:
-            # import pdb; pdb.set_trace()
+            
             # using open id  
             openId_keys = ['OPENID_CONFIG', 'OPENID_JWT_PUB_KEY']
             query = Configuration.query.filter(
@@ -245,6 +244,7 @@ class ValidateTokenApi(Resource):
 
             has_open_id_config = ('OPENID_CONFIG' in openId_config)
             
+            create_open_id_user=True
             open_id_success = False
             if has_open_id_config:
                 json_conf = json.loads(openId_config['OPENID_CONFIG'])
@@ -259,6 +259,7 @@ class ValidateTokenApi(Resource):
                         pkey = serialization.load_pem_public_key(cert, 
                                 backend=default_backend())
                     else:
+                        
                         # Try to download 
                         jwks = cache.get('OPENID_JWKS')
                         log.info('Downloading JWS? %s', jwks is None)
@@ -281,26 +282,26 @@ class ValidateTokenApi(Resource):
                                     json.dumps(jwk))
                                 log.info('Found key %s', token_kid)
                                 break
-                    
+                    #breakpoint()
                     decoded = jwt.decode(token.encode('utf8'), key=pkey, 
                                 audience=json_conf.get('client_id'),
-                                algorithms=algorithms)
+                                algorithms=algorithms,
+                                options={'verify_exp': verify_exp})
                     user = User.query.filter(
-                        User.login==decoded.get('username'), 
-                        User.authentication_type=='OPENID').first()
+                        User.login==decoded.get('username')).first()
                     
                     if user:
-                        if user.enabled:
+                        if user.enabled and user.authentication_type == 'OPENID':
                             _update_open_id_user_information(user, decoded)
                             result = self._get_result(user)
                             status_code = 200
-                    else: # creates the user
+                    elif create_open_id_user: # creates the user
                         user = _create_open_id_user(decoded)
                         result = self._get_result(user)
                         status_code = 200
                     open_id_success = True
             if not open_id_success:
-                if request.headers.get('X-THORN-ID') == 'true': # Old thorn auth
+                if try_old_thorn_token: # Old thorn auth
                     decoded = jwt.decode(token, current_app.secret_key, 
                             algorithms=["HS256"])
                     user = User.query.get(int(decoded.get('id')))
