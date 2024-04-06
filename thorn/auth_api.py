@@ -232,7 +232,7 @@ class ValidateTokenApi(Resource):
         """ Validate tokens in Authorization request header (e.g. JWT tokens)
         """
         token = authorization
-        status_code = 400
+        status_code = 401
         result = {}
         try:
             
@@ -274,6 +274,7 @@ class ValidateTokenApi(Resource):
 
                         # keep the cache warm
                         cache.add('OPENID_JWKS', jwks)
+                        print(jwks, token)
                         token_kid = jwt.get_unverified_header(token)['kid']
                         for jwk in jwks['keys']:
                             kid = jwk['kid']
