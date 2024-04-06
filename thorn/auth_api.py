@@ -295,7 +295,8 @@ class ValidateTokenApi(Resource):
                         if user.enabled and user.authentication_type == 'OPENID':
                             _update_open_id_user_information(user, decoded)
                             result = self._get_result(user)
-                            status_code = 200
+                        
+                        status_code = 200
                     elif create_open_id_user: # creates the user
                         user = _create_open_id_user(decoded)
                         result = self._get_result(user)
