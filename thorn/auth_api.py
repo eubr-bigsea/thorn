@@ -249,7 +249,7 @@ class ValidateTokenApi(Resource):
             if has_open_id_config:
                 json_conf = json.loads(openId_config['OPENID_CONFIG'])
                 algorithms = ["RS256"]
-                if json_conf['enabled']:
+                if json_conf.get('enabled', False):
                     log.info('Using OpenID token')
                     if ('OPENID_JWT_PUB_KEY' in openId_config and 
                         len(openId_config.get('OPENID_JWT_PUB_KEY', '')) > 5):
