@@ -4,8 +4,20 @@ import pytest
 import datetime
 import flask_migrate
 from thorn.app import create_app
-from thorn.models import (AuthenticationType, User, Role, UserStatus, db)
+from thorn.models import (AuthenticationType, User, Role, UserStatus, 
+                          Configuration, db)
 
+def get_configuration():
+    c = Configuration(
+        id=10,
+        name='OPENID_CONFIG',
+        value='''{
+            "enabled": true,
+            "authority": "https://authority.lemonade.org.br/oauth2/token/.well-known/openid-configuration",
+            "client_id": "zdeVcYINUSlbTuM4K7vUggbHPZQa"
+        }''',
+        )
+    return [c]
 
 def get_users():
     u1 = User(
@@ -59,6 +71,8 @@ def client(app):
             flask_migrate.upgrade(revision='head')
             for user in get_users():
                 db.session.add(user)
+            for c in get_configuration():
+                db.session.merge(c)
             client.secret = app.config['THORN_CONFIG']['secret']
             db.session.commit()
         yield client
