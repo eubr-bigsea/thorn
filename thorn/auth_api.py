@@ -74,7 +74,7 @@ def _update_open_id_user_information(user: User, openid_user: dict):
     sub = openid_user.get('sub')
     notes = f'{{"sub": "{sub}", "OpenId": true}}'
     login = openid_user.get('username')
-    email = openid_user.get('email')
+    email = openid_user.get('email', login) or login
     first_name = openid_user.get('given_name')
     last_name = openid_user.get('family_name')
 
@@ -274,7 +274,7 @@ class ValidateTokenApi(Resource):
 
                         # keep the cache warm
                         cache.add('OPENID_JWKS', jwks)
-                        print(jwks, token)
+                        # print(jwks, token)
                         token_kid = jwt.get_unverified_header(token)['kid']
                         for jwk in jwks['keys']:
                             kid = jwk['kid']
@@ -294,8 +294,8 @@ class ValidateTokenApi(Resource):
                     if user:
                         if user.enabled and user.authentication_type == 'OPENID':
                             _update_open_id_user_information(user, decoded)
-                            result = self._get_result(user)
                         
+                        result = self._get_result(user)
                         status_code = 200
                     elif create_open_id_user: # creates the user
                         user = _create_open_id_user(decoded)
