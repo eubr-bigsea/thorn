@@ -107,7 +107,7 @@ def _create_open_id_user(openid_user:dict):
                 notes=notes,
                 authentication_type=AuthenticationType.OPENID,
                 encrypted_password=encrypt_password('dummy'))
-    user.roles = list(Role.query.filter(Role.name=='everybody'))
+    # user.roles = list(Role.query.filter(Role.name=='everybody'))
     db.session.add(user)
     db.session.commit()
     return user
