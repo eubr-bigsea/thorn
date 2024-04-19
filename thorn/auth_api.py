@@ -289,8 +289,9 @@ class ValidateTokenApi(Resource):
                                 audience=json_conf.get('client_id'),
                                 algorithms=algorithms,
                                 options={'verify_exp': verify_exp})
+                    login = decoded.get('username') or decoded.get('sub')
                     user = User.query.filter(
-                        User.login==decoded.get('username')).first()
+                        User.login==login).first()
                     
                     if user:
                         if user.enabled and user.authentication_type == 'OPENID':
