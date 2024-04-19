@@ -73,7 +73,8 @@ def _create_ldap_user(login: str, ldap_user:dict):
 def _update_open_id_user_information(user: User, openid_user: dict):
     sub = openid_user.get('sub')
     notes = f'{{"sub": "{sub}", "OpenId": true}}'
-    login = openid_user.get('username')
+
+    login = openid_user.get('username') or sub
     email = openid_user.get('email', login) or login
     first_name = openid_user.get('given_name')
     last_name = openid_user.get('family_name')
@@ -94,7 +95,7 @@ def _update_open_id_user_information(user: User, openid_user: dict):
 def _create_open_id_user(openid_user:dict):
     sub = openid_user.get('sub')
     notes = f'{{"sub": "{sub}", "OpenId": true}}'
-    login = openid_user.get('username')
+    login = openid_user.get('username') or sub
     email = openid_user.get('email') or login
     first_name = openid_user.get('given_name')
     last_name = openid_user.get('family_name')
