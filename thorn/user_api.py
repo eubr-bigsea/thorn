@@ -447,6 +447,7 @@ class UserDetailApi(Resource):
         return_code = 200
         if user is not None:
             # Permissions are need if using OpenId
+            user.roles.extend(list(Role.query.filter(Role.all_user)))
             result = {
                 'status': 'OK',
                 'data': [UserItemResponseSchema(
