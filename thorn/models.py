@@ -1,18 +1,12 @@
 import datetime
-import json
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float, \
-    Enum, DateTime, Numeric, Text, Unicode, UnicodeText
-from sqlalchemy import event
-from sqlalchemy.dialects.mysql import LONGTEXT
-from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship, backref
-from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, \
+    DateTime, Text, Unicode
+from sqlalchemy.orm import relationship
 from sqlalchemy_i18n import make_translatable, translation_base, Translatable
-
 make_translatable(options={'locales': ['pt', 'en'],
-                           'auto_create_locales': True,
-                           'fallback_locale': 'en'})
+                           'auto_create_locales': False,
+                           'fallback_locale': 'pt'})
 
 db = SQLAlchemy()
 
@@ -84,6 +78,13 @@ class AssetType:
     APP = 'APP'
     VISUALIZATION = 'VISUALIZATION'
     USER = 'USER'
+    PIPELINE = 'PIPELINE'
+    PIPELINE_RUN = 'PIPELINE_RUN'
+    EXPERIMENT = 'EXPERIMENT'
+    EXPERIMENT_EXPLORER = 'EXPERIMENT_EXPLORER'
+    EXPERIMENT_VISUALIZATION = 'EXPERIMENT_VISUALIZATION'
+    EXPERIMENT_MODEL = 'EXPERIMENT_MODEL'
+    EXPERIMENT_SQL = 'EXPERIMENT_SQL'
     WORKFLOW = 'WORKFLOW'
 
     @staticmethod
@@ -110,16 +111,20 @@ class AuthenticationType:
 role_permission = db.Table(
     'role_permission',
     Column('role_id', Integer,
-           ForeignKey('role.id'), nullable=False, index=True),
+           ForeignKey('role.id'),
+           nullable=False, index=True),
     Column('permission_id', Integer,
-           ForeignKey('permission.id'), nullable=False, index=True))
+           ForeignKey('permission.id'),
+           nullable=False, index=True))
 # noinspection PyUnresolvedReferences
 user_role = db.Table(
     'user_role',
     Column('user_id', Integer,
-           ForeignKey('user.id'), nullable=False, index=True),
+           ForeignKey('user.id'),
+           nullable=False, index=True),
     Column('role_id', Integer,
-           ForeignKey('role.id'), nullable=False, index=True))
+           ForeignKey('role.id'),
+           nullable=False, index=True))
 
 
 class Asset(db.Model):
@@ -134,12 +139,15 @@ class Asset(db.Model):
                        name='AssetTypeEnumType'), nullable=False)
 
     # Associations
-    owner_id = Column(Integer,
-                      ForeignKey("user.id",
-                                 name="fk_asset_owner_id"), nullable=False,
-                      index=True)
+    owner_id = Column(
+        Integer,
+        ForeignKey("user.id",
+                   name="fk_asset_owner_id"),
+        nullable=False,
+        index=True)
     owner = relationship(
         "User",
+        overlaps='assets',
         foreign_keys=[owner_id])
 
     def __str__(self):
@@ -157,7 +165,7 @@ class Configuration(db.Model, Translatable):
     # Fields
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
-    value = Column(LONGTEXT, nullable=False)
+    value = Column(Text(4294000000), nullable=False)
     enabled = Column(Boolean,
                      default=True, nullable=False)
     internal = Column(Boolean,
@@ -189,11 +197,12 @@ class MailQueue(db.Model):
     # Fields
     id = Column(Integer, primary_key=True)
     created = Column(DateTime,
-                     default=datetime.datetime.utcnow, nullable=False)
+                     default=datetime.datetime.utcnow, nullable=False,
+                     onupdate=datetime.datetime.utcnow)
     status = Column(String(50), nullable=False)
     attempts = Column(Integer,
                       default=0, nullable=False)
-    json_data = Column(LONGTEXT, nullable=False)
+    json_data = Column(Text(4294000000), nullable=False)
 
     def __str__(self):
         return self.created
@@ -209,7 +218,8 @@ class Notification(db.Model):
     # Fields
     id = Column(Integer, primary_key=True)
     created = Column(DateTime,
-                     default=datetime.datetime.utcnow, nullable=False)
+                     default=datetime.datetime.utcnow, nullable=False,
+                     onupdate=datetime.datetime.utcnow)
     text = Column(String(2000), nullable=False)
     link = Column(String(200))
     status = Column(Enum(*list(NotificationStatus.values()),
@@ -222,12 +232,15 @@ class Notification(db.Model):
                   default="INFO", nullable=False)
 
     # Associations
-    user_id = Column(Integer,
-                     ForeignKey("user.id",
-                                name="fk_notification_user_id"), nullable=False,
-                     index=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("user.id",
+                   name="fk_notification_user_id"),
+        nullable=False,
+        index=True)
     user = relationship(
         "User",
+        overlaps='user',
         foreign_keys=[user_id])
 
     def __str__(self):
@@ -283,10 +296,12 @@ class Role(db.Model, Translatable):
     # Associations
     permissions = relationship(
         "Permission",
+        overlaps="roles",
         secondary=role_permission,
         cascade="save-update")
     users = relationship(
         "User",
+        overlaps="roles",
         secondary=user_role,
         cascade="save-update")
 
@@ -345,19 +360,22 @@ class User(db.Model):
     # Associations
     roles = relationship(
         "Role",
+        overlaps="users",
         secondary=user_role,
         cascade="delete",
         secondaryjoin=(
             "and_("
             "Role.id==user_role.c.role_id,"
             "Role.enabled==True)"))
-    workspace_id = Column(Integer,
-                          ForeignKey("workspace.id",
-                                     name="fk_user_workspace_id",
-                                     use_alter=True),
-                          index=True)
+    workspace_id = Column(
+        Integer,
+        ForeignKey("workspace.id",
+                   name="fk_user_workspace_id",
+                   use_alter=True),
+        index=True)
     workspace = relationship(
         "Workspace",
+        overlaps='users',
         foreign_keys=[workspace_id])
 
     def __str__(self):
@@ -388,15 +406,18 @@ class UserPreference(db.Model):
     # Fields
     id = Column(Integer, primary_key=True)
     key = Column(String(100), nullable=False)
-    value = Column(LONGTEXT, nullable=False)
+    value = Column(Text(4294000000), nullable=False)
 
     # Associations
-    user_id = Column(Integer,
-                     ForeignKey("user.id",
-                                name="fk_user_preference_user_id"), nullable=False,
-                     index=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("user.id",
+                   name="fk_user_preference_user_id"),
+        nullable=False,
+        index=True)
     user = relationship(
         "User",
+        overlaps='preferences',
         foreign_keys=[user_id])
 
     def __str__(self):
@@ -415,12 +436,15 @@ class Workspace(db.Model):
     name = Column(String(50), nullable=False)
 
     # Associations
-    owner_id = Column(Integer,
-                      ForeignKey("user.id",
-                                 name="fk_workspace_owner_id"), nullable=False,
-                      index=True)
+    owner_id = Column(
+        Integer,
+        ForeignKey("user.id",
+                   name="fk_workspace_owner_id"),
+        nullable=False,
+        index=True)
     owner = relationship(
         "User",
+        overlaps='workspaces',
         foreign_keys=[owner_id])
 
     def __str__(self):
