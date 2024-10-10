@@ -80,7 +80,8 @@ def get_commands():
              'WORKFLOW','VISUALIZATION','USER')'''
     elif is_sqlite():
         cmd = 'SELECT 1'
-    else: get_psql_enum_alter_commands(
+    else: 
+        cmd = get_psql_enum_alter_commands(
                  ['permission', 'asset'], ['applicable_to', 'type'], 'AssetTypeEnumType', 
                    ['SYSTEM','DASHBOARD','DATA_SOURCE', 'JOB', 'APP', 'DEPLOYMENT', 'API',
                      'WORKFLOW','VISUALIZATION','USER'], 'USER') 

@@ -53,8 +53,8 @@ def _insert_configuration():
     )
     columns = [c.name for c in tb.columns]
     data = [
-        (10, 'OPENID_CONFIG', '{}', 1, 0, 'TEXTAREA'),
-        (11, 'OPENID_JWT_PUB_KEY', '{}', 1, 0, 'TEXTAREA'),
+        (10, 'OPENID_CONFIG', '{}', True, False, 'TEXTAREA'),
+        (11, 'OPENID_JWT_PUB_KEY', '{}', True, False, 'TEXTAREA'),
     ]
     rows = [dict(list(zip(columns, row))) for row in data]
     op.bulk_insert(tb, rows)

@@ -16,7 +16,7 @@ coverage==5.5
 flask-rq2==18.3
 flask-swagger-ui==3.36.0
 marshmallow==3.12.1
-psycopg2==2.8.6
+psycopg2-binary==2.8.6
 pyaml==20.4.0
 pyjwt==2.4.0
 pytest==6.2.4
@@ -26,3 +26,4 @@ requests==2.26.0
 socketio==0.2.1
 Flask-Caching==2.1.0
 werkzeug==2.3.8
+python-dotenv==1.0.1
