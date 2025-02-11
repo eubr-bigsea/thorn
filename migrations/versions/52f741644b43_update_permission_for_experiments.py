@@ -26,7 +26,6 @@ def upgrade():
         UPDATE permission SET applicable_to = 'EXPERIMENT'
         WHERE applicable_to LIKE 'EXPERIMENT%%';
     """)
-    breakpoint()
     connection.execute("""
         UPDATE permission_translation 
         SET description = 'Executar experimentos SQL'
