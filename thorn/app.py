@@ -12,7 +12,6 @@ from flask import Flask, request
 from flask_babel import Babel
 from flask_cors import CORS
 from flask_restful import Api
-from flask_swagger_ui import get_swaggerui_blueprint
 from thorn.gateway import ApiGateway
 from thorn.models import db, User
 from thorn.permission_api import PermissionListApi
@@ -23,36 +22,25 @@ from thorn.auth_api import ValidateTokenApi, AuthenticationApi
 from thorn.role_api import RoleListApi, RoleDetailApi
 from thorn.notification_api import NotificationListApi, NotificationDetailApi, \
     NotificationSummaryApi
-from thorn.configuration_api import (ConfigurationListApi, 
+from thorn.configuration_api import (ConfigurationListApi,
     UserInterfaceConfigurationDetailApi)
 from thorn.cache_config import cache
 
 def create_app(is_main_module=False):
-    
+
     app = Flask(__name__)
-    app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.abspath('thorn/i18n/locales') 
+    app.config['BABEL_TRANSLATION_DIRECTORIES'] = os.path.abspath('thorn/i18n/locales')
     babel = Babel(app)
-    
+
     logging.config.fileConfig('logging_config.ini')
-    
+
     app.secret_key = '0e36528dc34844e79963436a7af9258f'
-    
+
     # CORS
     CORS(app, resources={r"/*": {"origins": "*"}})
 
-    # Swagger
-    swaggerui_blueprint = get_swaggerui_blueprint(
-        '/api/docs',  
-        '/static/swagger.yaml',
-        config={  # Swagger UI config overrides
-            'app_name': "Lemonade Thorn"
-        },
-    )
-    
-    app.register_blueprint(swaggerui_blueprint)
-
     api = Api(app)
-    
+
     mappings = {
         '/approve/<int:user_id>': ApproveUserApi,
         '/auth/validate': ValidateTokenApi,
@@ -79,20 +67,20 @@ def create_app(is_main_module=False):
     }
     for path, view in list(mappings.items()):
         api.add_resource(view, path)
-    
-    
+
+
     @babel.localeselector
     def get_locale():
         return request.headers.get('X-Locale', 'pt')
-    
+
     sqlalchemy_utils.i18n.get_locale = get_locale
-    
+
     config_file = os.environ.get('THORN_CONFIG')
 
     os.chdir(os.environ.get('THORN_HOME', '.'))
     logger = logging.getLogger(__name__)
 
-    
+
     if config_file:
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)['thorn']
@@ -111,9 +99,9 @@ def create_app(is_main_module=False):
         if engine_config:
             final_config = {'pool_pre_ping': True}
             if 'mysql://' in app.config['SQLALCHEMY_DATABASE_URI']:
-                if 'SQLALCHEMY_POOL_SIZE' in engine_config: 
-                    final_config['pool_size'] = engine_config['SQLALCHEMY_POOL_SIZE'] 
-                if 'SQLALCHEMY_POOL_RECYCLE' in engine_config: 
+                if 'SQLALCHEMY_POOL_SIZE' in engine_config:
+                    final_config['pool_size'] = engine_config['SQLALCHEMY_POOL_SIZE']
+                if 'SQLALCHEMY_POOL_RECYCLE' in engine_config:
                     final_config['pool_recycle'] = engine_config['SQLALCHEMY_POOL_RECYCLE']
             app.config['SQLALCHEMY_ENGINE_OPTIONS'] = final_config
 
@@ -122,7 +110,7 @@ def create_app(is_main_module=False):
         db.init_app(app)
         rq.init_app(app)
         cache.init_app(app)
-        
+
         migrate = Migrate(app, db)
         port = int(config.get('port', 5000))
         logger.debug('Running in %s mode', config.get('environment'))

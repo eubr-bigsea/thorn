@@ -1,24 +1,41 @@
-FROM python:3.9.5-alpine3.14 as base
+ARG THORN_HOME_ARG=/usr/local/thorn
+FROM python:3.9.21-slim-bullseye AS base
 
-FROM base as pip_builder
-RUN apk add --no-cache gcc musl-dev libffi-dev openssl-dev openldap-dev g++ postgresql-dev
-COPY requirements.txt / 
-RUN pip install -U pip wheel && pip install -r /requirements.txt
+FROM base AS uv_builder
+ARG THORN_HOME_ARG
+ENV THORN_HOME=$THORN_HOME_ARG \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+
+WORKDIR $THORN_HOME
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libldap-dev python-dev libsasl2-dev && \
+    pip install -U pip wheel uv
+
+# Copy and install dependencies using a cache-mounted directory
+COPY pyproject.toml $THORN_HOME/
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv lock && \
+    uv sync --frozen --no-install-project --no-dev
 
 FROM base
-LABEL maintainer="Vinicius Dias <viniciusvdias@dcc.ufmg.br>, Guilherme Maluf <guimaluf@dcc.ufmg.br>"
+ARG THORN_HOME_ARG
+ENV THORN_HOME=$THORN_HOME_ARG
+ENV THORN_CONFIG=$THORN_HOME/conf/thorn-config.yaml \
+    PATH="$THORN_HOME/.venv/bin:$PATH" \
+    FLASK_APP=thorn.app
 
-RUN apk add --no-cache libldap dumb-init
-ENV THORN_HOME /usr/local/thorn
-ENV THORN_CONFIG $THORN_HOME/conf/thorn-config.yaml
+# Install dumb-init for better signal handling
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    dumb-init libldap-common libldap-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY --from=pip_builder /usr/local /usr/local
-WORKDIR $THORN_HOME
 COPY . $THORN_HOME/
-COPY bin/entrypoint /usr/local/bin/
+COPY --from=uv_builder $THORN_HOME/.venv $THORN_HOME/.venv
 
-# CMD ["/usr/local/thorn/sbin/thorn-daemon.sh", "docker"]
-RUN pybabel compile -d $THORN_HOME/thorn/i18n/locales
+WORKDIR $THORN_HOME
+COPY bin/entrypoint /usr/local/bin/
+RUN pybabel compile -d thorn/i18n/locales
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/usr/local/bin/entrypoint"]
 CMD ["server"]

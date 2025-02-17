@@ -1,0 +1,14 @@
+# Exclude cache, logs, and temporary files
+__pycache__/
+*.log
+*.tmp
+*.pyc
+*.pyo
+*.pyd
+.venv
+venv
+.env
+.pytest_cache
+.git
+.gitignore
+README.md
