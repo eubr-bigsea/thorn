@@ -173,6 +173,7 @@ class ValidateTokenApi(Resource):
         status_code = 401
         user = None
         config = current_app.config['THORN_CONFIG']
+        result = {}
 
         # Check if URL is unprotected
         unprotected = config.get(
@@ -188,7 +189,6 @@ class ValidateTokenApi(Resource):
         if method in unprotected.get(path, []) or unprotected.get(path) == [] \
                 or '/public/' in path:
             status_code = 200
-            result = {}
         elif request.headers.get('X-Auth-Token') == str(config.get('secret')):
             status_code = 200
             result = { 
