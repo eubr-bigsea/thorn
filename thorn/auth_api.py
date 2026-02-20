@@ -19,7 +19,11 @@ log = logging.getLogger(__name__)
 
 
 def _get_global_roles():
-    return [r.id for r in Role.query.filter(Role.all_user==True)]  # noqa: E712
+    return [r.id for r in Role.query.filter(Role.all_user == True)]  # noqa: E712
+
+def _get_global_permissions():
+  return [p.name for r in Role.query.filter(Role.all_user == True) for p in r.permissions]
+
 
 def _get_jwt_token(user):
     return jwt.encode(
@@ -319,10 +323,14 @@ class ValidateTokenApi(Resource):
 
     def _get_result(self, user):
         global_roles = _get_global_roles()
+        global_permissions = _get_global_permissions()     
+        permissions = ','.join(set(
+		[p.name for r in user.roles for p in r.permissions] + 
+		global_permissions
+	)) 
         return {
               'X-User-Id': user.id,
-              'X-Permissions': ','.join([p.name for r in user.roles 
-                  for p in r.permissions]),
+              'X-Permissions': permissions,
               'X-Roles': ','.join(map(str, [
                   r.id for r in user.roles] + global_roles)),
               'X-Locale': user.locale,
