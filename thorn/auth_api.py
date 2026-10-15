@@ -66,6 +66,25 @@ def _download_jwks(json_conf):
     return jwks, discovery.get('issuer')
 
 
+def _with_userinfo_names(json_conf, token, claims):
+    """Fills given_name/family_name from the userinfo endpoint when the token
+    lacks them. Any failure keeps the original claims: names are optional."""
+    if claims.get('given_name') and claims.get('family_name'):
+        return claims
+    try:
+        discovery = requests.get(_discovery_url(json_conf['authority']),
+                                 timeout=5).json()
+        info = requests.get(discovery['userinfo_endpoint'], timeout=5,
+                            headers={'Authorization': f'Bearer {token}'}
+                            ).json()
+    except Exception:  # noqa: BLE001
+        log.exception('OpenID userinfo request failed')
+        return claims
+    return {**claims,
+            'given_name': claims.get('given_name') or info.get('given_name'),
+            'family_name': claims.get('family_name') or info.get('family_name')}
+
+
 def _cache_call(method, *args, default=None, **kwargs):
     """Cache errors (e.g. Redis down) must degrade, never fail the login."""
     try:
@@ -186,10 +205,10 @@ def _update_open_id_user_information(user: User, openid_user: dict):
 
     login = openid_user.get('username') or sub
     email = openid_user.get('email', login) or login
-    first_name = openid_user.get('given_name')
-    last_name = openid_user.get('family_name')
+    # A token without name claims must not erase the names already stored.
+    first_name = openid_user.get('given_name') or user.first_name
+    last_name = openid_user.get('family_name') or user.last_name
 
-    
     if any([user.login != login, 
            user.email != email, 
            user.first_name != first_name, 
@@ -385,6 +404,11 @@ class ValidateTokenApi(Resource):
                     user = User.query.filter(
                         User.login==login).first()
                     
+                    names_missing = (user is None or not user.first_name
+                                     or not user.last_name)
+                    if names_missing:
+                        decoded = _with_userinfo_names(json_conf, token,
+                                                       decoded)
                     if user:
                         # Only enabled OpenID users may log in this way;
                         # never let an IdP token take over another user type.
