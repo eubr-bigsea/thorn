@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-}
+from thorn.auth_api import invalidate_openid_cache
 from thorn.app_auth import requires_auth, requires_permission
 from thorn.util import translate_validation
 from flask import request, current_app, g as flask_globals, abort
@@ -106,6 +107,7 @@ class ConfigurationListApi(Resource):
                 for config in config:
                     configurations.append(db.session.merge(config))
                 db.session.commit()
+                invalidate_openid_cache()
                 return_code = 200
                 result = {
                     'status': 'OK',

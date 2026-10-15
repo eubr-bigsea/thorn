@@ -25,6 +25,7 @@ PUBLIC_PATH = re.compile(r'^/api/v1/[^/]+/public/')
 TOKEN_TTL_SECONDS = 12 * 3600  # shortcut: fixed default, make configurable if needed
 JWKS_REFRESH_MIN_INTERVAL = 60  # also the back-off after a failed download
 JWKS_TTL = 3600  # how long the downloaded JWKS counts as fresh
+OPENID_SETTINGS_TTL = 60  # DB read of the OpenID configuration rows
 
 
 def _is_public_path(path):
@@ -60,6 +61,24 @@ def _cache_call(method, *args, default=None, **kwargs):
     except Exception as ex:  # noqa: BLE001
         log.warning('Cache %s failed: %s', method, ex)
         return default
+
+
+def _get_openid_settings():
+    """OPENID_CONFIG / OPENID_JWT_PUB_KEY rows, cached to spare the DB."""
+    settings = _cache_call('get', 'OPENID_SETTINGS')
+    if settings is None:
+        query = Configuration.query.filter(Configuration.name.in_(
+            ['OPENID_CONFIG', 'OPENID_JWT_PUB_KEY']))
+        settings = dict((c.name, c.value) for c in query)
+        _cache_call('set', 'OPENID_SETTINGS', settings,
+                    timeout=OPENID_SETTINGS_TTL)
+    return settings
+
+
+def invalidate_openid_cache():
+    """Call after the OpenID configuration changes."""
+    _cache_call('delete', 'OPENID_SETTINGS')
+    _cache_call('delete', 'OPENID_JWKS_FRESH')
 
 
 def _get_signing_key(json_conf, kid):
@@ -317,10 +336,7 @@ class ValidateTokenApi(Resource):
         try:
             
             # using open id  
-            openId_keys = ['OPENID_CONFIG', 'OPENID_JWT_PUB_KEY']
-            query = Configuration.query.filter(
-                        Configuration.name.in_(openId_keys))
-            openId_config = dict((c.name, c.value) for c in query)
+            openId_config = _get_openid_settings()
 
             has_open_id_config = ('OPENID_CONFIG' in openId_config)
             
