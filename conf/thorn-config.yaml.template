@@ -1,5 +1,6 @@
 thorn:
     port: 3319
+    # secret_key: <random string>   # signs legacy JWTs; or set THORN_SECRET_KEY
     environment: prod
     servers:
         database_url: mysql+pymysql://user:secret@server:3306/thorn

@@ -27,6 +27,10 @@ from thorn.configuration_api import (ConfigurationListApi,
     UserInterfaceConfigurationDetailApi)
 from thorn.cache_config import cache
 
+# Public in the repo history: only a fallback, never rely on it.
+LEGACY_SECRET_KEY = '0e36528dc34844e79963436a7af9258f'
+
+
 def create_app(is_main_module=False):
     
     app = Flask(__name__)
@@ -34,8 +38,6 @@ def create_app(is_main_module=False):
     babel = Babel(app)
     
     logging.config.fileConfig('logging_config.ini')
-    
-    app.secret_key = '0e36528dc34844e79963436a7af9258f'
     
     # CORS
     CORS(app, resources={r"/*": {"origins": "*"}})
@@ -83,8 +85,7 @@ def create_app(is_main_module=False):
     
     @babel.localeselector
     def get_locale():
-        return (request.headers.get('X-User-Locale') or
-                request.headers.get('X-Locale', 'pt'))
+        return request.headers.get('X-User-Locale', 'pt')
     
     sqlalchemy_utils.i18n.get_locale = get_locale
     
@@ -119,6 +120,13 @@ def create_app(is_main_module=False):
             app.config['SQLALCHEMY_ENGINE_OPTIONS'] = final_config
 
         app.config['THORN_CONFIG'] = config
+
+        # Signs legacy JWTs: set THORN_SECRET_KEY (or thorn.secret_key).
+        app.secret_key = (os.environ.get('THORN_SECRET_KEY') or
+                          config.get('secret_key') or LEGACY_SECRET_KEY)
+        if app.secret_key == LEGACY_SECRET_KEY:
+            logger.warning('Using the public default secret_key: legacy '
+                           'tokens can be forged. Set THORN_SECRET_KEY.')
 
         db.init_app(app)
         rq.init_app(app)

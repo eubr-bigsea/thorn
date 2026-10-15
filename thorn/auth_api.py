@@ -46,9 +46,10 @@ def _find_jwk(jwks, kid):
 
 
 def _download_jwks(json_conf):
-    r = requests.get(json_conf['authority'], timeout=5)
-    jwks_uri = r.json()['jwks_uri']
-    return requests.get(jwks_uri, timeout=5).json()
+    """Returns (jwks, issuer) from the OpenID discovery document."""
+    discovery = requests.get(json_conf['authority'], timeout=5).json()
+    jwks = requests.get(discovery['jwks_uri'], timeout=5).json()
+    return jwks, discovery.get('issuer')
 
 
 def _get_global_roles():
@@ -297,24 +298,33 @@ class ValidateTokenApi(Resource):
                             'utf8'))
                         pkey = serialization.load_pem_public_key(cert, 
                                 backend=default_backend())
+                        issuer = json_conf.get('issuer')
                     else:
                         
                         token_kid = jwt.get_unverified_header(token)['kid']
                         pkey = _find_jwk(cache.get('OPENID_JWKS'), token_kid)
-                        # Unknown kid: refresh once per interval (key rotation)
-                        if pkey is None and cache.add(
+                        issuer = (json_conf.get('issuer') or
+                                  cache.get('OPENID_ISSUER'))
+                        # Unknown kid or issuer: refresh once per interval
+                        # (key rotation)
+                        if (pkey is None or issuer is None) and cache.add(
                                 'OPENID_JWKS_REFRESHED', True,
                                 timeout=JWKS_REFRESH_MIN_INTERVAL):
                             log.info('Downloading JWKS')
-                            jwks = _download_jwks(json_conf)
+                            jwks, discovered = _download_jwks(json_conf)
                             cache.set('OPENID_JWKS', jwks)
+                            cache.set('OPENID_ISSUER', discovered)
                             pkey = _find_jwk(jwks, token_kid)
+                            issuer = json_conf.get('issuer') or discovered
                         if pkey is None:
                             raise ValueError(f'Unknown key id {token_kid}')
-                    #breakpoint()
+                    if issuer is None:
+                        # shortcut: PEM key without discovery cannot learn the
+                        # issuer; set "issuer" in OPENID_CONFIG to enforce it.
+                        log.warning('OpenID issuer not verified')
                     decoded = jwt.decode(token.encode('utf8'), key=pkey, 
                                 audience=json_conf.get('client_id'),
-                                issuer=json_conf.get('issuer'),
+                                issuer=issuer,
                                 algorithms=algorithms,
                                 options={'verify_exp': verify_exp})
                     login = decoded.get('username') or decoded.get('sub')
@@ -340,6 +350,9 @@ class ValidateTokenApi(Resource):
                 if try_old_thorn_token: # Old thorn auth
                     decoded = jwt.decode(token, current_app.secret_key, 
                             algorithms=["HS256"])
+                    # Tokens issued before expiry existed never lapse: refuse.
+                    if 'exp' not in decoded:
+                        raise jwt.MissingRequiredClaimError('exp')
                     user = User.query.get(int(decoded.get('id')))
                     if user.enabled and user.status == UserStatus.ENABLED:
                         result = self._get_result(user)
