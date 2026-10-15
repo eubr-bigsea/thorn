@@ -130,7 +130,11 @@ def create_app(is_main_module=False):
 
         db.init_app(app)
         rq.init_app(app)
-        cache.init_app(app)
+        # Shared across workers (JWKS, rate-limit lock); same Redis as RQ.
+        cache.init_app(app, config={
+            'CACHE_TYPE': 'RedisCache',
+            'CACHE_REDIS_URL': app.config['RQ_REDIS_URL'],
+            'CACHE_KEY_PREFIX': 'thorn:'})
         
         migrate = Migrate(app, db)
         port = int(config.get('port', 5000))

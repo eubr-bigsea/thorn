@@ -23,7 +23,8 @@ log = logging.getLogger(__name__)
 # anchored at the service prefix, not anywhere in the path.
 PUBLIC_PATH = re.compile(r'^/api/v1/[^/]+/public/')
 TOKEN_TTL_SECONDS = 12 * 3600  # shortcut: fixed default, make configurable if needed
-JWKS_REFRESH_MIN_INTERVAL = 60
+JWKS_REFRESH_MIN_INTERVAL = 60  # also the back-off after a failed download
+JWKS_TTL = 3600  # how long the downloaded JWKS counts as fresh
 
 
 def _is_public_path(path):
@@ -50,6 +51,45 @@ def _download_jwks(json_conf):
     discovery = requests.get(json_conf['authority'], timeout=5).json()
     jwks = requests.get(discovery['jwks_uri'], timeout=5).json()
     return jwks, discovery.get('issuer')
+
+
+def _cache_call(method, *args, default=None, **kwargs):
+    """Cache errors (e.g. Redis down) must degrade, never fail the login."""
+    try:
+        return getattr(cache, method)(*args, **kwargs)
+    except Exception as ex:  # noqa: BLE001
+        log.warning('Cache %s failed: %s', method, ex)
+        return default
+
+
+def _get_signing_key(json_conf, kid):
+    """Returns (public key, issuer) for the token's kid.
+
+    The JWKS is kept without expiry and refreshed when older than JWKS_TTL,
+    when the kid is unknown (rotation) or the issuer is not known yet. A
+    failed refresh keeps serving the last known keys, and downloads are
+    limited to one per JWKS_REFRESH_MIN_INTERVAL.
+    """
+    jwks = _cache_call('get', 'OPENID_JWKS')
+    pkey = _find_jwk(jwks, kid)
+    issuer = json_conf.get('issuer') or _cache_call('get', 'OPENID_ISSUER')
+    stale = not _cache_call('get', 'OPENID_JWKS_FRESH')
+    if (stale or pkey is None or issuer is None) and _cache_call(
+            'add', 'OPENID_JWKS_LOCK', True,
+            timeout=JWKS_REFRESH_MIN_INTERVAL, default=True):
+        try:
+            log.info('Downloading JWKS')
+            jwks, discovered = _download_jwks(json_conf)
+            _cache_call('set', 'OPENID_JWKS', jwks, timeout=0)
+            _cache_call('set', 'OPENID_ISSUER', discovered, timeout=0)
+            _cache_call('set', 'OPENID_JWKS_FRESH', True, timeout=JWKS_TTL)
+            pkey = _find_jwk(jwks, kid)
+            issuer = json_conf.get('issuer') or discovered
+        except Exception:  # noqa: BLE001
+            log.exception('JWKS download failed; using cached keys')
+    if pkey is None:
+        raise ValueError(f'Unknown key id {kid}')
+    return pkey, issuer
 
 
 def _get_global_roles():
@@ -301,23 +341,9 @@ class ValidateTokenApi(Resource):
                         issuer = json_conf.get('issuer')
                     else:
                         
-                        token_kid = jwt.get_unverified_header(token)['kid']
-                        pkey = _find_jwk(cache.get('OPENID_JWKS'), token_kid)
-                        issuer = (json_conf.get('issuer') or
-                                  cache.get('OPENID_ISSUER'))
-                        # Unknown kid or issuer: refresh once per interval
-                        # (key rotation)
-                        if (pkey is None or issuer is None) and cache.add(
-                                'OPENID_JWKS_REFRESHED', True,
-                                timeout=JWKS_REFRESH_MIN_INTERVAL):
-                            log.info('Downloading JWKS')
-                            jwks, discovered = _download_jwks(json_conf)
-                            cache.set('OPENID_JWKS', jwks)
-                            cache.set('OPENID_ISSUER', discovered)
-                            pkey = _find_jwk(jwks, token_kid)
-                            issuer = json_conf.get('issuer') or discovered
-                        if pkey is None:
-                            raise ValueError(f'Unknown key id {token_kid}')
+                        pkey, issuer = _get_signing_key(
+                            json_conf,
+                            jwt.get_unverified_header(token)['kid'])
                     if issuer is None:
                         # shortcut: PEM key without discovery cannot learn the
                         # issuer; set "issuer" in OPENID_CONFIG to enforce it.
