@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-}
-from thorn.app_auth import requires_auth
+from thorn.app_auth import is_service_token, requires_auth
 from flask import request, current_app, g as flask_globals
 from flask_restful import Resource
 from sqlalchemy import or_
@@ -111,8 +111,7 @@ class NotificationListApi(Resource):
         return_code = 400
 
         config = current_app.config[CONFIG_KEY]
-        token = config['secret']
-        if request.headers.get('x-auth-token') != str(token):
+        if not is_service_token(request.headers.get('x-auth-token')):
             return_code = 401
             result = {'status': 'ERROR'}
         elif request.json is not None:

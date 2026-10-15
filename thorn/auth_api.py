@@ -9,7 +9,7 @@ from flask import Response, current_app, request
 from flask_babel import gettext
 from flask_restful import Resource
 
-from thorn.app_auth import requires_auth
+from thorn.app_auth import is_service_token, requires_auth
 from thorn.models import (AuthenticationType, Configuration, Role, User, 
                           UserStatus, db)
 from thorn.util import check_password, encrypt_password, ldap_authentication
@@ -193,7 +193,7 @@ class ValidateTokenApi(Resource):
         if method in unprotected.get(path, []) or unprotected.get(path) == [] \
                 or '/public/' in path:
             status_code = 200
-        elif request.headers.get('X-Auth-Token') == str(config.get('secret')):
+        elif is_service_token(request.headers.get('X-Auth-Token')):
             status_code = 200
             result = { 
                     'X-User-Id': 1,
@@ -298,11 +298,15 @@ class ValidateTokenApi(Resource):
                         User.login==login).first()
                     
                     if user:
-                        if user.enabled and user.authentication_type == 'OPENID':
+                        # Only enabled OpenID users may log in this way;
+                        # never let an IdP token take over another user type.
+                        if (user.enabled
+                                and user.status == UserStatus.ENABLED
+                                and user.authentication_type ==
+                                AuthenticationType.OPENID):
                             _update_open_id_user_information(user, decoded)
-                        
-                        result = self._get_result(user)
-                        status_code = 200
+                            result = self._get_result(user)
+                            status_code = 200
                     elif create_open_id_user: # creates the user
                         user = _create_open_id_user(decoded)
                         result = self._get_result(user)

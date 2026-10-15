@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-}
+import hmac
 import json
 import jwt
 import logging
@@ -21,6 +22,15 @@ MSG2 = 'Could not verify your access level for that URL. ' \
 
 SessionUser = namedtuple(
     "SessionUser", "id, login, email, name, first_name, last_name, locale, permissions")
+
+def is_service_token(token):
+    """True if token equals the configured service secret (constant time)."""
+    secret = current_app.config[CONFIG_KEY].get('secret')
+    if not secret or not token:
+        return False
+    return hmac.compare_digest(str(token).encode('utf8'),
+                               str(secret).encode('utf8'))
+
 
 def authenticate(msg, params):
     """Sends a 403 response that enables basic auth"""
@@ -66,8 +76,7 @@ def requires_permission(*permissions):
 def requires_auth(f):
     @wraps(f)
     def decorated(*_args, **kwargs):
-        config = current_app.config[CONFIG_KEY]
-        if str(config.get('secret')) == str(request.headers.get('X-Auth-Token')):
+        if is_service_token(request.headers.get('X-Auth-Token')):
             user_id = 1
             user = User.query.get(user_id)
             
