@@ -1,5 +1,7 @@
 import json
 import logging
+import re
+import time
 import urllib
 import requests
 import jwt
@@ -17,6 +19,37 @@ from thorn.util import check_password, encrypt_password, ldap_authentication
 from thorn.cache_config import cache
 log = logging.getLogger(__name__)
 
+# Public routes live under /api/v1/<service>/public/ ; match the segment
+# anchored at the service prefix, not anywhere in the path.
+PUBLIC_PATH = re.compile(r'^/api/v1/[^/]+/public/')
+TOKEN_TTL_SECONDS = 12 * 3600  # shortcut: fixed default, make configurable if needed
+JWKS_REFRESH_MIN_INTERVAL = 60
+
+
+def _is_public_path(path):
+    if '..' in path or '%' in path:
+        return False
+    return PUBLIC_PATH.match(path) is not None
+
+
+def _clean(value):
+    """Make a value safe for the ';'-delimited X-User-Data header."""
+    return str(value or '').replace(';', ',').replace('\n', ' ').replace(
+        '\r', ' ')
+
+
+def _find_jwk(jwks, kid):
+    for jwk in (jwks or {}).get('keys', []):
+        if jwk.get('kid') == kid:
+            return jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
+    return None
+
+
+def _download_jwks(json_conf):
+    r = requests.get(json_conf['authority'], timeout=5)
+    jwks_uri = r.json()['jwks_uri']
+    return requests.get(jwks_uri, timeout=5).json()
+
 
 def _get_global_roles():
     return [r.id for r in Role.query.filter(Role.all_user == True)]  # noqa: E712
@@ -29,6 +62,7 @@ def _get_jwt_token(user):
     return jwt.encode(
         {
             'id': user.id,
+            'exp': int(time.time()) + TOKEN_TTL_SECONDS,
             #'name': '{} {}'.format(
             #    user.first_name or '', user.last_name or '').strip(),
             #'email': user.email,
@@ -185,20 +219,20 @@ class ValidateTokenApi(Resource):
         path = request.headers.get('X-Original-URI', '')
         qs = {}
         if '?' in path:
-            path, qs = path.split('?')
+            path, qs = path.split('?', 1)
             qs = urllib.parse.parse_qs(qs)
 
         method = request.headers.get('X-Original-Method', 'INVALID')
 
         if method in unprotected.get(path, []) or unprotected.get(path) == [] \
-                or '/public/' in path:
+                or _is_public_path(path):
             status_code = 200
         elif is_service_token(request.headers.get('X-Auth-Token')):
             status_code = 200
             result = { 
                     'X-User-Id': 1,
                     'X-Permissions': ['ADMINISTRATOR'],
-                    'X-Locale': 'pt',
+                    'X-User-Locale': 'pt',
                     'X-User-Data': '{};{};{} {};{}'.format(
                         'admin', 'admin@lemonade.org.br',
                         'Admin', 'Lemonade',
@@ -265,32 +299,22 @@ class ValidateTokenApi(Resource):
                                 backend=default_backend())
                     else:
                         
-                        # Try to download 
-                        jwks = cache.get('OPENID_JWKS')
-                        log.info('Downloading JWS? %s', jwks is None)
-                        if jwks is None:
-                            r = requests.get(json_conf['authority'])
-                            jwks_uri = r.json()['jwks_uri']
-                            r = requests.get(jwks_uri)
-                            jwks = r.json()
-                        else:
-                            kid = jwt.get_unverified_header(token)['kid']
-                            jwks = cache.get('OPENID_JWKS')
-
-                        # keep the cache warm
-                        cache.add('OPENID_JWKS', jwks)
-                        # print(jwks, token)
                         token_kid = jwt.get_unverified_header(token)['kid']
-                        for jwk in jwks['keys']:
-                            kid = jwk['kid']
-                            if token_kid == kid:
-                                pkey = jwt.algorithms.RSAAlgorithm.from_jwk(
-                                    json.dumps(jwk))
-                                log.info('Found key %s', token_kid)
-                                break
+                        pkey = _find_jwk(cache.get('OPENID_JWKS'), token_kid)
+                        # Unknown kid: refresh once per interval (key rotation)
+                        if pkey is None and cache.add(
+                                'OPENID_JWKS_REFRESHED', True,
+                                timeout=JWKS_REFRESH_MIN_INTERVAL):
+                            log.info('Downloading JWKS')
+                            jwks = _download_jwks(json_conf)
+                            cache.set('OPENID_JWKS', jwks)
+                            pkey = _find_jwk(jwks, token_kid)
+                        if pkey is None:
+                            raise ValueError(f'Unknown key id {token_kid}')
                     #breakpoint()
                     decoded = jwt.decode(token.encode('utf8'), key=pkey, 
                                 audience=json_conf.get('client_id'),
+                                issuer=json_conf.get('issuer'),
                                 algorithms=algorithms,
                                 options={'verify_exp': verify_exp})
                     login = decoded.get('username') or decoded.get('sub')
@@ -337,9 +361,12 @@ class ValidateTokenApi(Resource):
               'X-Permissions': permissions,
               'X-Roles': ','.join(map(str, [
                   r.id for r in user.roles] + global_roles)),
-              'X-Locale': user.locale,
-              'X-User-Data': (f'{user.login};{user.email};{user.first_name} '
-                        f'{user.last_name};{user.locale}')
+              'X-User-Locale': user.locale,
+              'X-User-Data': ';'.join([
+                  _clean(user.login), _clean(user.email),
+                  _clean(f'{user.first_name or ""} {user.last_name or ""}'
+                         .strip()),
+                  _clean(user.locale)])
               }
     
 

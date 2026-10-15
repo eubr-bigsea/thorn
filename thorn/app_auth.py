@@ -81,19 +81,20 @@ def requires_auth(f):
             user = User.query.get(user_id)
             
             login, email, name, locale = user.login, user.email, user.first_name, 'en'
-            setattr(flask_g, 'user', 
-                    SessionUser(user_id, login, email, name, locale, '', '',
-                    ['ADMINISTRATOR']))
+            setattr(flask_g, 'user',
+                    SessionUser(user_id, login, email, name, name, '', locale,
+                                ['ADMINISTRATOR']))
             return f(*_args, **kwargs)
         else:
             user_id = request.headers.get('x-user-id')
             permissions = request.headers.get('x-permissions', '')
             user_data = request.headers.get('x-user-data')
             if all([user_data, user_id]):
-                login, email, name, locale = user_data.split(';')
-                setattr(flask_g, 'user', 
-                        SessionUser(user_id, login, email, name, locale, '', '',
-                    permissions.split(',')))
+                login, email, name, locale = (user_data.split(';', 3) +
+                                              [''] * 4)[:4]
+                setattr(flask_g, 'user',
+                        SessionUser(user_id, login, email, name, name, '',
+                                    locale, permissions.split(',')))
                 return f(*_args, **kwargs)
             else:
                 return authenticate(MSG1, {'message': 'Invalid authentication'})

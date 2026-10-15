@@ -83,7 +83,8 @@ def create_app(is_main_module=False):
     
     @babel.localeselector
     def get_locale():
-        return request.headers.get('X-Locale', 'pt')
+        return (request.headers.get('X-User-Locale') or
+                request.headers.get('X-Locale', 'pt'))
     
     sqlalchemy_utils.i18n.get_locale = get_locale
     
