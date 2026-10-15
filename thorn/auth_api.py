@@ -47,9 +47,21 @@ def _find_jwk(jwks, kid):
     return None
 
 
+DISCOVERY_SUFFIX = '/.well-known/openid-configuration'
+
+
+def _discovery_url(authority):
+    """Accepts the issuer base (as oidc-client does) or the full discovery URL."""
+    authority = authority.rstrip('/')
+    if authority.endswith(DISCOVERY_SUFFIX):
+        return authority
+    return authority + DISCOVERY_SUFFIX
+
+
 def _download_jwks(json_conf):
     """Returns (jwks, issuer) from the OpenID discovery document."""
-    discovery = requests.get(json_conf['authority'], timeout=5).json()
+    discovery = requests.get(_discovery_url(json_conf['authority']),
+                             timeout=5).json()
     jwks = requests.get(discovery['jwks_uri'], timeout=5).json()
     return jwks, discovery.get('issuer')
 
