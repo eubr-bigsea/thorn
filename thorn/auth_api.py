@@ -330,12 +330,9 @@ class ValidateTokenApi(Resource):
                         'pt')
                     }
         elif 'api_token' in qs:
-            user = User.query.filter(
-                User.api_token==qs.get('api_token')[0]).first()
-            if user is not None and user.enabled \
-                    and user.status not in [UserStatus.DELETED, 
-                        UserStatus.PENDING_APPROVAL]:
-                result = self._get_result(user)
+            found = self._validate_api_token(qs['api_token'][0])
+            if found is not None:
+                result = found
                 status_code = 200
         else: 
             authorization = (request.headers.get('Authorization') or 
@@ -348,7 +345,13 @@ class ValidateTokenApi(Resource):
             if authorization is None:
                 authorization = qs.get('token')[0] if 'token' in qs else None
                 offset = 0
-            if authorization is not None:
+            if authorization is not None and '.' not in authorization[offset:]:
+                # JWTs always contain dots; api tokens are alphanumeric.
+                found = self._validate_api_token(authorization[offset:])
+                if found is not None:
+                    result = found
+                    status_code = 200
+            elif authorization is not None:
                 status_code, result = self._validate_authorization_token(
                     authorization[offset:],
                     request.headers.get('X-THORN-ID') == 'true',
@@ -356,6 +359,15 @@ class ValidateTokenApi(Resource):
             else:
                 log.warn(gettext('No suitable authentication method found.'))
         return '', status_code, result
+
+    def _validate_api_token(self, token):
+        """Returns the validation headers for a user api_token, else None."""
+        user = User.query.filter(User.api_token == token).first() \
+            if token else None
+        if user is not None and user.enabled and user.status not in [
+                UserStatus.DELETED, UserStatus.PENDING_APPROVAL]:
+            return self._get_result(user)
+        return None
 
     def _validate_authorization_token(self, authorization, try_old_thorn_token,
                                       verify_exp=True):
