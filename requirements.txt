@@ -14,6 +14,8 @@ SQLAlchemy==1.4.18
 bcrypt==3.2.0
 coverage==5.5
 flask-rq2==18.3
+# Flask-RQ2 18.3 calls rq.cli.cli.worker, removed in rq 2.x
+rq==1.16.2
 flask-swagger-ui==3.36.0
 marshmallow==3.12.1
 psycopg2-binary==2.8.6
