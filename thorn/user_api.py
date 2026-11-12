@@ -39,7 +39,7 @@ class GenerateUserTokenApi(Resource):
         user = User.query.get(user_id)
         if not user:
             return {'status': 'ERROR', 'message': 'not found'}, 404
-        user.api_token = _get_random_string(15)
+        user.api_token = _get_random_string(32)
         db.session.add(user)
         db.session.commit()
         return {'status': 'OK', 'token': user.api_token, 'message': 
