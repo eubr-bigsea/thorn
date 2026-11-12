@@ -8,7 +8,7 @@ from thorn.util import check_password, encrypt_password, translate_validation
 import math
 import uuid
 import datetime
-import random
+import secrets
 import string
 import logging
 
@@ -21,7 +21,7 @@ from marshmallow import ValidationError
 def _get_random_string(length):
     # Random string with the combination of lower and upper case
     letters = string.ascii_letters + string.digits
-    return ''.join(random.choice(letters) for i in range(length))
+    return ''.join(secrets.choice(letters) for i in range(length))
 
 log = logging.getLogger(__name__)
 
